@@ -4,6 +4,9 @@ from file_input import GetLinesFromFile
 import re
 
 def IsTriangle(a, b, c):
+	a = int(a)
+	b = int(b)
+	c = int(c)
 	return a + b > c and b + c > a and a + c > b
 
 def Solve(input):
@@ -16,7 +19,7 @@ def Solve(input):
 			triangle1 = []
 			triangle2 = []
 			triangle3 = []
-			for line in lines:
+			for line in lines:	
 				triangle1.append(line[0])
 				triangle2.append(line[1])
 				triangle3.append(line[2])
