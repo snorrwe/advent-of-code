@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../')
 from file_input import GetLinesFromFile
 
 def NextNumber(currentNumber, step):
