@@ -1,5 +1,6 @@
 #include <array>
 #include <iostream>
+#include <tuple>
 
 class Vector2
 {
@@ -118,49 +119,56 @@ constexpr auto neighbours = [](auto const& set, auto const& v, auto setSize) {
     return ConstPair<size_t, std::array<size_t, 8>>(size, result);
 };
 
+constexpr auto getValueByPosition = [](auto const& spiral, auto size, auto const& position) {
+    size_t sum = 0;
+    auto nPair = ::neighbours(spiral, position, size);
+    auto& neighbours = nPair.second;
+    for (int i = 0; i < nPair.first; ++i)
+    {
+        sum += neighbours[i];
+    }
+    return sum;
+};
+
 constexpr auto solve = [](auto const& input) {
-    auto set = TSet({TNode(Vector2(0, 0), 1)});
+    auto spiral = TSet({TNode(Vector2(0, 0), 1)});
     size_t size = 1;
-    size_t current = 0;
     size_t radius = 1;
     Vector2 velocity{0, 1};
     Vector2 position{1, 0};
-    while (current <= input)
+    size_t current = 0;
+    while (current < input)
     {
-        size_t sum = 0;
-        auto nPair = ::neighbours(set, position, size);
-        auto& neighbours = nPair.second;
-        for (int i = 0; i < nPair.first; ++i)
-        {
-            sum += neighbours[i];
-        }
-        current = sum;
-        set[size++] = TNode(position, current);
+        // Calculate the value of the current node
+        current = getValueByPosition(spiral, size, position);
+        // Store the value of the current node
+        spiral[size++] = TNode(position, current);
+        // Calculate the next position that needs evaluating
         auto next = position + velocity;
-        auto distance = next.distance(Vector2(0, 0));
-        if (distance > radius * 2)
+        // If next is outside the current edge, it means that we completed that edge
+        if (next.distance(Vector2(0, 0)) > radius * 2)
         {
-            velocity = velocity.turnLeft();
+            velocity = velocity.turnLeft(); // Calculate the next velocity
             if (velocity == Vector2(0, 1))
             {
-                position = Vector2(position.x + 1, position.y);
+                // We completed a circle, increase the radius
                 ++radius;
             }
             else
             {
+                // Recalculate the next position
                 next = position + velocity;
             }
         }
         position = next;
     }
-    return current;
+    return std::make_tuple(current, spiral, size, position);
 };
 
 int main(int argc, char const* argv[])
 {
-    // auto result = solve(11); // Expected: 23 // Comiles and runs correctly
-    constexpr auto result = solve(11); // Expected: 23 // Crashes during compilation with clang
-    // constexpr auto result = solve(361527); // Expected: 363010
-    std::cout << result << std::endl;
+    constexpr size_t INPUT = 361527;
+    constexpr auto result2 = solve(INPUT); // Expected: 363010
+    std::cout << std::get<0>(result2) << std::endl;
     return 0;
 }
