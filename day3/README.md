@@ -1,5 +1,6 @@
 # About the C++ solution
 
+## The task
 ```
 --- Part Two ---
 
@@ -22,6 +23,6 @@ Once a square is written, its value does not change. Therefore, the first few sq
 What is the first value written that is larger than your puzzle input?
 ```
 
-Using C++17
+## Clang flags
 
-Clang flags: `-O3 -std=c++1z -fconstexpr-steps=500000000`
+`-O3 -std=c++1z -fconstexpr-steps=500000000`
