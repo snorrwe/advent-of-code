@@ -1,17 +1,17 @@
 #include <array>
 #include <iostream>
 
-class Vector
+class Vector2
 {
 public:
-    constexpr Vector() : x(0), y(0) {}
-    constexpr Vector(size_t x, size_t y) : x(x), y(y) {}
-    constexpr Vector(Vector&& v) : x(v.x), y(v.y) {}
-    constexpr Vector(Vector const& v) : x(v.x), y(v.y) {}
-    constexpr Vector& operator=(Vector const&) = default;
+    constexpr Vector2() : x(0), y(0) {}
+    constexpr Vector2(size_t x, size_t y) : x(x), y(y) {}
+    constexpr Vector2(Vector2&& v) : x(v.x), y(v.y) {}
+    constexpr Vector2(Vector2 const& v) : x(v.x), y(v.y) {}
+    constexpr Vector2& operator=(Vector2 const&) = default;
 
-    constexpr Vector turnLeft() { return Vector(-y, x); }
-    constexpr size_t distance(Vector const& v)
+    constexpr Vector2 turnLeft() { return Vector2(-y, x); }
+    constexpr size_t distance(Vector2 const& v)
     {
         auto x = this->x - v.x;
         auto y = this->y - v.y;
@@ -24,17 +24,17 @@ public:
     int y;
 };
 
-constexpr Vector operator+(Vector const& lhs, Vector const& rhs)
+constexpr Vector2 operator+(Vector2 const& lhs, Vector2 const& rhs)
 {
-    return Vector(lhs.x + rhs.x, lhs.y + rhs.y);
+    return Vector2(lhs.x + rhs.x, lhs.y + rhs.y);
 }
 
-constexpr Vector operator-(Vector const& lhs, Vector const& rhs)
+constexpr Vector2 operator-(Vector2 const& lhs, Vector2 const& rhs)
 {
-    return Vector(lhs.x - rhs.x, lhs.y - rhs.y);
+    return Vector2(lhs.x - rhs.x, lhs.y - rhs.y);
 }
 
-constexpr bool operator==(Vector const& lhs, Vector const& rhs)
+constexpr bool operator==(Vector2 const& lhs, Vector2 const& rhs)
 {
     return lhs.x == rhs.x && lhs.y == rhs.y;
 }
@@ -59,7 +59,7 @@ public:
 };
 
 const size_t MAX_SIZE = 100;
-using TNode = ConstPair<Vector, size_t>;
+using TNode = ConstPair<Vector2, size_t>;
 using TSet = std::array<TNode, MAX_SIZE * MAX_SIZE>;
 
 namespace ConstSet
@@ -68,7 +68,7 @@ typedef ConstPair<TSet, size_t> TAddResult;
 typedef ConstPair<bool, TNode> TFindResult;
 typedef ConstPair<bool, size_t> TFindIndexResult;
 
-constexpr TFindResult find(TSet const& values, Vector const& value, size_t size)
+constexpr TFindResult find(TSet const& values, Vector2 const& value, size_t size)
 {
     for (int i = 0; i < size; ++i)
     {
@@ -77,7 +77,7 @@ constexpr TFindResult find(TSet const& values, Vector const& value, size_t size)
     return TFindResult(false);
 }
 
-constexpr TFindIndexResult findIndex(TSet const& values, Vector const& value, size_t size)
+constexpr TFindIndexResult findIndex(TSet const& values, Vector2 const& value, size_t size)
 {
     for (int i = 0; i < size; ++i)
     {
@@ -107,7 +107,7 @@ constexpr auto neighbours = [](auto const& set, auto const& v, auto setSize) {
         {
             if (i != 0 || j != 0)
             {
-                auto fresult = ConstSet::find(set, Vector(v.x + i, v.y + j), setSize);
+                auto fresult = ConstSet::find(set, Vector2(v.x + i, v.y + j), setSize);
                 if (fresult.first)
                 {
                     result[size++] = fresult.second.second;
@@ -119,12 +119,12 @@ constexpr auto neighbours = [](auto const& set, auto const& v, auto setSize) {
 };
 
 constexpr auto solve = [](auto const& input) {
-    auto set = TSet({TNode(Vector(0, 0), 1)});
+    auto set = TSet({TNode(Vector2(0, 0), 1)});
     size_t size = 1;
     size_t current = 0;
     size_t radius = 1;
-    Vector velocity{0, 1};
-    Vector position{1, 0};
+    Vector2 velocity{0, 1};
+    Vector2 position{1, 0};
     while (current <= input)
     {
         size_t sum = 0;
@@ -137,13 +137,13 @@ constexpr auto solve = [](auto const& input) {
         current = sum;
         set[size++] = TNode(position, current);
         auto next = position + velocity;
-        auto distance = next.distance(Vector(0, 0));
+        auto distance = next.distance(Vector2(0, 0));
         if (distance < radius || distance > radius * 2)
         {
             velocity = velocity.turnLeft();
-            if (velocity == Vector(0, 1))
+            if (velocity == Vector2(0, 1))
             {
-                position = Vector(position.x + 1, position.y);
+                position = Vector2(position.x + 1, position.y);
                 ++radius;
             }
             else
