@@ -138,7 +138,7 @@ constexpr auto solve = [](auto const& input) {
         set[size++] = TNode(position, current);
         auto next = position + velocity;
         auto distance = next.distance(Vector2(0, 0));
-        if (distance < radius || distance > radius * 2)
+        if (distance > radius * 2)
         {
             velocity = velocity.turnLeft();
             if (velocity == Vector2(0, 1))
