@@ -1,46 +1,9 @@
 #include "../../core/include/constpair.h"
 #include "../../core/include/constset.h"
+#include "../../core/include/vector2.h"
 #include <array>
 #include <iostream>
 #include <tuple>
-
-class Vector2
-{
-public:
-    constexpr Vector2() : x(0), y(0) {}
-    constexpr Vector2(size_t x, size_t y) : x(x), y(y) {}
-    constexpr Vector2(Vector2&& v) : x(v.x), y(v.y) {}
-    constexpr Vector2(Vector2 const& v) : x(v.x), y(v.y) {}
-    constexpr Vector2& operator=(Vector2 const&) = default;
-
-    constexpr Vector2 turnLeft() { return Vector2(-y, x); }
-    constexpr size_t distance(Vector2 const& v)
-    {
-        auto x = this->x - v.x;
-        auto y = this->y - v.y;
-        if (x < 0) x = -x;
-        if (y < 0) y = -y;
-        return x + y;
-    }
-
-    int x;
-    int y;
-};
-
-constexpr Vector2 operator+(Vector2 const& lhs, Vector2 const& rhs)
-{
-    return Vector2(lhs.x + rhs.x, lhs.y + rhs.y);
-}
-
-constexpr Vector2 operator-(Vector2 const& lhs, Vector2 const& rhs)
-{
-    return Vector2(lhs.x - rhs.x, lhs.y - rhs.y);
-}
-
-constexpr bool operator==(Vector2 const& lhs, Vector2 const& rhs)
-{
-    return lhs.x == rhs.x && lhs.y == rhs.y;
-}
 
 const size_t MAX_SIZE = 100;
 using TNode = ConstPair<Vector2, size_t>;
@@ -55,7 +18,7 @@ constexpr auto neighbours = [](auto const& set, auto const& v, auto setSize) {
         {
             if (i != 0 || j != 0)
             {
-                auto fresult = ConstSet::find(set, Vector2(v.x + i, v.y + j), setSize);
+                auto fresult = ConstSet::find<TSet, TNode>(set, Vector2(v.x + i, v.y + j), setSize);
                 if (fresult.first)
                 {
                     result[size++] = fresult.second.second;
