@@ -130,7 +130,7 @@ constexpr auto getValueByPosition = [](auto const& spiral, auto size, auto const
     return sum;
 };
 
-constexpr auto solve = [](auto const& input) {
+constexpr auto solve = [](const int input) {
     auto spiral = TSet({TNode(Vector2(0, 0), 1)});
     size_t size = 1;
     size_t radius = 1;
