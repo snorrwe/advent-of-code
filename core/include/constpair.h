@@ -20,8 +20,9 @@ public:
     T2 second;
 };
 
-std::ostream& operator<<(std::ostream& stream, ConstPair const& pair)
+template <typename T1, typename T2>
+std::ostream& operator<<(std::ostream& stream, ConstPair<T1, T2> const& pair)
 {
-    stream << "First:\n" << pair.first << "\nSecond:\n" << pair.second;
+    stream << "[Pair]\nFirst:\n" << pair.first << "\nSecond:\n" << pair.second;
     return stream;
 }
