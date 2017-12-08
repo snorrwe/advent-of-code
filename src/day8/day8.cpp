@@ -446,7 +446,7 @@ constexpr auto solve = [](const auto& input) {
 
 int main(int argc, char const* argv[])
 {
-    auto testResult = solve<TestDict>(TEST);
+    constexpr auto testResult = solve<TestDict>(TEST);
     std::cout << "Test result 1: " << std::get<0>(testResult) << std::endl;
     std::cout << "Test result 2: " << std::get<1>(testResult) << std::endl;
     constexpr auto result = solve<ActualDict>(ACTUAL);
