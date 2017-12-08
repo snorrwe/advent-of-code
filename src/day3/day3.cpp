@@ -29,7 +29,8 @@ constexpr auto neighbours = [](auto const& set, auto const& v, auto setSize) {
     return ConstPair<size_t, std::array<size_t, 8>>(size, result);
 };
 
-constexpr auto getValueByPosition = [](auto const& spiral, auto size, auto const& position) {
+constexpr auto getValueByPosition = [](auto const& spiral, const size_t size,
+                                       auto const& position) {
     size_t sum = 0;
     auto nPair = ::neighbours(spiral, position, size);
     auto& neighbours = nPair.second;
@@ -40,7 +41,7 @@ constexpr auto getValueByPosition = [](auto const& spiral, auto size, auto const
     return sum;
 };
 
-constexpr auto solve = [](const int input) {
+constexpr auto solve = [](const size_t input) {
     auto spiral = TSet({TNode(Vector2(0, 0), 1)});
     size_t size = 1;
     size_t radius = 1;
@@ -79,6 +80,6 @@ int main(int argc, char const* argv[])
 {
     constexpr size_t INPUT = 361527;
     constexpr auto result2 = solve(INPUT); // Expected: 363010
-    std::cout << std::get<0>(result2) << std::endl;
+    std::cout << "Result2: " << std::get<0>(result2) << std::endl;
     return 0;
 }
