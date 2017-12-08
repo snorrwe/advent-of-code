@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 
 template <typename T1, typename T2> class ConstPair
 {
@@ -18,3 +19,9 @@ public:
     T1 first;
     T2 second;
 };
+
+std::ostream& operator<<(std::ostream& stream, ConstPair const& pair)
+{
+    stream << "First:\n" << pair.first << "\nSecond:\n" << pair.second;
+    return stream;
+}
