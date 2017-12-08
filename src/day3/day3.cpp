@@ -1,3 +1,4 @@
+#include "../../core/include/constpair.h"
 #include <array>
 #include <iostream>
 #include <tuple>
@@ -39,25 +40,6 @@ constexpr bool operator==(Vector2 const& lhs, Vector2 const& rhs)
 {
     return lhs.x == rhs.x && lhs.y == rhs.y;
 }
-
-template <typename T1, typename T2> class ConstPair
-{
-public:
-    constexpr ConstPair() : first(), second() {}
-    constexpr ConstPair(ConstPair<T1, T2> const& pair) : first(pair.first), second(pair.second) {}
-    constexpr ConstPair(T1 const& first, T2 const& second) : first(first), second(second) {}
-    constexpr ConstPair(T1 const& first) : first(first) {}
-
-    constexpr ConstPair<T1, T2>& operator=(ConstPair<T1, T2> const& other)
-    {
-        first = other.first;
-        second = other.second;
-        return *this;
-    }
-
-    T1 first;
-    T2 second;
-};
 
 const size_t MAX_SIZE = 100;
 using TNode = ConstPair<Vector2, size_t>;
