@@ -1,9 +1,8 @@
 #pragma once
 #include <iostream>
 
-template <typename T1, typename T2> class ConstPair
+template <typename T1, typename T2> struct ConstPair
 {
-public:
     constexpr ConstPair() : first(), second() {}
     constexpr ConstPair(ConstPair<T1, T2> const& pair) : first(pair.first), second(pair.second) {}
     constexpr ConstPair(T1 const& first, T2 const& second) : first(first), second(second) {}
