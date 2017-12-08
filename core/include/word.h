@@ -3,7 +3,7 @@
 
 struct Word
 {
-    constexpr Word() : begin(), end() {}
+    constexpr Word() : begin(nullptr), end(nullptr) {}
     constexpr Word(const char* begin, const char* end) : begin(begin), end(end) {}
     constexpr Word(Word const& w) : begin(w.begin), end(w.end) {}
 
