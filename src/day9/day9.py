@@ -1,29 +1,31 @@
 #!/usr/bin/python
+import enum
+
+State = enum.Enum('State', 'default garbage ignore')
 
 
 def solve(input):
-    group_level = 0
     score = 0
-    cancel = False
-    garbage = False
     dumped_characters = 0
+    group_level = 0
+    state = State.default
     for i in input:
-        if cancel:
-            cancel = False
+        if state == State.ignore:
+            state = State.garbage
             continue
-        if not garbage:
+        if state == State.default:
             if i == '{':
                 group_level += 1
                 score += group_level
             elif i == '}':
                 group_level -= 1
             elif i == '<':
-                garbage = True
+                state = State.garbage
         else:
             if i == '>':
-                garbage = False
+                state = State.default
             elif i == '!':
-                cancel = True
+                state = State.ignore
             else:
                 dumped_characters += 1
     return (score, dumped_characters)
