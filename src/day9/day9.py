@@ -22,11 +22,12 @@ def solve(input):
             elif i == '<':
                 state = State.garbage
         else:
-            if i == '>':
-                state = State.default
-            elif i == '!':
-                state = State.ignore
-            else:
+            try:
+                state = {
+                    '>': State.default,
+                    '!': State.ignore
+                }[i]
+            except KeyError:
                 dumped_characters += 1
     return (score, dumped_characters)
 
