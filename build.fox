@@ -3,9 +3,16 @@ buildfox_required_version = 0.2
 # output folder
 out = build/${variation}
 
-cxxflags = -O3 -std=c++1z -fconstexpr-steps=500000 -stdlib=libc++
+cxxflags = -O3 -std=c++1z -fconstexpr-steps=500000 -stdlib=libc++ -Wall
 ldflags = 
 
-includedirs = lib/core/include src 
+includedirs = lib src 
 
-subfox src/**/*.fox 
+# Daily solutions
+
+subfox src/**/*.fox
+
+# Testing
+
+build objects($out/test/*): auto lib/testing/*.cpp
+build application($out/test): auto objects($out/test/*)

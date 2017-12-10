@@ -1,4 +1,4 @@
-#include "../../core/include/word.h"
+#include "core/word.h"
 #include <array>
 #include <iostream>
 

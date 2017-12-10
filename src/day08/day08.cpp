@@ -1,6 +1,6 @@
-#include "../../core/include/constdict.h"
-#include "../../core/include/constpair.h"
-#include "../../core/include/word.h"
+#include "core/constdict.h"
+#include "core/constpair.h"
+#include "core/word.h"
 #include "input.h"
 #include <array>
 #include <iostream>
