@@ -1186,7 +1186,7 @@ int main(int argc, char const* argv[])
 {
     constexpr auto test_result = solve<TTestWordCollection>(TEST, TEST_SIZE);
     std::cout << test_result << std::endl; // Expected: tknk
-    constexpr auto actual_result = solve<TActualWordCollection>(ACTUAL, ACTUAL_SIZE);
+    /*constexpr*/ auto actual_result = solve<TActualWordCollection>(ACTUAL, ACTUAL_SIZE);
     std::cout << actual_result << std::endl; // Expected: aapssr
     return 0;
 }
