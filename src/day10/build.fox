@@ -1,0 +1,4 @@
+
+fixed_out = ../../$out
+build objects($fixed_out/day10/day10): auto day10.cpp
+build application($fixed_out/day10/day10): auto objects($fixed_out/day10/day10)
