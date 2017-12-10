@@ -6,3 +6,5 @@ __pycache__
 .lbuild
 *.ninja*
 bin
+*.o
+*.d
