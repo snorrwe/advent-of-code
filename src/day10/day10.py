@@ -1,4 +1,6 @@
 #!/usr/bin/python
+import functools
+
 INPUT = "230,1,2,221,97,252,168,169,57,99,0,254,181,255,235,167"
 
 
@@ -25,6 +27,10 @@ def to_hex(n):
     return result
 
 
+def xor(items):
+    return functools.reduce(lambda x, y: x ^ y, items)
+
+
 def part2(input, size=256, rounds=64):
     input = [ord(c) for c in input] + [17, 31, 73, 47, 23]
     print(input)
@@ -36,12 +42,9 @@ def part2(input, size=256, rounds=64):
     for i in range(0, 256, 16):
         affected = items[i:i+16]
         assert(len(affected) == 16)
-        output = affected[0]
-        for x in affected[1:]:
-            output = output ^ x
+        output = xor(affected)
         result.append(output)
     result = "".join([to_hex(i) for i in result])
-    print(result)
     return result
 
 
