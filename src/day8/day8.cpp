@@ -108,7 +108,7 @@ int main(int argc, char const* argv[])
     constexpr auto testResult = solve<TestDict>(TEST);
     std::cout << "Test result 1: " << std::get<0>(testResult) << std::endl;
     std::cout << "Test result 2: " << std::get<1>(testResult) << std::endl;
-    constexpr auto result = solve<ActualDict>(ACTUAL);
+    auto result = solve<ActualDict>(ACTUAL);
     std::cout << "Actual result 1: " << std::get<0>(result) << std::endl; // Expected: 7296
     std::cout << "Actual result 2: " << std::get<1>(result) << std::endl; // Expected: 8186
     return 0;

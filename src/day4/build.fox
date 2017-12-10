@@ -1,0 +1,3 @@
+
+build objects(../../$out/day4/day4): auto day4.cpp
+build application(../../$out/day4/day4): auto objects($out/day4/*)

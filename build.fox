@@ -3,9 +3,8 @@ buildfox_required_version = 0.2
 # output folder
 out = bin/${variation}
 
-cxxflags = -O3 -std=c++1z -fconstexpr-steps=90000000
+cxxflags = -O3 -std=c++1z -fconstexpr-steps=500000
 
 includedirs = core/include src
 
-build objects($out/**/*): auto src/**/*.cpp
-build application($out/**/*): auto objects($out/**/*)
+subfox src/**/*.fox
