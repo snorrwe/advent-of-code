@@ -2,8 +2,9 @@ import os
 import re
 
 TEMPLATE = """
-build objects(../../$out/{name}/{name}): auto {name}.cpp
-build application(../../$out/{name}/{name}): auto objects($out/{name}/*)
+fixed_out = ../../$out
+build objects($fixed_out/{name}/{name}): auto {name}.cpp
+build application($fixed_out/{name}/{name}): auto objects($fixed_out/{name}/{name})
 """
 
 
