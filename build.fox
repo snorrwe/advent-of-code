@@ -3,7 +3,7 @@ buildfox_required_version = 0.2
 # output folder
 out = build/${variation}
 
-cxxflags = -O3 -std=c++1z -fconstexpr-steps=500000 -stdlib=libc++ -Wall
+cxxflags = -O3 -std=c++1z -fconstexpr-steps=5000000 -stdlib=libc++ -Wall
 ldflags = 
 
 includedirs = lib src 

@@ -94,7 +94,7 @@ constexpr auto solve = [](auto input) {
 
 int main(int argc, char const* argv[])
 {
-    const auto result = solve(INPUT);
+    /*constexpr*/ auto result = solve(INPUT);
     printf("%llu\n", result);
     return 0;
 }

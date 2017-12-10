@@ -16,7 +16,7 @@ constexpr int constPow(int base, unsigned power)
 struct Word
 {
     template <size_t MaxSize> using SplitResult = ConstPair<std::array<Word, MaxSize>, size_t>;
-    template <size_t MaxSize>
+    template <size_t MaxSize = 10>
     constexpr static SplitResult<MaxSize> split(const char* begin, char sep = ' ');
     constexpr static size_t size(Word const& word);
     friend std::ostream& operator<<(std::ostream& stream, Word const& word);
@@ -37,8 +37,8 @@ struct Word
     {
         if (begin == end) return 0;
         size_t cnt = 0;
-        int result = 0;
         auto i = end;
+        int result = 0;
         while (i-- != begin && *i >= '0' && *i <= '9')
         {
             result += (*i - '0') * constPow(10, cnt++);
@@ -86,7 +86,7 @@ constexpr ConstPair<std::array<Word, MaxSize>, size_t> Word::split(const char* b
 {
     auto result = std::array<Word, MaxSize>();
     size_t size = 0;
-    bool inWord = true;
+    bool inWord = *begin != sep;
     auto end = begin;
     while (*end != '\0' && *end != '\n')
     {
