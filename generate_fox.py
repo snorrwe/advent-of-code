@@ -1,4 +1,5 @@
 import os
+import subprocess
 import re
 
 FOX_TEMPLATE = """
@@ -20,6 +21,7 @@ def main():
     for root, dirs, files in os.walk('src'):
         for file in files:
             create_fox(root, file)
+    subprocess.call("bf toolchain=clang")
 
 if __name__ == '__main__':
     main()
