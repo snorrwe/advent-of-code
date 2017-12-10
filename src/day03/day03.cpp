@@ -1,6 +1,6 @@
-#include "../../core/include/constpair.h"
-#include "../../core/include/constset.h"
-#include "../../core/include/vector2.h"
+#include "core/constpair.h"
+#include "core/constset.h"
+#include "core/vector2.h"
 #include <array>
 #include <iostream>
 #include <tuple>
