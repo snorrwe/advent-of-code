@@ -8,7 +8,7 @@ build application($fixed_out/{name}/{name}): auto objects($fixed_out/{name}/{nam
 """
 
 
-def create_fox(file):
+def create_fox(root, file):
     m = re.match(r'(.*day\d+)\.cpp$', file)
     if(m):
         name = m.group(1)
@@ -19,7 +19,7 @@ def create_fox(file):
 def main():
     for root, dirs, files in os.walk('src'):
         for file in files:
-            create_fox(file)
+            create_fox(root, file)
 
 if __name__ == '__main__':
     main()
