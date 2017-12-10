@@ -56,7 +56,7 @@ constexpr auto solve = [](auto const& input) {
 
 int main(int argc, char const* argv[])
 {
-    constexpr auto result = solve(INPUT);
+    /*constexpr*/ auto result = solve(INPUT);
     std::cout << "Part1: " << std::get<0>(result) << std::endl; // Expected: 12505
     std::cout << "Part2: " << std::get<1>(result) << std::endl; // Expected: 6671
     return 0;
