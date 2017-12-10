@@ -1,4 +1,4 @@
 
 fixed_out = ../../$out
 build objects($fixed_out/day3/day3): auto day3.cpp
-build application($fixed_out/day3/day3): auto objects($fixed_out/day3/day3)
+build application(day3): auto objects($fixed_out/day3/day3)
