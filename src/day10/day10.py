@@ -33,7 +33,6 @@ def xor(items):
 
 def part2(input, size=256, rounds=64):
     input = [ord(c) for c in input] + [17, 31, 73, 47, 23]
-    print(input)
     items = [i for i in range(size)]
     skip, pos = (0, 0)
     for _ in range(rounds):
