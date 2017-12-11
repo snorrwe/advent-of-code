@@ -81,6 +81,45 @@ constexpr bool operator==(Word const& w1, Word const& w2)
     return true;
 }
 
+constexpr bool operator==(Word const& w1, const char* word)
+{
+    auto i1 = w1.begin;
+    auto i2 = word;
+    while (i1 != w1.end)
+    {
+        if (*i1 != *i2) return false;
+        if (*i2 == '\0') return false;
+        ++i1;
+        ++i2;
+    }
+    return *i2 == '\0';
+}
+
+constexpr bool operator==(const char* word, Word const& w1) { return w1 == word; }
+
+template <size_t size>
+constexpr bool operator==(std::array<char, size> const& chars, const char* word)
+{
+    auto wit = word;
+    for (int i = 0; i < size && *wit != '\0'; ++i)
+    {
+        if (chars[i] != *wit) return false;
+        ++wit;
+    }
+    return *wit == '\0';
+}
+
+template <size_t N> std::ostream& operator<<(std::ostream& stream, std::array<char, N> arr)
+{
+    stream << "Char array: [";
+    for (int i = 0; i < N; ++i)
+    {
+        stream << arr[i];
+    }
+    stream << "]";
+    return stream;
+}
+
 template <size_t MaxSize>
 constexpr ConstPair<std::array<Word, MaxSize>, size_t> Word::split(const char* begin, char sep)
 {

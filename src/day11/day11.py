@@ -4,7 +4,7 @@ Direction = enum.Enum('Direction', 'n ne se s sw nw')
 
 
 class Hex(object):
-    """Represent a hex on the field"""
+    """Represent a hex on the grid"""
 
     def __init__(self, q, r, s):
         assert(q + r + s == 0)
@@ -50,9 +50,9 @@ def solve(input):
     part2 = 0
     for direction in input.split(','):
         current = current.neighbour(Direction[direction])
-        dStart = current.distance(start)
-        if dStart > part2:
-            part2 = dStart
+        d_start = current.distance(start)
+        if d_start > part2:
+            part2 = d_start
     part1 = start.distance(current)
     return (part1, part2)
 
