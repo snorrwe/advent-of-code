@@ -18,7 +18,7 @@ def create_fox(root, file):
 
 
 def main():
-    for root, dirs, files in os.walk('src'):
+    for root, dirs, files in os.walk('advent_src'):
         for file in files:
             create_fox(root, file)
     subprocess.call("bf toolchain=clang")
