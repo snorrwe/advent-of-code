@@ -16,21 +16,14 @@ def cached(fn):
 def unhexify(hex):
     try:
         n = int(hex)
-        result = ''
-        for i in range(3, -1, -1):
-            part = n // pow(2, i)
-            n -= part * pow(2, i)
-            result += str(part)
-        return result
     except ValueError:
-        return {
-            'a': '1010',
-            'b': '1011',
-            'c': '1100',
-            'd': '1101',
-            'e': '1110',
-            'f': '1111',
-        }[hex]
+        n = ord(hex) - ord('a') + 10
+    result = ''
+    for i in range(3, -1, -1):
+        part = n // pow(2, i)
+        n -= part * pow(2, i)
+        result += str(part)
+    return result
 
 
 @cached
