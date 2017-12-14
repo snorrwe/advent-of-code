@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(name='Advent of Code',
       version='1.0',
@@ -8,5 +8,5 @@ setup(name='Advent of Code',
       author='Daniel Kiss',
       author_email='gward@python.net',
       url='https://github.com/snorrwe/advent-2017',
-      packages=['advent_src'],
+      packages=find_packages(),
       )

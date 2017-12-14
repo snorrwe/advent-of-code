@@ -1,5 +1,10 @@
 {
     "build_systems": [
+        {
+            "shell_cmd": "start env\\Scripts\\activate",
+            "working_dir": "${project_path}",
+            "name": "Open VEnv"
+        }
     ],
     "folders": [
         {

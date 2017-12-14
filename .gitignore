@@ -9,3 +9,5 @@ bin
 *.o
 *.o-*
 *.d
+env
+*.egg-info

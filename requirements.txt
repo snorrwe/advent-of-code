@@ -1,0 +1,7 @@
+-e git+https://github.com/snorrwe/advent-2017.git@40743e5e73191086fdcef90f80e8cbf4d53f110b#egg=Advent_of_Code
+attrs==17.3.0
+colorama==0.3.9
+pluggy==0.6.0
+py==1.5.2
+pytest==3.3.1
+six==1.11.0
