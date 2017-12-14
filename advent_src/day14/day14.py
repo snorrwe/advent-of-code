@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from .knothash import knothash
+from advent_src.day10.day10 import part2 as knothash
 
 
 def cached(fn):
