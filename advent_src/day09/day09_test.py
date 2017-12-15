@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import pytest
 import unittest
-from .day9 import solve as s
+from .day09 import solve as s
 
 
 def solve1(input):
