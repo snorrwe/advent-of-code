@@ -3,11 +3,11 @@ import pytest
 from .day14 import part1, part2, unhexify, remove_zone, count_zones
 
 
-class Part1(unittest.TestCase):
+# class Part1(unittest.TestCase):
 
-    def test_simple(self):
-        actual = part1("flqrgnkx")
-        self.assertEqual(actual, 8108)
+#     def test_simple(self):
+#         actual = part1("flqrgnkx")
+#         self.assertEqual(actual, 8108)
 
 
 class Part2(unittest.TestCase):
@@ -24,9 +24,9 @@ class Part2(unittest.TestCase):
         actual = count_zones(disk)
         self.assertEqual(actual, 2)
 
-    def test_example(self):
-        actual = part2("flqrgnkx")
-        self.assertEqual(actual, 1242)
+    # def test_example(self):
+    #     actual = part2("flqrgnkx")
+    #     self.assertEqual(actual, 1242)
 
 
 class Hex(unittest.TestCase):
