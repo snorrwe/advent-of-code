@@ -3,7 +3,7 @@
 #include <array>
 #include <iostream>
 
-template <typename TKey, typename TValue, size_t MaxSize = 1000> class ConstDict
+template <typename TKey, typename TValue, size_t MaxSize = 1024> class ConstDict
 {
 public:
     using Node = ConstPair<TKey, TValue>;
