@@ -6,11 +6,11 @@ out = build/${variation}
 cxxflags = -O3 -std=c++1z -fconstexpr-steps=5000000 -stdlib=libc++ -Wall
 ldflags = 
 
-includedirs = lib src 
+includedirs = lib advent_src 
 
 # Daily solutions
 
-subfox src/**/*.fox
+subfox advent_src/**/*.fox
 
 # Testing
 

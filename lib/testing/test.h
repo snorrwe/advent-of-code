@@ -1,5 +1,6 @@
 #pragma once
 #include <cassert>
+#include <exception>
 #include <functional>
 #include <iostream>
 
@@ -27,7 +28,7 @@ public:
         std::cout << "Test Fixture: [" << name << "]";
         if (this->success)
         {
-            std::cout << " Finished";
+            std::cout << " Finished with no errors!";
         }
         else
         {
@@ -46,11 +47,30 @@ private:
 bool test(const char* name, std::function<bool()> t)
 {
     Fixture f(name);
-    auto result = t();
-    if (!result)
+    try
+    {
+        auto result = t();
+        if (!result)
+        {
+            f.fail();
+        }
+        return result;
+    }
+    catch (int e)
     {
         f.fail();
+        std::cout << "Got an error code: " << e << '\n';
     }
-    return result;
+    catch (std::exception e)
+    {
+        f.fail();
+        std::cout << "Unexpected exception was thrown!\n" << e.what() << '\n';
+    }
+    catch (...)
+    {
+        f.fail();
+        std::cout << "Unexpected exception was thrown!\n";
+    }
+    return false;
 };
 }
