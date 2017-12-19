@@ -24,14 +24,14 @@ class Node(object):
 
     def next(self, last_pos):
         x, y = self.pos.x, self.pos.y
-        v = Vector(x - last_pos.x, y - last_pos.y)
-        next_vector = Vector(v.x + x, v.y + y)
+        velocity = Vector(x - last_pos.x, y - last_pos.y)
+        next_vector = Vector(velocity.x + x, velocity.y + y)
         if next_vector in self._neighbours:
             return self._neighbours[next_vector]
         for vec in self._neighbours:
             if vec != last_pos:
                 return self._neighbours[vec]
-        raise RuntimeError("No neighbours")
+        return None
 
     def add_neighbour(self, node):
         if node.pos not in self._neighbours:
@@ -42,10 +42,9 @@ class Node(object):
     def __str__(self):
         neighbours = "\n".join(["[%s, %s]" % (i.pos.x, i.pos.y)
                                 for i in self._neighbours.values()])
-        return "[{x}, {y}]\nNeighbours:\n{neighbours}"\
-            .format(x=self.pos.x,
-                    y=self.pos.y,
-                    neighbours=neighbours)
+        return "[{x}, {y}]\nNeighbours:\n{n}".format(x=self.pos.x,
+                                                     y=self.pos.y,
+                                                     n=neighbours)
 
 
 def create_map(diagram):
@@ -66,10 +65,9 @@ def create_map(diagram):
                 pos = Vector(x, y)
                 node = Node(x, y, v)
                 nodes[pos] = node
-                if Vector(pos.x - 1, pos.y) in nodes:
-                    nodes[Vector(pos.x - 1, pos.y)].add_neighbour(node)
-                if Vector(pos.x, pos.y - 1) in nodes:
-                    nodes[Vector(pos.x, pos.y - 1)].add_neighbour(node)
+                for v in [Vector(pos.x - 1, pos.y), Vector(pos.x, pos.y - 1)]:
+                    if v in nodes:
+                        nodes[v].add_neighbour(node)
     return (start, nodes)
 
 
@@ -79,15 +77,13 @@ def solve(diagram):
     last = Vector(start.pos.x, -1)
     part1 = ""
     part2 = 0
-    try:
-        while 1:
-            part2 += 1
-            current, last = current.next(last), current.pos
-            if current.value:
-                part1 += current.value
-    except RuntimeError:
-        pass
-    return (part1, part2)
+    while 1:
+        part2 += 1
+        current, last = current.next(last), current.pos
+        if not current:
+            return (part1, part2)
+        if current.value:
+            part1 += current.value
 
 
 def main():
