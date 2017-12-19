@@ -52,22 +52,21 @@ def create_map(diagram):
     start = None
     for x, char in enumerate(diagram[0]):
         if char != ' ':
-            pos = Vector(x, 0)
             start = Node(x, 0)
-            nodes[pos] = start
+            nodes[start.pos] = start
+            break
     for y, line in enumerate(diagram[1:]):
         y += 1
         for x, char in enumerate(line):
-            if char != ' ':
-                v = None
-                if char.isalpha():
-                    v = char
-                pos = Vector(x, y)
-                node = Node(x, y, v)
-                nodes[pos] = node
-                for v in [Vector(pos.x - 1, pos.y), Vector(pos.x, pos.y - 1)]:
-                    if v in nodes:
-                        nodes[v].add_neighbour(node)
+            if char == ' ':
+                continue
+            v = char if char.isalpha() else None
+            node = Node(x, y, v)
+            nodes[node.pos] = node
+            for v in [pos for pos in [Vector(node.pos.x - 1, node.pos.y),
+                                      Vector(node.pos.x, node.pos.y - 1)]
+                      if pos in nodes]:
+                nodes[v].add_neighbour(node)
     return (start, nodes)
 
 
@@ -88,7 +87,8 @@ def solve(diagram):
 
 def main():
     with open("input.txt", 'r') as f:
-        print(solve(f.read().split('\n')))
+        diagram = f.readlines()
+        print(solve(diagram))
 
 if __name__ == '__main__':
     main()
