@@ -1,3 +1,6 @@
+from math import sqrt
+
+
 def tokenize(inp):
     result = []
     for line in inp:
@@ -36,21 +39,29 @@ def run_program(tokens, registers):
 
 
 def part1(inp):
-    return None
     tokens = tokenize(inp)
     registers = {chr(ord('a') + i): 0 for i in range(8)}
     return run_program(tokens, registers)[0]
 
 
-def part2(inp):
-    tokens = tokenize(inp)
-    registers = {chr(ord('a') + i): 0 for i in range(8)}
-    registers['a'] = 1
-    return run_program(tokens, registers)[1]['h']
+def is_prime(n):
+    for e in range(2, int(sqrt(n))):
+        if n % e == 0:
+            return False
+    return True
+
+
+def part2():
+    h = 0
+    b = 107900
+    for i in range(b, b + 17000 + 1, 17):
+        if not is_prime(i):
+            h += 1
+    return h
 
 
 def solve(inp):
-    return(part1(inp), part2(inp))
+    return(part1(inp), part2())
 
 
 def main():

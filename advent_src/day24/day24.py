@@ -10,7 +10,7 @@ TEST_INPUT = """0/2
 9/10""".split('\n')
 
 ACTUAL_INPUT = """24/14
-30/24
+30/24 
 29/44
 47/37
 6/14
@@ -67,19 +67,21 @@ ACTUAL_INPUT = """24/14
 29/29
 45/50""".split('\n')
 
+
 def make_tree(inp):
     connections = defaultdict(list)
     nodes = set()
     for line in inp:
-      x,y = line.split('/')
-      x,y = int(x), int(y)
-      n = (line, x, y)
-      connections[x].append(n)
-      connections[y].append(n)
-      assert n not in nodes, "Oh noes"
-      nodes.add(n)
+        x, y = line.split('/')
+        x, y = int(x), int(y)
+        n = (line, x, y)
+        connections[x].append(n)
+        connections[y].append(n)
+        assert n not in nodes, "Oh noes"
+        nodes.add(n)
     return connections
-    
+
+
 def walk(tree, root, direction, visited=None):
     visited = visited if visited else set()
     visited.add(root)
@@ -93,15 +95,17 @@ def walk(tree, root, direction, visited=None):
         children['%s,%s,%s' % i] = result[1]
     value = sum(root[1:])
     part1 = value + (max([i for i in sub_values]) if sub_values else 0)
-    return (part1, {'value': value,'max': part1, 'children': children})
+    return (part1, {'value': value, 'max': part1, 'children': children})
+
 
 def part1(inp):
-  tree = make_tree(inp)
-  return walk(tree, (0,0,0), 0)
+    tree = make_tree(inp)
+    return walk(tree, (0, 0, 0), 0)
+
 
 def longest(tree, p=False):
     results = []
-    for k,v in tree['children'].items():
+    for k, v in tree['children'].items():
         r = longest(v)
         results.append((tree['value'] + r[0], r[1] + 1))
     if not results:
@@ -112,10 +116,11 @@ def longest(tree, p=False):
             m = i
     return m
 
+
 def part2(tree):
     result = longest(tree, 1)
     return result[0]
-  
+
 r_test, tree_1 = part1(TEST_INPUT)
 assert r_test == 31, "Doesn't pass part 1 test, result = [%s]" % r_test
 

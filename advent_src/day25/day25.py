@@ -1,21 +1,23 @@
 #-*-coding:utf8;-*-
 from collections import defaultdict
 
+
 class State(object):
 
     def __init__(self, one, zero):
         self.one = one
         self.zero = zero
-       
+
     def run(self, inp):
         if inp:
             return self.one
         return self.zero
-        
+
 TEST = {
-'A': State((0, -1, 'B'), (1, 1, 'B')),
-'B': State((1, 1, 'A'), (1, -1, 'A'))
+    'A': State((0, -1, 'B'), (1, 1, 'B')),
+    'B': State((1, 1, 'A'), (1, -1, 'A'))
 }
+
 
 def run(states, epochs, s='A'):
     pos = 0
