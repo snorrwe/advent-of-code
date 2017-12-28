@@ -1,6 +1,6 @@
 # Part2
 
-Pseudo code
+## Pseudo code
 ```
 b = 79;
 b *= 100;
@@ -38,4 +38,6 @@ do {
 } while(!g);
 ```
 
-h < 1455549530016
+## Solution
+
+What this code does is count non primes for every 17th number from `b = 107900` to `c = b + 17000`.
