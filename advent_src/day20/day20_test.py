@@ -28,11 +28,6 @@ class Part1(unittest.TestCase):
         actual = part1(TEST_INPUT_2)
         self.assertEqual(actual, 1)
 
-    def test_actual(self):
-        with open("input.txt", 'r') as f:
-            actual = part1(f.readlines())
-            self.assertEqual(actual, 243)
-
 
 class Part2(unittest.TestCase):
 
