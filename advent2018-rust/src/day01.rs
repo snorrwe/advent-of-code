@@ -8,7 +8,11 @@ pub fn run() {
     let buf_reader = BufReader::new(file);
     let numbers = buf_reader
         .lines()
-        .map(|line| line.unwrap().parse::<i32>().unwrap())
+        .map(|line| {
+            line.expect("Failed to read line")
+                .parse::<i32>()
+                .expect("Failed to parse line")
+        })
         .collect::<Vec<i32>>();
 
     let result = numbers.iter().sum::<i32>();
@@ -37,9 +41,16 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_part2() {
+    fn test_part2_1() {
         let numbers = vec![3, 3, 4, -2, -4];
         let result = part2(&numbers);
         assert_eq!(result, 10);
+    }
+
+    #[test]
+    fn test_part2_2() {
+        let numbers = vec![7, 7, -2, -7, -4];
+        let result = part2(&numbers);
+        assert_eq!(result, 14);
     }
 }
