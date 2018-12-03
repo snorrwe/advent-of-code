@@ -3,8 +3,8 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 
-pub fn run() {
-    let file = File::open("data/day2.txt").expect("Failed to open input file!");
+pub fn main() {
+    let file = File::open("input.txt").expect("Failed to open input file!");
     let buf_reader = BufReader::new(file);
     let lines: Vec<String> = buf_reader
         .lines()

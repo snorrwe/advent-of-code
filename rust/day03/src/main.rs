@@ -3,8 +3,8 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 
-pub fn run() {
-    let file = File::open("data/day3.txt").expect("Failed to open input file!");
+pub fn main() {
+    let file = File::open("input.txt").expect("Failed to open input file!");
     let buf_reader = BufReader::new(file);
     let claims: Vec<Claim> = buf_reader
         .lines()
@@ -46,10 +46,10 @@ fn build_map(claims: &Vec<Claim>) -> HashMap<[i32; 2], usize> {
             for j in 0..claim.dim[1] {
                 let [x, y] = claim.pos;
                 let pos = [x + i, y + j];
-                if !map.contains_key(&pos) {
-                    map.insert(pos, 1);
+                if let Some(x) = map.get_mut(&pos) {
+                    *x += 1;
                 } else {
-                    *map.get_mut(&pos).unwrap() += 1;
+                    map.insert(pos, 1);
                 }
             }
         }
