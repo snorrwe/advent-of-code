@@ -2,14 +2,15 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::io::Error;
 
-pub fn main() {
-    let file = File::open("input.txt").expect("Failed to open input file!");
+pub fn main() -> Result<(), Error> {
+    let file = File::open("input.txt")?;
     let buf_reader = BufReader::new(file);
     let claims: Vec<Claim> = buf_reader
         .lines()
-        .map(|line| line.expect("Failed to read line"))
-        .map(|line| Claim::parse(line.as_str()))
+        .filter_map(|line| line.ok())
+        .map(|line| Claim::parse(&line))
         .collect();
 
     let map = build_map(&claims);
@@ -17,6 +18,7 @@ pub fn main() {
     println!("Day3 part1: {}", part1);
     let part2 = part2(&claims, &map);
     println!("Day3 part2: {}", part2);
+    Ok(())
 }
 
 fn part1(map: &HashMap<[i32; 2], usize>) -> usize {
@@ -34,7 +36,7 @@ fn part2<'a>(claims: &'a Vec<Claim>, map: &HashMap<[i32; 2], usize>) -> &'a str 
                     }
                 }
             }
-            Some(claim.id.as_str())
+            Some(&claim.id)
         })
         .expect("Failed to find the answer")
 }
@@ -65,9 +67,9 @@ struct Claim {
 }
 
 impl Claim {
-    pub fn new(id: String, left: i32, top: i32, width: i32, height: i32) -> Claim {
+    pub fn new(id: &str, left: i32, top: i32, width: i32, height: i32) -> Claim {
         Claim {
-            id: id,
+            id: id.to_string(),
             pos: [left, top],
             dim: [width, height],
         }
@@ -92,7 +94,7 @@ impl Claim {
             .map(|s| s.parse::<i32>().expect("Expected dimension to be a number"))
             .collect::<Vec<i32>>();
 
-        Claim::new(id.to_string(), pos[0], pos[1], dim[0], dim[1])
+        Claim::new(id, pos[0], pos[1], dim[0], dim[1])
     }
 }
 
@@ -104,7 +106,7 @@ mod test {
     fn test_parse() {
         let result = Claim::parse("#123 @ 3,2: 5x4");
 
-        let expected = Claim::new("#123".to_string(), 3, 2, 5, 4);
+        let expected = Claim::new("#123", 3, 2, 5, 4);
         assert_eq!(result, expected);
     }
 
