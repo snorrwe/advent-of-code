@@ -40,8 +40,7 @@ fn part2<'a>(claims: &'a Vec<Claim>, map: &HashMap<[i32; 2], usize>) -> &'a str 
 }
 
 fn build_map(claims: &Vec<Claim>) -> HashMap<[i32; 2], usize> {
-    let mut map = HashMap::new();
-    map.reserve(20000);
+    let mut map = HashMap::with_capacity(350000);
     claims.iter().for_each(|claim| {
         for i in 0..claim.dim[0] {
             for j in 0..claim.dim[1] {
@@ -111,9 +110,12 @@ mod test {
 
     #[test]
     fn test_part1() {
-        let claims = ["#2 @ 3,1: 4x4", "#3 @ 5,5: 2x2", "#1 @ 1,3: 4x4"];
+        let claims = ["#2 @ 3,1: 4x4", "#3 @ 5,5: 2x2", "#1 @ 1,3: 4x4"]
+            .iter()
+            .map(|s| Claim::parse(s))
+            .collect();
 
-        let map = build_map(&claims.iter().map(|s| Claim::parse(s)).collect());
+        let map = build_map(&claims);
         let result = part1(&map);
 
         assert_eq!(result, 4);
