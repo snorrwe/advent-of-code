@@ -78,7 +78,7 @@ where
                 for i in 0..delta.num_minutes() {
                     *schedule
                         .entry(asleep + Duration::minutes(i))
-                        .or_insert_with(|| 0) += 1;
+                        .or_insert(0) += 1;
                 }
             }
             EventType::Asleep => {
