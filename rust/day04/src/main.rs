@@ -1,4 +1,7 @@
+#![feature(test)]
+
 extern crate chrono;
+
 use chrono::prelude::*;
 use chrono::Duration;
 use std::collections::BTreeMap;
@@ -16,21 +19,25 @@ fn main() -> Result<(), Error> {
         .filter_map(|line| Event::parse(&line))
         .collect();
 
-    events.sort_by_key(|event| event.time);
-    let result = part1(events.iter());
+    events.sort_unstable_by_key(|event| event.time);
+    let schedule = create_schedule(events.iter());
+    let result = part1(&schedule);
     println!("Day04 Part1: {}", result);
+    let result = part2(&schedule);
+    println!("Day04 Part2: {}", result);
     Ok(())
 }
 
-fn part1<'a, T>(events: T) -> u32
-where
-    T: Iterator<Item = &'a Event>,
-{
-    let schedule = create_schedule(events);
-    let most_asleep_guard = most_asleep_guard(&schedule).expect("Oops 1");
-    let most_slept = schedule
-        .get(&most_asleep_guard.0)
-        .expect("Oops 2")
+type Schedule = BTreeMap<u32, SleepSchedule>;
+type SleepSchedule = BTreeMap<chrono::NaiveTime, usize>;
+
+fn part1(schedule: &Schedule) -> u32 {
+    let most_asleep_guard = schedule
+        .iter()
+        .map(|(id, sleep)| (*id, sleep.len()))
+        .max_by_key(|(_, value)| *value)
+        .expect("Oops 1");
+    let most_slept = schedule[&most_asleep_guard.0]
         .iter()
         .max_by_key(|(_, &value)| value)
         .expect("Oops 3");
@@ -38,11 +45,13 @@ where
     most_asleep_guard.0 * most_slept.0.minute()
 }
 
-fn most_asleep_guard(schedule: &Schedule) -> Option<(u32, usize)> {
-    schedule
+fn part2(schedule: &Schedule) -> u32 {
+    let most_slept = schedule
         .iter()
-        .map(|(id, sleep)| (*id, sleep.len()))
-        .max_by_key(|(_, value)| *value)
+        .map(|(key, schedule)| (key, schedule.iter().max_by_key(|v| v.1).expect("Oops 55")))
+        .max_by_key(|(_, ref value)| *value.1)
+        .expect("Oops 3");
+    most_slept.0 * (most_slept.1).0.minute()
 }
 
 fn create_schedule<'a, T>(events: T) -> Schedule
@@ -75,8 +84,6 @@ where
     }
     schedule
 }
-
-type Schedule = BTreeMap<u32, BTreeMap<chrono::NaiveTime, usize>>;
 
 #[derive(Debug, Eq, PartialEq)]
 struct Event {
@@ -112,6 +119,10 @@ impl Event {
 
 #[cfg(test)]
 mod test {
+
+    extern crate test;
+
+    use self::test::Bencher;
     use super::*;
 
     #[test]
@@ -139,9 +150,41 @@ mod test {
         .filter_map(|line| Event::parse(line))
         .collect::<Vec<Event>>();
 
-        let result = part1(events.iter());
+        let schedule = create_schedule(events.iter());
+        let result = part1(&schedule);
 
         assert_eq!(result, 240);
+    }
+
+    #[test]
+    fn test_part2() {
+        let events = [
+            "[1518-11-01 00:00] Guard #10 begins shift",
+            "[1518-11-01 00:05] falls asleep",
+            "[1518-11-01 00:25] wakes up",
+            "[1518-11-01 00:30] falls asleep",
+            "[1518-11-01 00:55] wakes up",
+            "[1518-11-01 23:58] Guard #99 begins shift",
+            "[1518-11-02 00:40] falls asleep",
+            "[1518-11-02 00:50] wakes up",
+            "[1518-11-03 00:05] Guard #10 begins shift",
+            "[1518-11-03 00:24] falls asleep",
+            "[1518-11-03 00:29] wakes up",
+            "[1518-11-04 00:02] Guard #99 begins shift",
+            "[1518-11-04 00:36] falls asleep",
+            "[1518-11-04 00:46] wakes up",
+            "[1518-11-05 00:03] Guard #99 begins shift",
+            "[1518-11-05 00:45] falls asleep",
+            "[1518-11-05 00:55] wakes up",
+        ]
+        .iter()
+        .filter_map(|line| Event::parse(line))
+        .collect::<Vec<Event>>();
+
+        let schedule = create_schedule(events.iter());
+        let result = part2(&schedule);
+
+        assert_eq!(result, 4455);
     }
 
     #[test]
@@ -162,8 +205,14 @@ mod test {
         .collect::<Vec<Event>>();
         events.sort_by_key(|event| event.time);
 
-        let result = part1(events.iter());
+        let schedule = create_schedule(events.iter());
+        let result = part1(&schedule);
 
         assert_eq!(result, 10 * 55);
+    }
+
+    #[bench]
+    fn test_perf(bench: &mut Bencher) {
+        bench.iter(|| main());
     }
 }
