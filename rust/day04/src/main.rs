@@ -34,15 +34,20 @@ type SleepSchedule = BTreeMap<chrono::NaiveTime, usize>;
 fn part1(schedule: &Schedule) -> u32 {
     let most_asleep_guard = schedule
         .iter()
-        .map(|(id, sleep)| (*id, sleep.len()))
-        .max_by_key(|(_, value)| *value)
+        .max_by_key(|(_, value)| value.len())
+        .map(|(id, schedule)| {
+            (
+                id,
+                schedule
+                    .iter()
+                    .max_by_key(|(_, &value)| value)
+                    .map(|(time, _)| time.minute())
+                    .expect("Oops 3"),
+            )
+        })
         .expect("Oops 1");
-    let most_slept = schedule[&most_asleep_guard.0]
-        .iter()
-        .max_by_key(|(_, &value)| value)
-        .expect("Oops 3");
 
-    most_asleep_guard.0 * most_slept.0.minute()
+    most_asleep_guard.0 * most_asleep_guard.1
 }
 
 fn part2(schedule: &Schedule) -> u32 {
@@ -59,26 +64,25 @@ where
     T: Iterator<Item = &'a Event>,
 {
     let mut current: u32 = 0;
-    let mut asleep: Option<DateTime<Utc>> = None;
+    let mut asleep = Utc::now();
     let mut schedule = Schedule::new();
-    'b: for event in events {
+    for event in events {
         match event.event {
             EventType::Id(id) => {
                 current = id;
-                asleep = None;
             }
             EventType::Awake => {
-                let asleep = asleep.expect("Oops 4");
                 let delta: Duration = event.time - asleep;
                 let asleep = asleep.time();
                 let schedule = schedule.entry(current).or_insert_with(|| BTreeMap::new());
                 for i in 0..delta.num_minutes() {
-                    let i = asleep + Duration::minutes(i);
-                    *schedule.entry(i).or_insert_with(|| 0) += 1;
+                    *schedule
+                        .entry(asleep + Duration::minutes(i))
+                        .or_insert_with(|| 0) += 1;
                 }
             }
             EventType::Asleep => {
-                asleep = Some(event.time);
+                asleep = event.time;
             }
         }
     }
