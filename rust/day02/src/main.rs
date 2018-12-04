@@ -39,8 +39,7 @@ fn count(line: &str) -> (usize, usize) {
         if !count.contains_key(&chr) {
             count.insert(chr, 0);
         }
-        let c = count.get_mut(&chr).unwrap();
-        *c += 1;
+        *count.entry(chr).or_insert(0) += 1;
     }
     let mut result = [0, 0];
     count.values().for_each(|value| {

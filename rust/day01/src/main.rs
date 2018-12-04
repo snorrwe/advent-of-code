@@ -31,10 +31,11 @@ fn part2(numbers: &Vec<i32>) -> i32 {
         .find_map(|n| {
             current += n;
             if frequencies.contains(&current) {
-                return Some(current);
+                Some(current)
+            } else {
+                frequencies.insert(current);
+                None
             }
-            frequencies.insert(current);
-            None
         })
         .unwrap()
 }
