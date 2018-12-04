@@ -23,17 +23,20 @@ pub fn main() {
 }
 
 fn part2(numbers: &Vec<i32>) -> i32 {
-    let mut frequencies = HashSet::new();
+    let mut frequencies = HashSet::with_capacity(numbers.len());
     let mut current = 0;
-    loop {
-        for n in numbers.iter() {
+    numbers
+        .iter()
+        .cycle()
+        .find_map(|n| {
             current += n;
             if frequencies.contains(&current) {
-                return current;
+                return Some(current);
             }
             frequencies.insert(current);
-        }
-    }
+            None
+        })
+        .unwrap()
 }
 
 #[cfg(test)]

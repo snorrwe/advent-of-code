@@ -76,9 +76,7 @@ where
                 let asleep = asleep.time();
                 let schedule = schedule.entry(current).or_insert_with(|| BTreeMap::new());
                 for i in 0..delta.num_minutes() {
-                    *schedule
-                        .entry(asleep + Duration::minutes(i))
-                        .or_insert(0) += 1;
+                    *schedule.entry(asleep + Duration::minutes(i)).or_insert(0) += 1;
                 }
             }
             EventType::Asleep => {
