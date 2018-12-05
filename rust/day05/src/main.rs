@@ -40,18 +40,18 @@ fn tick(polymer: &mut String) {
         });
 
     if let Some(i) = to_remove {
-        polymer.remove(i);
+        polymer.remove(i + 1);
         polymer.remove(i);
     }
 }
 
 fn part2(polymer: String) -> String {
-    let set = polymer
+    let unique_chars = polymer
         .chars()
         .map(|c| c.to_ascii_lowercase())
         .collect::<HashSet<_>>();
     let mut shortest: String = polymer.clone();
-    for chr in set {
+    for chr in unique_chars {
         let mut polymer = polymer.clone();
         polymer.retain(|c| c.to_ascii_lowercase() != chr);
         let res = react(polymer);
