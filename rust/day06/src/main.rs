@@ -27,7 +27,7 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn run(points: &Vec<Point>, min_distance: i32) -> (Option<usize>, i32) {
+fn run(points: &Vec<Point>, min_distance: i32) -> (usize, i32) {
     let [x, y] = points.iter().next().unwrap();
     let edges = points.iter().fold([*x, *y, *x, *y], |mut dim, point| {
         for i in 0..2 {
@@ -65,9 +65,9 @@ fn run(points: &Vec<Point>, min_distance: i32) -> (Option<usize>, i32) {
                 *map.entry(*closest).or_insert(0) += 1;
             }
 
-            let total_d:i32 = distances.iter().map(|(_,d)|*d).sum();
+            let total_d: i32 = distances.iter().map(|(_, d)| *d).sum();
             if total_d < min_distance {
-                part2+=1;
+                part2 += 1;
             }
         }
     }
@@ -76,7 +76,9 @@ fn run(points: &Vec<Point>, min_distance: i32) -> (Option<usize>, i32) {
         .iter()
         .filter(|(pos, _)| !infinites.contains(*pos))
         .map(|(_, v)| *v)
-        .max();
+        .max()
+        .expect("Failed to find the maximum");
+
     (part1, part2)
 }
 
@@ -93,7 +95,6 @@ mod test {
         let input = vec![[1, 1], [1, 6], [8, 3], [3, 4], [5, 5], [8, 9]];
 
         let (part1, part2) = run(&input, 32);
-        let part1 = part1.expect("Failed to find the answer");
 
         assert_eq!(part1, 17);
         assert_eq!(part2, 16);
