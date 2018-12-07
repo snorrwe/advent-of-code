@@ -20,13 +20,14 @@ fn main() -> Result<(), Error> {
         .map(|x: Vec<_>| [x[0], x[1]])
         .collect();
 
-    let result = part1(&points);
-    println!("Part1: {:?}", result);
+    let (part1, part2) = run(&points, 10_000);
+    println!("Part1: {:?}", part1);
+    println!("Part2: {:?}", part2);
 
     Ok(())
 }
 
-fn part1(points: &Vec<Point>) -> Option<usize> {
+fn run(points: &Vec<Point>, min_distance: i32) -> (Option<usize>, i32) {
     let [x, y] = points.iter().next().unwrap();
     let edges = points.iter().fold([*x, *y, *x, *y], |mut dim, point| {
         for i in 0..2 {
@@ -46,6 +47,7 @@ fn part1(points: &Vec<Point>) -> Option<usize> {
     let offset = 1;
     let edge_x = [x1 - offset, x2 + offset];
     let edge_y = [y1 - offset, y2 + offset];
+    let mut part2 = 0;
     for x in edge_x[0]..=edge_x[1] {
         for y in edge_y[0]..=edge_y[1] {
             let pos = [x, y];
@@ -62,13 +64,20 @@ fn part1(points: &Vec<Point>) -> Option<usize> {
                 }
                 *map.entry(*closest).or_insert(0) += 1;
             }
+
+            let total_d:i32 = distances.iter().map(|(_,d)|*d).sum();
+            if total_d < min_distance {
+                part2+=1;
+            }
         }
     }
 
-    map.iter()
+    let part1 = map
+        .iter()
         .filter(|(pos, _)| !infinites.contains(*pos))
         .map(|(_, v)| *v)
-        .max()
+        .max();
+    (part1, part2)
 }
 
 fn manhattan(x: &Point, y: &Point) -> i32 {
@@ -80,12 +89,14 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_part1() {
+    fn test() {
         let input = vec![[1, 1], [1, 6], [8, 3], [3, 4], [5, 5], [8, 9]];
 
-        let result = part1(&input).expect("Failed to find the answer");
+        let (part1, part2) = run(&input, 32);
+        let part1 = part1.expect("Failed to find the answer");
 
-        assert_eq!(result, 17);
+        assert_eq!(part1, 17);
+        assert_eq!(part2, 16);
     }
 }
 
