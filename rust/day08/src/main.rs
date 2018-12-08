@@ -7,13 +7,12 @@ fn main() -> Result<(), Error> {
     let mut data = String::new();
     file.read_to_string(&mut data)?;
 
-    let data = data
+    let mut data_it = data
         .trim()
         .split(' ')
-        .filter_map(|c| c.parse::<usize>().ok())
-        .collect::<Vec<_>>();
+        .filter_map(|c| c.parse::<usize>().ok());
 
-    let tree = build_tree(&mut data.iter());
+    let tree = build_tree(&mut data_it);
 
     let result = part1(&tree);
     println!("Part1: {}", result);
@@ -23,27 +22,23 @@ fn main() -> Result<(), Error> {
 }
 
 fn part1(tree: &Tree) -> usize {
-    let mut result = 0;
-    result += tree.metadata.iter().sum::<usize>();
-    for child in tree.children.iter() {
-        result += part1(child);
-    }
-    result
+    tree.metadata.iter().sum::<usize>()
+        + tree
+            .children
+            .iter()
+            .map(|child| part1(child))
+            .sum::<usize>()
 }
 
 fn part2(tree: &Tree) -> usize {
-    if tree.children.len() == 0 {
+    if tree.children.is_empty() {
         tree.metadata.iter().sum()
     } else {
         tree.metadata
             .iter()
             .map(|i| {
                 let child = tree.children.get(i - 1);
-                if let Some(ref child) = child {
-                    part2(child)
-                } else {
-                    0
-                }
+                child.map_or(0, |child| part2(child))
             })
             .sum()
     }
@@ -51,24 +46,16 @@ fn part2(tree: &Tree) -> usize {
 
 fn build_tree<'a, I>(input: &mut I) -> Tree
 where
-    I: Iterator<Item = &'a usize>,
+    I: Iterator<Item = usize>,
 {
     let n_children = input.next().expect("Unexpected end of input1");
     let n_meta = input.next().expect("Unexpected end of input2");
-    let mut children = vec![];
-    for _ in 0..*n_children {
-        children.push(build_tree(input));
-    }
-    let mut meta = vec![];
-    for _ in 0..*n_meta {
-        let input = input.next();
-        meta.push(*input.expect("Unexpected end of input3"));
-    }
-    let result = Tree {
+    let children = (0..n_children).map(|_| build_tree(input)).collect();
+    let meta = (0..n_meta).filter_map(|_| input.next()).collect();
+    Tree {
         metadata: meta,
         children: children,
-    };
-    result
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -85,7 +72,7 @@ mod test {
     fn test_tree_building() {
         let input = vec![2, 3, 0, 3, 10, 11, 12, 1, 1, 0, 1, 99, 2, 1, 1, 2];
 
-        let result = build_tree(&mut input.iter());
+        let result = build_tree(&mut input.iter().map(|x| *x));
 
         let expected = Tree {
             metadata: vec![1, 1, 2],
