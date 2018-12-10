@@ -7,14 +7,12 @@
 #include <limits>
 #include <random>
 
-constexpr auto STAR_SIZE = 10;
+const auto STAR_SIZE = 10;
+const auto TRANSLATE_OFFSET = 200;
 
-struct Velocity : public mino::Point
+struct Velocity
 {
     mino::Point value;
-    using mino::Point::Point;
-    using mino::Point::operator+;
-    using mino::Point::operator+=;
 };
 
 class MapSystem final : public mino::ISystem
@@ -58,6 +56,11 @@ public:
         for (int i = 0; i < 10000; ++i)
         {
             update_cells();
+            if (count == 10000)
+            {
+                active = false;
+                logger->info("At 10k, stopping step forward with 'E'");
+            }
         }
         logger->info("MapSystem started successfully");
     }
@@ -97,20 +100,16 @@ private:
         auto miny = std::numeric_limits<int>::max();
         positions->iter([&](auto const& entity, auto& position) {
             const auto& velocity = *velocities->get_component(entity);
-            position += velocity;
+            position += velocity.value;
             if (position.x() < minx)
                 minx = position.x();
             if (position.y() < miny)
                 miny = position.y();
         });
         // translate
-        const auto translate = mino::Point{{-minx, -miny}};
+        const auto translate = mino::Point{{TRANSLATE_OFFSET - minx, TRANSLATE_OFFSET - miny}};
         positions->iter([&](auto const& entity, auto& position) { position += translate; });
-        if (++count == 10000)
-        {
-            active = false;
-            logger->info("At 10k, stopping step forward with 'E'");
-        }
+        ++count;
     }
 
     void init()
@@ -120,7 +119,7 @@ private:
             //
             auto entity = engine.add_entity();
             auto& velocity = velocities->add_component(entity.id);
-            velocity = Velocity{{vel.x(), vel.y()}};
+            velocity = Velocity{vel};
 
             auto components = render_system->create_renderable_entity(entity);
 
