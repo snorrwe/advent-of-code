@@ -8,7 +8,7 @@
 #include <random>
 
 const auto STAR_SIZE = 10;
-const auto TRANSLATE_OFFSET = 200;
+const auto TRANSLATE_OFFSET = mino::Point{{1920 / 2, 1080 / 2}};
 
 struct Velocity
 {
@@ -25,7 +25,7 @@ class MapSystem final : public mino::ISystem
     mino::Manager<Velocity>* velocities = nullptr;
     mino::Logger* logger = nullptr;
 
-    bool active = true;
+    bool active = false;
     size_t count = 0;
 
 public:
@@ -46,23 +46,11 @@ public:
         positions = engine.get_or_create_manager<mino::Manager<mino::PositionComponent>>();
         velocities = engine.get_or_create_manager<mino::Manager<Velocity>>();
 
-        assert(render_system);
-        assert(input_system);
-        assert(renders);
-        assert(positions);
-        assert(velocities);
-
-        init();
-        for (int i = 0; i < 10000; ++i)
-        {
-            update_cells();
-            if (count == 10000)
-            {
-                active = false;
-                logger->info("At 10k, stopping step forward with 'E'");
-            }
-        }
-        logger->info("MapSystem started successfully");
+        init_cells();
+        update_cells(10000);
+        logger->info("MapSystem started successfully\n"
+                     "At 10k steps, stopping step forward with 'E', backwards with 'W'. Exit by "
+                     "pressing 'Q'");
     }
 
     void update() override
@@ -77,8 +65,11 @@ public:
                 }
                 else if (event.key.keysym.sym == SDLK_e && !active)
                 {
-                    update_cells();
-                    logger->info("Tick {}", count);
+                    update_cells(1);
+                }
+                else if (event.key.keysym.sym == SDLK_w && !active)
+                {
+                    update_cells(-1);
                 }
                 else if (event.key.keysym.sym == SDLK_q)
                 {
@@ -89,45 +80,52 @@ public:
         }
         if (active)
         {
-            update_cells();
+            update_cells(1);
         }
     }
 
 private:
-    void update_cells()
+    void update_cells(int times)
     {
         auto minx = std::numeric_limits<int>::max();
         auto miny = std::numeric_limits<int>::max();
+        auto maxx = std::numeric_limits<int>::min();
+        auto maxy = std::numeric_limits<int>::min();
         positions->iter([&](auto const& entity, auto& position) {
             const auto& velocity = *velocities->get_component(entity);
-            position += velocity.value;
+            position += velocity.value * times;
+            if (position.x() > maxx)
+                maxx = position.x();
             if (position.x() < minx)
                 minx = position.x();
+            if (position.y() > maxy)
+                maxy = position.y();
             if (position.y() < miny)
                 miny = position.y();
         });
-        // translate
-        const auto translate = mino::Point{{TRANSLATE_OFFSET - minx, TRANSLATE_OFFSET - miny}};
+        const auto translate =
+            mino::Point{{-abs(maxx - minx) / 2 - minx, -abs(maxy - miny) / 2 - miny}} +
+            TRANSLATE_OFFSET;
         positions->iter([&](auto const& entity, auto& position) { position += translate; });
-        ++count;
+        count += times;
+        logger->info("Tick {}", count);
     }
 
-    void init()
+    void init_cells()
     {
         for (auto& [pos, vel] : DAY10_INPUT)
         {
-            //
             auto entity = engine.add_entity();
             auto& velocity = velocities->add_component(entity.id);
-            velocity = Velocity{vel};
+            velocity = Velocity{vel * STAR_SIZE};
 
             auto components = render_system->create_renderable_entity(entity);
 
-            components.position = pos;
+            components.position = pos * STAR_SIZE;
 
             components.render.texture = render_system->load_texture("data/star.png");
             components.render.source = {0, 0, 256, 256};
-            components.render.dest = {0, 0, 1, 1};
+            components.render.dest = {0, 0, STAR_SIZE, STAR_SIZE};
         }
     }
 };

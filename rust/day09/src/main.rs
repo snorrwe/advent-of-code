@@ -1,7 +1,7 @@
 extern crate pbr;
 
 use pbr::ProgressBar;
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap as Map, VecDeque};
 
 fn main() {
     play(464, 70_918);
@@ -12,7 +12,7 @@ fn play(n_players: usize, n_marbles: usize) -> usize {
     let mut board = VecDeque::with_capacity(n_marbles);
     board.push_back(0);
     let mut current_ind = 0;
-    let mut scores = BTreeMap::new();
+    let mut scores = Map::new();
     let mut pb = ProgressBar::new(n_marbles as u64);
     for marble in 1..=n_marbles {
         if marble % 23 == 0 {
@@ -33,8 +33,8 @@ fn play(n_players: usize, n_marbles: usize) -> usize {
         }
     }
     let result = scores.values().max().map_or(0, |x| *x);
-    pb.finish_print(&format!(
-        "\r\nDone\nn_players: {}\nn_marbles: {}\nresult: {}\r\n",
+    pb.finish_println(&format!(
+        "n_players: {}\nn_marbles: {}\nresult: {}\n",
         n_players, n_marbles, result
     ));
     result
