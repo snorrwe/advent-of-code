@@ -8,7 +8,7 @@
 #include <random>
 
 const auto STAR_SIZE = 10;
-const auto TRANSLATE_OFFSET = mino::Point{{1920 / 2, 1080 / 2}};
+const auto TRANSLATE_OFFSET = mino::Point{1920 / 2, 1080 / 2};
 
 struct Velocity
 {
@@ -47,8 +47,9 @@ public:
         init_cells();
         update_cells(10000);
         logger->info("MapSystem started successfully\n"
-                     "At 10k steps, stopping step forward with 'E', backwards with 'W'. Exit by "
-                     "pressing 'Q'");
+                     "Start / Stop time by pressing the Spacebar. "
+                     "Step forward by pressing 'E', backwards by pressing 'W'. "
+                     "Exit by pressing 'Q'");
     }
 
     void update() override
