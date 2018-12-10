@@ -20,7 +20,6 @@ class MapSystem final : public mino::ISystem
     mino::Minomaly& engine;
     mino::RenderSystem* render_system = nullptr;
     mino::InputSystem* input_system = nullptr;
-    mino::Manager<mino::RenderComponent>* renders = nullptr;
     mino::Manager<mino::PositionComponent>* positions = nullptr;
     mino::Manager<Velocity>* velocities = nullptr;
     mino::Logger* logger = nullptr;
@@ -42,7 +41,6 @@ public:
         render_system = engine.get_system<mino::RenderSystem>();
         input_system = engine.get_system<mino::InputSystem>();
 
-        renders = engine.get_or_create_manager<mino::Manager<mino::RenderComponent>>();
         positions = engine.get_or_create_manager<mino::Manager<mino::PositionComponent>>();
         velocities = engine.get_or_create_manager<mino::Manager<Velocity>>();
 
