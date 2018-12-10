@@ -1,5 +1,4 @@
 #pragma once
-#include "minomaly/minomaly.hpp"
 #include "minomaly/system/render_system.hpp"
 #include <array>
 #include <utility>
