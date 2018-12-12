@@ -12,7 +12,7 @@ fn main() -> Result<(), Error> {
         .filter_map(|line| line.ok())
         .collect::<Vec<_>>();
 
-    let (dependencies, tasks) = tasks(&lines.iter().map(|l| l.as_str()).collect());
+    let (dependencies, tasks) = parse_tasks(&lines.iter().map(|l| l.as_str()).collect());
 
     let part1 = run_tasks(dependencies.clone(), tasks.clone(), 1, 0);
     println!("Part1: {:?}", part1);
@@ -23,7 +23,7 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn tasks(lines: &Vec<&str>) -> (HashMap<char, Vec<char>>, HashSet<char>) {
+fn parse_tasks(lines: &Vec<&str>) -> (HashMap<char, Vec<char>>, HashSet<char>) {
     let mut dependencies = HashMap::new();
     let tasks = lines
         .iter()
@@ -60,27 +60,31 @@ impl Worker {
         }
     }
 
+    /// Forward the worker by 1 tick
+    /// If the time reaches 0 the worker removes itself as dependency
+    /// If the time left is 0 the worker will request new work
+    /// Returns the time left from the current task
     pub fn tick(
         &mut self,
         dependencies: &mut HashMap<char, Vec<char>>,
         available: &mut Vec<char>,
         offset: u8,
         done: &mut String,
-    ) {
+    ) -> u8 {
         if self.time != 0 {
             self.time -= 1;
             if self.time == 0 {
                 self.finish(dependencies, available, done);
             }
         }
-        if self.time == 0 && available.len() > 0 {
+        if self.time == 0 && !available.is_empty() {
             available.sort_unstable();
-            let current = available[0];
-            available.remove(0);
+            let current = available.remove(0);
             self.task = current;
             self.time = offset + current as u8 - 'A' as u8 + 1;
             dependencies.remove(&self.task);
         }
+        self.time
     }
 
     fn finish(
@@ -89,19 +93,29 @@ impl Worker {
         available: &mut Vec<char>,
         done: &mut String,
     ) {
-        dependencies.iter_mut().for_each(|(k, v)| {
-            let pos = v.iter().position(|c| *c == self.task);
-            if let Some(pos) = pos {
-                v.remove(pos);
-                if v.len() == 0 {
-                    available.push(*k);
+        dependencies
+            .iter_mut()
+            .filter_map(|(task, dependencies)| {
+                dependencies
+                    .iter()
+                    .position(|c| *c == self.task)
+                    .map_or(None, |pos| Some((task, dependencies, pos)))
+            })
+            .for_each(|(task, dependencies, pos)| {
+                dependencies.remove(pos);
+                if dependencies.is_empty() {
+                    available.push(*task);
                 }
-            }
-        });
+            });
         done.push(self.task);
     }
 }
 
+/// Run the tasks specified by the dependecy graph and task list
+/// Using `n` workers
+/// Returns the number of ticks required to finish all tasks and
+/// the order of the completion of the tasks
+/// Offset refers to the offset in time found in the specification
 fn run_tasks(
     mut dependencies: HashMap<char, Vec<char>>,
     tasks: HashSet<char>,
@@ -114,28 +128,23 @@ fn run_tasks(
         .map(|c| *c)
         .collect::<Vec<_>>();
 
-    let mut workers = vec![];
-    for _ in 0..n_workers {
-        workers.push(Worker::new());
-    }
+    let mut workers = (0..n_workers)
+        .map(|_| Worker::new())
+        .collect::<Vec<Worker>>();
 
     let mut result = 0;
     let mut order = String::new();
-    loop {
-        let mut done = 0;
-        workers.iter_mut().for_each(|worker| {
-            worker.tick(&mut dependencies, &mut available, offset, &mut order);
-            if worker.time == 0 {
-                done += 1;
-            }
-        });
-        if done == n_workers {
-            break;
-        }
+    let mut done = 0;
+    while done != n_workers {
+        done = workers
+            .iter_mut()
+            .map(|worker| worker.tick(&mut dependencies, &mut available, offset, &mut order))
+            .filter(|time_left| *time_left == 0)
+            .count();
         result += 1;
     }
 
-    (result, order)
+    (result - 1, order)
 }
 
 #[cfg(test)]
@@ -154,7 +163,7 @@ mod test {
             "Step F must be finished before step E can begin.",
         ];
 
-        let (dependencies, tasks) = tasks(&input.iter().map(|l| *l).collect());
+        let (dependencies, tasks) = parse_tasks(&input.iter().map(|l| *l).collect());
         let result = run_tasks(dependencies.clone(), tasks.clone(), 1, 0);
         assert_eq!(result.1, "CABDFE");
     }
@@ -171,7 +180,7 @@ mod test {
             "Step F must be finished before step E can begin.",
         ];
 
-        let (dependencies, tasks) = tasks(&input.iter().map(|l| *l).collect());
+        let (dependencies, tasks) = parse_tasks(&input.iter().map(|l| *l).collect());
         let result = run_tasks(dependencies, tasks, 2, 0);
         assert_eq!(result.0, 15);
         assert_eq!(result.1, "CABFDE");
