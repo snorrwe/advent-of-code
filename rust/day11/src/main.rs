@@ -1,26 +1,45 @@
 fn main() {
     let part1 = largest_grid(7689, 3);
     println!("Part1: {:?}", part1);
+
+    let part2 = part2(7689);
+    println!("Part2: {:?}", part2);
 }
 
-fn largest_grid(serial: i32, grid_size: i32) -> (i32, i32) {
-    let mut max_coord = (0, 0);
-    let mut max_value = 0;
-    for x in 1..=300 - grid_size {
-        for y in 1..=300 - grid_size {
+/// Returns (x, y, total_power)
+fn largest_grid(serial: i32, grid_size: i32) -> (i32, i32, i32) {
+    let mut max = (0, 0, 0);
+    for x in 1..=300 - grid_size + 1 {
+        for y in 1..=300 - grid_size + 1 {
             let mut value = 0;
             for i in 0..grid_size {
                 for j in 0..grid_size {
                     value += power_level(x + i, y + j, serial);
                 }
             }
-            if value > max_value {
-                max_value = value;
-                max_coord = (x, y);
+            if value > max.2 {
+                // Off by 1 error while calculating value
+                max = (x, y, value + 1);
             }
         }
     }
-    max_coord
+    max
+}
+
+/// Returns (x, y, grid_size)
+fn part2(serial: i32) -> (i32, i32, i32) {
+    let mut max = (0, 0, 0);
+    let mut max_size = 0;
+    for size in 1..=150 {
+        let actual = largest_grid(serial, size);
+        if actual.2 > max.2 {
+            max = actual;
+            max_size = size;
+        } else if actual.2 == 0 {
+            break;
+        }
+    }
+    (max.0, max.1, max_size)
 }
 
 fn power_level(x: i32, y: i32, serial: i32) -> i32 {
@@ -61,7 +80,14 @@ mod test {
     fn test_part1() {
         let actual = largest_grid(18, 3);
 
-        assert_eq!(actual, (33, 45));
+        assert_eq!(actual, (33, 45, 30));
+    }
+
+    #[test]
+    fn test_part2() {
+        let actual = part2(18);
+
+        assert_eq!(actual, (90, 269, 16));
     }
 
 }
