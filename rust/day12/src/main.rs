@@ -16,19 +16,28 @@ fn main() -> Result<(), Error> {
 
     let (state, rules) = parse::load_initial_state(lines);
 
-    let part1 = part1(state, rules);
+    let part1 = part1(state.clone(), &rules);
 
     println!("Part1: {}", part1);
+
+    let part2 = part2(state, &rules);
+
+    println!("Part2: {}", part2);
 
     Ok(())
 }
 
-fn part1(mut world: World, rules: Rules) -> i32 {
+fn part1(mut world: World, rules: &Rules) -> i32 {
     world = tick(world, rules, 20);
     world.iter().sum()
 }
 
-fn tick(mut world: World, rules: Rules, iterations: usize) -> World {
+fn part2(mut world: World, rules: &Rules) -> u64 {
+    world = tick(world, rules, 500);
+    world.iter().map(|i| *i as u64 - 500 + 50_000_000_000).sum()
+}
+
+fn tick(mut world: World, rules: &Rules, iterations: u64) -> World {
     for _tick in 0..iterations {
         world = world
             .iter()
@@ -86,7 +95,7 @@ mod test {
 
         let (state, rules) = parse::load_initial_state(input);
 
-        let actual = tick(state, rules, 1);
+        let actual = tick(state, &rules, 1);
 
         let expected = "...#...#....#.....#..#..#..#..........."
             .chars()
@@ -122,7 +131,7 @@ mod test {
 
         let (state, rules) = parse::load_initial_state(input);
 
-        let actual = part1(state, rules);
+        let actual = part1(state, &rules);
 
         assert_eq!(actual, 325);
     }
