@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
@@ -14,16 +14,38 @@ fn main() -> Result<(), Error> {
 
     let (map, trains) = build_track(lines);
 
-    let result = part1(map, trains, None);
+    let result = part1(map.clone(), trains.clone(), None);
     println!("Part1: {:?}", result);
+    let result = part2(map, trains, None);
+    println!("Part2: {:?}", result);
     Ok(())
 }
 
 fn part1(map: Map, mut trains: Trains, max_ticks: Option<usize>) -> Option<(usize, Point)> {
-    for i in 0..max_ticks.unwrap_or(2_000_000) {
-        let collision = tick(&map, &mut trains);
+    for i in 0..max_ticks.unwrap_or(2000) {
+        let collision = tick(&map, &mut trains, false);
         if let Some(collision) = collision {
-            return Some((i, collision));
+            return Some((i + 1, collision));
+        }
+    }
+    None
+}
+
+fn part2(map: Map, mut trains: Trains, max_ticks: Option<usize>) -> Option<(usize, Point)> {
+    for i in 0..max_ticks.unwrap_or(1_000_000) {
+        tick(&map, &mut trains, true);
+        debug_assert!(
+            trains.len() % 2 == 1,
+            format!(
+                "Length of trains must be an odd number, got: {}",
+                trains.len()
+            )
+        );
+        if trains.len() == 1 {
+            return Some((i + 1, trains[0].point));
+        } else if trains.is_empty() {
+            println!("All the trains were destroyed at tick {}", i);
+            return None;
         }
     }
     None
@@ -31,23 +53,32 @@ fn part1(map: Map, mut trains: Trains, max_ticks: Option<usize>) -> Option<(usiz
 
 /// Returns the position of the collision if any
 /// Updates the trains
-fn tick(map: &Map, trains: &mut Trains) -> Option<Point> {
-    let mut points = trains.iter().map(|t| t.point).collect::<HashSet<_>>();
+fn tick(map: &Map, trains: &mut Trains, _remove_colliding: bool) -> Option<Point> {
+    let mut points = trains
+        .iter()
+        .map(|t| (t.point, t.clone()))
+        .collect::<BTreeMap<_, _>>();
     trains.sort_unstable_by_key(|train| train.point);
     let mut result = None;
-    *trains = trains
-        .iter()
-        .map(|train| {
-            let prev = train.point;
-            let train = train.tick(&map);
-            if points.contains(&train.point) {
-                result = Some(train.point);
-            }
-            points.remove(&prev);
-            points.insert(train.point);
-            train
-        })
-        .collect();
+    let mut collisions = BTreeSet::new();
+    trains.iter().for_each(|train| {
+        if collisions.contains(&train.point) {
+            return;
+        }
+        points.remove(&train.point);
+        let train = train.tick(&map);
+        let colliding = points.contains_key(&train.point);
+        if colliding {
+            // Remove the existing train to destroy both
+            // But let later trains occupy the position
+            points.remove(&train.point);
+            result = Some(train.point);
+            collisions.insert(train.point);
+        } else {
+            points.insert(train.point, train.clone());
+        }
+    });
+    *trains = points.values().map(|t| t.clone()).collect();
     result
 }
 
@@ -293,10 +324,22 @@ mod test {
 
         let (i, result) = part1(map, trains, Some(15)).expect("Failed to find the collision");
 
-        assert_eq!(i, 13);
+        assert_eq!(i, 14);
         assert_eq!(result, Point::new(7, 3));
+    }
 
-        panic!();
+    #[test]
+    fn test_part2() {
+        let input = [
+            "/>-<\\  ", "|   |  ", "| /<+-\\", "| | | v", "\\>+</ |", "  |   ^", "  \\<->/",
+        ];
+
+        let (map, trains) = build_track(input.iter().map(|x| x.to_string()));
+
+        let (i, result) = part2(map, trains, Some(8)).expect("Failed to find the collision");
+
+        assert_eq!(i, 3);
+        assert_eq!(result, Point::new(6, 4));
     }
 
     #[test]
@@ -305,9 +348,9 @@ mod test {
 
         let (map, trains) = build_track(input.iter().map(|x| x.to_string()));
 
-        let (i, result) = part1(map, trains, Some(15)).expect("Failed to find the collision");
+        let (i, _result) = part1(map, trains, Some(15)).expect("Failed to find the collision");
 
-        assert_eq!(i, 1);
+        assert_eq!(i, 2);
     }
 }
 
