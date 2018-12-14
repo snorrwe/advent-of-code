@@ -1,11 +1,28 @@
-use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::io::Error;
-use std::mem;
-use std::ops::Add;
+
+mod point;
+mod train;
+mod turn;
+
+use self::point::Point;
+use self::train::Train;
+
+pub type Map = HashMap<Point, Track>;
+pub type Trains = Vec<Train>;
+
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
+pub enum Track {
+    NS,
+    EW,
+    NE,
+    NW,
+    NESW,
+}
 
 fn main() -> Result<(), Error> {
     let file = File::open("input.txt")?;
@@ -80,144 +97,6 @@ fn tick(map: &Map, trains: &mut Trains, _remove_colliding: bool) -> Option<Point
     });
     *trains = points.values().map(|t| t.clone()).collect();
     result
-}
-
-type Map = HashMap<Point, Track>;
-type Trains = Vec<Train>;
-
-#[repr(u8)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
-enum Turn {
-    Left = 0,
-    _Straight = 1,
-    Right = 2,
-}
-
-impl Turn {
-    pub fn from_u8(n: u8) -> Option<Turn> {
-        if n <= 2 {
-            Some(unsafe { mem::transmute(n) })
-        } else {
-            None
-        }
-    }
-
-    pub fn as_u8(&self) -> u8 {
-        unsafe { mem::transmute(*self) }
-    }
-}
-
-#[repr(u8)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
-enum Track {
-    NS,
-    EW,
-    NE,
-    NW,
-    NESW,
-}
-
-#[derive(Debug, Clone, Eq, Ord)]
-struct Train {
-    pub point: Point,
-    pub facing: Point,
-    pub turn: Turn,
-}
-
-impl PartialEq for Train {
-    fn eq(&self, other: &Train) -> bool {
-        self.point == other.point
-    }
-}
-
-impl PartialOrd for Train {
-    fn partial_cmp(&self, other: &Train) -> Option<Ordering> {
-        Some(self.point.cmp(&other.point))
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Ord, Hash, Copy)]
-struct Point {
-    pub x: i32,
-    pub y: i32,
-}
-
-impl Point {
-    pub fn new(x: i32, y: i32) -> Self {
-        Self { x: x, y: y }
-    }
-
-    pub fn turn(&self, turn: Turn) -> Self {
-        match turn {
-            Turn::Right => Self::new(-self.y, self.x),
-            Turn::Left => Self::new(self.y, -self.x),
-            Turn::_Straight => self.clone(),
-        }
-    }
-}
-
-impl PartialOrd for Point {
-    fn partial_cmp(&self, other: &Point) -> Option<Ordering> {
-        Some(self.y.cmp(&other.y).then(self.x.cmp(&other.x)))
-    }
-}
-
-impl Add for Point {
-    type Output = Point;
-
-    fn add(self, other: Point) -> Self::Output {
-        Point::new(self.x + other.x, self.y + other.y)
-    }
-}
-
-impl Train {
-    pub fn new(x: i32, y: i32, facing: Point) -> Train {
-        Train {
-            point: Point::new(x, y),
-            facing: facing,
-            turn: Turn::Left,
-        }
-    }
-
-    pub fn tick(&self, map: &Map) -> Self {
-        let mut result = self.clone();
-        let next = self.point + self.facing;
-        result.point = next;
-        let node = map
-            .get(&result.point)
-            .expect(&format!("Point was not found on the map {:?}", result));
-        match node {
-            Track::NESW => {
-                result.facing = result.facing.turn(result.turn);
-                let mut x = result.turn.as_u8();
-                x += 1;
-                x %= 3;
-                result.turn = Turn::from_u8(x).expect(&format!("Unexpected value for turn {}", x));
-            }
-            Track::NE => match result.facing {
-                Point { x: -1, y: 0 } | Point { x: 1, y: 0 } => {
-                    result.facing = result.facing.turn(Turn::Left)
-                }
-                Point { x: 0, y: -1 } | Point { x: 0, y: 1 } => {
-                    result.facing = result.facing.turn(Turn::Right)
-                }
-                _ => unimplemented!(),
-            },
-            Track::NW => match result.facing {
-                Point { x: 1, y: 0 } | Point { x: -1, y: 0 } => {
-                    result.facing = result.facing.turn(Turn::Right)
-                }
-                Point { x: 0, y: 1 } | Point { x: 0, y: -1 } => {
-                    result.facing = result.facing.turn(Turn::Left)
-                }
-                _ => unimplemented!(),
-            },
-            _ => {
-                // Doesnt require turning
-            }
-        }
-        result
-    }
 }
 
 fn build_track<I>(lines: I) -> (Map, Trains)
