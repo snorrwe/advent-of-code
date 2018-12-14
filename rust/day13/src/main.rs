@@ -21,26 +21,38 @@ fn main() -> Result<(), Error> {
 
 fn part1(map: Map, mut trains: Trains, max_ticks: Option<usize>) -> Option<(usize, Point)> {
     for i in 0..max_ticks.unwrap_or(2_000_000) {
-        let new_trains = tick(&map, &mut trains);
-        let mut points = HashSet::new();
-        for train in new_trains.iter() {
-            if points.contains(&train.point) {
-                return Some((i, train.point));
-            }
-            points.insert(train.point);
+        let collision = tick(&map, &mut trains);
+        if let Some(collision) = collision {
+            return Some((i, collision));
         }
-        trains = new_trains.iter().map(|x| x.clone()).collect();
     }
     None
 }
 
-/// Returns the new positions of trains
-fn tick(map: &Map, trains: &Trains) -> Vec<Train> {
-    trains.iter().map(|train| train.tick(&map)).collect()
+/// Returns the position of the collision if any
+/// Updates the trains
+fn tick(map: &Map, trains: &mut Trains) -> Option<Point> {
+    let mut points = trains.iter().map(|t| t.point).collect::<HashSet<_>>();
+    trains.sort_unstable_by_key(|train| train.point);
+    let mut result = None;
+    *trains = trains
+        .iter()
+        .map(|train| {
+            let prev = train.point;
+            let train = train.tick(&map);
+            if points.contains(&train.point) {
+                result = Some(train.point);
+            }
+            points.remove(&prev);
+            points.insert(train.point);
+            train
+        })
+        .collect();
+    result
 }
 
 type Map = HashMap<Point, Track>;
-type Trains = BTreeSet<Train>;
+type Trains = Vec<Train>;
 
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
@@ -197,19 +209,19 @@ where
                         '-' => Track::EW,
                         '+' => Track::NESW,
                         '>' => {
-                            trains.insert(Train::new(x, y, Point::new(1, 0)));
+                            trains.push(Train::new(x, y, Point::new(1, 0)));
                             Track::EW
                         }
                         '<' => {
-                            trains.insert(Train::new(x, y, Point::new(-1, 0)));
+                            trains.push(Train::new(x, y, Point::new(-1, 0)));
                             Track::EW
                         }
                         '^' => {
-                            trains.insert(Train::new(x, y, Point::new(0, -1)));
+                            trains.push(Train::new(x, y, Point::new(0, -1)));
                             Track::NS
                         }
                         'v' => {
-                            trains.insert(Train::new(x, y, Point::new(0, 1)));
+                            trains.push(Train::new(x, y, Point::new(0, 1)));
                             Track::NS
                         }
                         ' ' => return None,
@@ -267,25 +279,6 @@ mod test {
     }
 
     #[test]
-    fn test_move() {
-        let input = ["/->\\", "^"];
-        let expected_trains = [
-            Train::new(3, 0, Point::new(0, 1)),
-            Train::new(0, 0, Point::new(1, 0)),
-        ]
-        .iter()
-        .map(|x| x.clone())
-        .collect::<Trains>();
-
-        let (map, mut trains) = build_track(input.iter().map(|x| x.to_string()));
-
-        let result = tick(&map, &mut trains);
-        let result = result.iter().map(|x| x.clone()).collect::<Trains>();
-
-        assert_eq!(result, expected_trains);
-    }
-
-    #[test]
     fn test_part1() {
         let input = [
             "/->-\\        ",
@@ -302,6 +295,8 @@ mod test {
 
         assert_eq!(i, 13);
         assert_eq!(result, Point::new(7, 3));
+
+        panic!();
     }
 
     #[test]
