@@ -7,9 +7,9 @@
 
 ## Building
 
-- Copy `minomaly` into `lib/`
-
 ```
+git submodule init
+git submodule update
 cmake -H. -Bbuild
 cmake --build build # repeat this to rebuild
 ```
