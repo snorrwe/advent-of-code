@@ -1,4 +1,4 @@
-use super::pathfinder::{path_to, Path};
+use super::pathfinder::find_best_step;
 use super::point::Point;
 use super::{Creatures, OccupiedPoints};
 
@@ -27,35 +27,41 @@ impl Creature {
         creatures: &mut Creatures,
         occupied_points: &mut OccupiedPoints,
     ) -> bool {
-        let closest_enemy = self.closest_enemy(creatures, occupied_points);
-        if closest_enemy.is_none() {
-            // check if the reason of not moving is that there are no enemies left
-            return creatures
-                .iter()
-                .any(|creature| creature.race != self.race && creature.hp > 0);
+        if !creatures.iter().any(|c| c.race != self.race && c.hp > 0) {
+            return false;
         }
-
-        let (closest_enemy, path) = closest_enemy.unwrap();
-        if self.position.dist(&closest_enemy.position) > 1 {
-            let step = path.back().unwrap();
-            occupied_points.remove(&self.position);
-            occupied_points.insert(*step);
-            self.position = *step;
-        }
-        if self.position.dist(&closest_enemy.position) == 1 {
-            // is inrange
-            closest_enemy.dmg(occupied_points, self.ap);
-        }
+        self.step(occupied_points);
+        self.attack(creatures, occupied_points);
         true
     }
 
-    pub fn closest_enemy<'a>(
-        &self,
-        creatures: &'a mut Creatures,
-        occupied_points: &OccupiedPoints,
-    ) -> Option<(&'a mut Creature, Path)> {
-        let creatures = creatures.iter_mut().filter(|c| c.race != self.race);
-        find_closest_creature(&self.position, creatures, occupied_points)
+    pub fn step(&mut self, occupied_points: &mut OccupiedPoints) {
+        let step = find_best_step(self, occupied_points);
+        if let Some(step) = step {
+            occupied_points.remove(&self.position);
+            self.position = step;
+            occupied_points.insert(self.position, Some(self.race));
+        }
+    }
+
+    pub fn attack(&self, creatures: &mut Creatures, occupied_points: &mut OccupiedPoints) {
+        let target = creatures
+            .iter_mut()
+            .filter(|c| c.race == self.enemy_race() && self.inrange(c))
+            .fold(None, |result, c| {
+                if better_target(&result, c) {
+                    Some(c)
+                } else {
+                    result
+                }
+            });
+        if let Some(target) = target {
+            target.dmg(occupied_points, self.ap);
+        }
+    }
+
+    fn inrange(&self, other: &Creature) -> bool {
+        self.position.dist(&other.position) <= 1
     }
 
     pub fn dmg(&mut self, occupied_points: &mut OccupiedPoints, dmg: i32) {
@@ -64,48 +70,19 @@ impl Creature {
             occupied_points.remove(&self.position);
         }
     }
+
+    pub fn enemy_race(&self) -> Race {
+        match self.race {
+            Race::Elf => Race::Goblin,
+            Race::Goblin => Race::Elf,
+        }
+    }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Copy)]
 pub enum Race {
     Elf,
     Goblin,
-}
-
-fn find_closest_creature<'a, I>(
-    point: &Point,
-    creatures: I,
-    occupied_points: &OccupiedPoints,
-) -> Option<(&'a mut Creature, Path)>
-where
-    I: Iterator<Item = &'a mut Creature>,
-{
-    let mut min = 10_000_000;
-    let mut result_path = Path::new();
-    let closest = creatures.fold(None, |result, creature| {
-        let path = path_to(&creature.position, point, occupied_points);
-        if let Some(path) = path {
-            let d = path.len();
-            if d < min
-                || (d == min
-                    && d > 0
-                    && result_path
-                        .front()
-                        .map_or(false, |p| *path.front().unwrap() < *p))
-                || (d <= 1 && better_target(&result, creature))
-            {
-                min = d;
-                result_path = path;
-                Some(creature)
-            } else {
-                result
-            }
-        } else {
-            result
-        }
-    });
-
-    closest.map_or(None, |closest| Some((closest, result_path)))
 }
 
 fn better_target(base: &Option<&mut Creature>, new: &Creature) -> bool {
@@ -124,87 +101,43 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_closeset_enemy() {
-        let mut creatures = vec![
-            Creature::new(2, 1, Race::Goblin),
-            Creature::new(0, 2, Race::Elf),
-            Creature::new(2, 2, Race::Goblin),
-        ];
-
-        let mut occupied_points = [Point::new(2, 1), Point::new(0, 2), Point::new(2, 2)]
-            .iter()
-            .map(|x| *x)
-            .collect();
-
-        let closest = creatures
-            .get_mut(1)
-            .unwrap()
-            .clone()
-            .closest_enemy(&mut creatures, &mut occupied_points)
-            .expect("Failed to find the closest enemy");
-        assert_eq!(*closest.0, Creature::new(2, 2, Race::Goblin),);
-
-        let closest = creatures
-            .get_mut(0)
-            .unwrap()
-            .clone()
-            .closest_enemy(&mut creatures, &mut occupied_points)
-            .expect("Failed to find the closest enemy");
-        assert_eq!(*closest.0, Creature::new(0, 2, Race::Elf),);
-    }
-
-    #[test]
     fn test_chooses_correct_step() {
-        let mut creatures = vec![
-            Creature::new(2, 1, Race::Goblin),
-            Creature::new(0, 2, Race::Elf),
-            Creature::new(2, 2, Race::Goblin),
-        ];
+        let mut creature = Creature::new(0, 2, Race::Elf);
 
-        let mut occupied_points = [Point::new(2, 1), Point::new(0, 2), Point::new(2, 2)]
-            .iter()
-            .map(|x| *x)
-            .collect();
+        let mut occupied_points = [
+            (Point::new(2, 1), Some(Race::Goblin)),
+            (Point::new(2, 1), Some(Race::Elf)),
+            (Point::new(2, 2), Some(Race::Goblin)),
+        ]
+        .iter()
+        .cloned()
+        .collect();
 
-        let (_closest, path) = creatures
-            .get_mut(1)
-            .unwrap()
-            .clone()
-            .closest_enemy(&mut creatures, &mut occupied_points)
-            .expect("Failed to find the closest enemy");
+        creature.step(&mut occupied_points);
 
-        assert_eq!(*path.front().unwrap(), Point::new(1, 2));
+        assert_eq!(creature.position, Point::new(1, 2));
     }
 
     #[test]
     fn test_chooses_correct_step_2() {
-        let mut creatures = vec![
-            Creature::new(3, 1, Race::Elf),
-            Creature::new(6, 1, Race::Goblin),
-            Creature::new(1, 2, Race::Goblin),
-        ];
+        let mut creature = Creature::new(3, 1, Race::Elf);
 
         let mut occupied_points = [
-            Point::new(3, 1),
-            Point::new(6, 1),
-            Point::new(1, 3),
+            (Point::new(3, 1), Some(Race::Elf)),
+            (Point::new(6, 1), Some(Race::Goblin)),
+            (Point::new(1, 3), Some(Race::Goblin)),
             // Walls
-            Point::new(2, 3),
-            Point::new(3, 2),
-            Point::new(2, 2),
+            (Point::new(3, 2), None),
+            (Point::new(2, 3), None),
+            (Point::new(2, 2), None),
         ]
         .iter()
-        .map(|x| *x)
+        .cloned()
         .collect();
 
-        let (_closest, path) = creatures
-            .get_mut(0)
-            .unwrap()
-            .clone()
-            .closest_enemy(&mut creatures, &mut occupied_points)
-            .expect("Failed to find the closest enemy");
+        creature.step(&mut occupied_points);
 
-        assert_eq!(*path.back().unwrap(), Point::new(2, 1));
+        // assert_eq!(creature.position, Point::new(2, 1));
     }
 }
 

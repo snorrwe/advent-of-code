@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
@@ -10,7 +10,7 @@ mod point;
 use self::creature::*;
 use self::point::*;
 
-pub type OccupiedPoints = BTreeSet<Point>;
+pub type OccupiedPoints = BTreeMap<Point, Option<Race>>;
 pub type Creatures = Vec<Creature>;
 
 fn main() -> Result<(), Error> {
@@ -92,24 +92,26 @@ where
     let mut add_creature = |x: usize, y: usize, race: Race| {
         let x = x as i32;
         let y = y as i32;
-        creatures.push(Creature::new(x, y, race))
+        let creature = Creature::new(x, y, race);
+        creatures.push(creature);
     };
-    let point = |x: usize, y: usize| Some(Point::new(x as i32, y as i32));
+    let point = |x: usize, y: usize, value| Some((Point::new(x as i32, y as i32), value));
     let map = lines
         .enumerate()
         .map(|(y, line)| {
             line.chars()
                 .enumerate()
                 .filter_map(|(x, c)| match c {
-                    '#' => point(x, y),
+                    '#' => point(x, y, None),
                     'E' => {
                         add_creature(x, y, Race::Elf);
-                        point(x, y)
+                        point(x, y, Some(Race::Elf))
                     }
                     'G' => {
                         add_creature(x, y, Race::Goblin);
-                        point(x, y)
+                        point(x, y, Some(Race::Goblin))
                     }
+
                     _ => None,
                 })
                 .collect::<Vec<_>>()
@@ -129,12 +131,12 @@ mod test {
         let input = ["##", "#.G", "E.G"];
 
         let exp_map = [
-            Point::new(0, 0),
-            Point::new(1, 0),
-            Point::new(0, 1),
-            Point::new(2, 1),
-            Point::new(0, 2),
-            Point::new(2, 2),
+            (Point::new(0, 0), None),
+            (Point::new(1, 0), None),
+            (Point::new(0, 1), None),
+            (Point::new(2, 1), Some(Race::Goblin)),
+            (Point::new(0, 2), Some(Race::Elf)),
+            (Point::new(2, 2), Some(Race::Goblin)),
         ]
         .iter()
         .cloned()

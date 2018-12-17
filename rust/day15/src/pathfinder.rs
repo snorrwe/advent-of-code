@@ -1,9 +1,8 @@
+use super::creature::{Creature, Race};
 use super::point::Point;
 use super::OccupiedPoints;
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
-
-pub type Path = VecDeque<Point>;
+use std::collections::HashSet;
 
 #[derive(Debug, Ord, Eq, Clone)]
 pub struct Node {
@@ -30,137 +29,108 @@ impl PartialOrd for Node {
     }
 }
 
-/// Implements A*
+/// Implements Breadth first search
 /// `occupied_points` are walls and other unpassable obstacles
-pub fn path_to(from: &Point, to: &Point, occupied_points: &OccupiedPoints) -> Option<Path> {
-    let mut closed = HashSet::with_capacity(100);
-    let mut came_from = HashMap::with_capacity(100);
-    let mut open = BinaryHeap::with_capacity(100);
-    open.push(Node {
-        point: *from,
-        gcost: 0,
-        hcost: from.dist(to),
-    });
+pub fn find_best_step(from: &Creature, occupied_points: &OccupiedPoints) -> Option<Point> {
+    if adjacent_enemy(&from.position, &from.enemy_race(), occupied_points).is_some() {
+        return None;
+    }
+    let first_moves = from
+        .position
+        .neighbours()
+        .iter()
+        .cloned()
+        .filter(|p| !occupied_points.contains_key(p))
+        .collect::<Vec<_>>();
 
-    let mut tries = 0;
-    while !open.is_empty() && tries <= 1000 {
-        tries += 1;
-        let current = open.pop().unwrap();
-        if current.point.dist(to) == 1 {
-            return Some(reconstruct_path(came_from, current.point));
+    let mut best_moves = vec![];
+
+    for point in first_moves.iter() {
+        if adjacent_enemy(point, &from.enemy_race(), occupied_points).is_some() {
+            best_moves.push((*point, 1, *point));
         }
 
-        closed.insert(current.point);
-        current.point.neighbours().iter().for_each(|neighbour| {
-            if closed.contains(&neighbour) || occupied_points.contains(&neighbour) {
-                return;
-            }
-            let gcost = current.gcost + 1;
-            let existing = open.iter().find_map(|node| {
-                if node.point == *neighbour {
-                    Some(node)
-                } else {
-                    None
+        let mut seen = HashSet::new();
+        seen.insert(from.position);
+        seen.insert(*point);
+
+        let mut stack = point
+            .neighbours()
+            .iter()
+            .cloned()
+            .filter(|p| !occupied_points.contains_key(p))
+            .collect::<Vec<_>>();
+
+        let mut i = 1; // Already moved 1 here
+        let mut running = true;
+        while running {
+            i += 1;
+
+            let mut new_stack = vec![];
+            for p in stack.iter() {
+                if seen.contains(p) {
+                    continue;
                 }
-            });
-            if let Some(existing) = existing {
-                if existing.gcost <= gcost
-                {
-                    return;
+                seen.insert(*p);
+                if adjacent_enemy(&p, &from.enemy_race(), occupied_points).is_some() {
+                    best_moves.push((*point, i, *p));
+                    running = false;
                 }
-                // Remove existing from the heap
-                let v = open
-                    .iter()
-                    .filter(|node| node.point != *neighbour)
-                    .cloned()
-                    .collect::<Vec<_>>();
-                open = BinaryHeap::from(v);
+                new_stack.append(
+                    &mut p
+                        .neighbours()
+                        .iter()
+                        .filter(|p| !occupied_points.contains_key(p) && !seen.contains(p))
+                        .cloned()
+                        .collect::<Vec<_>>(),
+                );
             }
-            open.push(Node {
-                point: *neighbour,
-                gcost: gcost,
-                hcost: neighbour.dist(to),
-            });
-            came_from.insert(*neighbour, current.point);
-        });
+            new_stack.sort_unstable();
+            new_stack.dedup();
+            stack = new_stack;
+            if stack.is_empty() {
+                running = false;
+            }
+        }
+    }
+    get_best_move(best_moves)
+}
+
+pub fn adjacent_enemy(point: &Point, enemy: &Race, map: &OccupiedPoints) -> Option<Point> {
+    for neighbour in point.neighbours().iter() {
+        if map
+            .get(&neighbour)
+            .map_or(false, |r| r.clone().map_or(false, |race| race == *enemy))
+        {
+            return Some(*neighbour);
+        }
     }
     None
 }
 
-fn reconstruct_path(mut came_from: HashMap<Point, Point>, mut current: Point) -> Path {
-    let mut result = Path::new();
-    while came_from.contains_key(&current) {
-        let (to, from) = came_from.remove_entry(&current).unwrap();
-        current = from;
-        result.push_front(to);
+/// best_move tuple: (where it came from, steps took, where it ended up)
+fn get_best_move(mut best_moves: Vec<(Point, i32, Point)>) -> Option<Point> {
+    if best_moves.is_empty() {
+        return None;
     }
-    result
+    // First condition - fewest number of moves away
+    let min_steps = best_moves.iter().map(|(_, i, _)| *i).min().unwrap();
+    best_moves.retain(|(_, i, _)| *i == min_steps);
+
+    // Second condition - if tie, choose the first tile in reading order
+    best_moves.sort_unstable_by_key(|(_, _, p)| *p);
+    let mut first = best_moves[0].2;
+    best_moves.retain(|(_, _, p)| *p == first);
+
+    // Third condition - if tie, take the first step in reading order
+    best_moves.sort_unstable_by_key(|(p, _, _)| *p);
+    first = best_moves[0].0;
+    best_moves.retain(|(p, _, _)| *p == first);
+    best_moves.get(0).map_or(None, |(p, _, _)| Some(*p))
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-
-    #[test]
-    fn test_shortest_path() {
-        let start = Point::new(0, 0);
-        let end = Point::new(1, 2);
-        let occupied = [Point::new(0, 0), Point::new(1, 2)]
-            .iter()
-            .cloned()
-            .collect();
-
-        let result = path_to(&start, &end, &occupied).expect("Failed to find path");
-
-        assert_eq!(result, vec![Point::new(1, 0), Point::new(1, 1),]);
-    }
-
-    #[test]
-    fn test_unreachable() {
-        let start = Point::new(0, 0);
-        let end = Point::new(1, 2);
-        let occupied = [
-            Point::new(0, 0),
-            Point::new(1, 2),
-            Point::new(0, 2),
-            Point::new(2, 2),
-            Point::new(1, 1),
-            Point::new(1, 3),
-        ]
-        .iter()
-        .cloned()
-        .collect();
-
-        let result = path_to(&start, &end, &occupied);
-
-        assert!(result.is_none());
-    }
-
-    #[test]
-    fn test_shortest_path_with_obstacles() {
-        let start = Point::new(0, 0);
-        let end = Point::new(1, 2);
-        let occupied = [
-            Point::new(0, 0),
-            Point::new(1, 2),
-            Point::new(0, 2),
-            Point::new(1, 1),
-            Point::new(1, 3),
-        ]
-        .iter()
-        .cloned()
-        .collect();
-
-        let result = path_to(&start, &end, &occupied).expect("Failed to find shortest path");
-        assert_eq!(
-            result,
-            vec![
-                Point::new(1, 0),
-                Point::new(2, 0),
-                Point::new(2, 1),
-                Point::new(2, 2),
-            ]
-        );
-    }
 }
 
