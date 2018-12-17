@@ -47,7 +47,7 @@ impl Creature {
     pub fn attack(&self, creatures: &mut Creatures, occupied_points: &mut OccupiedPoints) {
         let target = creatures
             .iter_mut()
-            .filter(|c| c.race == self.enemy_race() && self.inrange(c))
+            .filter(|c| c.race == self.enemy_race() && self.inrange(c) && c.hp > 0)
             .fold(None, |result, c| {
                 if better_target(&result, c) {
                     Some(c)

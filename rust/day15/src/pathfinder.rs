@@ -39,8 +39,8 @@ pub fn find_best_step(from: &Creature, occupied_points: &OccupiedPoints) -> Opti
         .position
         .neighbours()
         .iter()
-        .cloned()
         .filter(|p| !occupied_points.contains_key(p))
+        .cloned()
         .collect::<Vec<_>>();
 
     let mut best_moves = vec![];
@@ -57,8 +57,8 @@ pub fn find_best_step(from: &Creature, occupied_points: &OccupiedPoints) -> Opti
         let mut stack = point
             .neighbours()
             .iter()
-            .cloned()
             .filter(|p| !occupied_points.contains_key(p))
+            .cloned()
             .collect::<Vec<_>>();
 
         let mut i = 1; // Already moved 1 here
@@ -131,6 +131,6 @@ fn get_best_move(mut best_moves: Vec<(Point, i32, Point)>) -> Option<Point> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    // use super::*;
 }
 

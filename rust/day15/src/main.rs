@@ -20,14 +20,41 @@ fn main() -> Result<(), Error> {
 
     let (map, creatures) = build_map(lines);
 
-    let part1 = battle(map, creatures);
+    let part1 = battle(map.clone(), creatures.clone());
 
     println!("Part1: {:?}", part1);
+
+    let part2 = part2(map, creatures);
+    println!("Part2: {:?}", part2);
 
     Ok(())
 }
 
-fn battle(mut map: OccupiedPoints, mut creatures: Creatures) -> u32 {
+fn part2(map: OccupiedPoints, mut creatures: Creatures) -> u32 {
+    let mut result;
+    let mut ap = 4;
+    loop {
+        set_elf_ap(&mut creatures, ap);
+        result = battle(map.clone(), creatures.clone());
+        if result.1 {
+            return result.0;
+        }
+        ap += 1;
+    }
+}
+
+fn set_elf_ap(creatures: &mut Creatures, ap: i32) {
+    creatures
+        .iter_mut()
+        .filter(|c| c.race == Race::Elf)
+        .for_each(|c| {
+            c.ap = ap;
+        });
+}
+
+/// Return the (outcome, if all elves survived)
+fn battle(mut map: OccupiedPoints, mut creatures: Creatures) -> (u32, bool) {
+    let mut elves_survived = true;
     let n_creatures = |creatures: &Creatures| {
         creatures.iter().fold([0, 0], |mut count, c| {
             if c.hp <= 0 {
@@ -47,26 +74,23 @@ fn battle(mut map: OccupiedPoints, mut creatures: Creatures) -> u32 {
         if !tick(&mut map, &mut creatures) {
             ticks += 1;
         }
-        count = n_creatures(&creatures);
+        let c = n_creatures(&creatures);
+        if c[0] != count[0] {
+            elves_survived = false;
+        }
+        count = c;
     }
     let total_hp: u32 = creatures
         .iter()
         .filter_map(|c| if c.hp > 0 { Some(c.hp as u32) } else { None })
         .sum();
-    println!("{:#?}", creatures);
-    println!("{} {}", ticks, total_hp);
-    ticks * total_hp
+    (ticks * total_hp, elves_survived)
 }
 
 /// Returns wether the battle finished (any creature found no target)
 fn tick(map: &mut OccupiedPoints, creatures: &mut Creatures) -> bool {
     // Reading order
     creatures.sort_unstable_by_key(|creature| creature.position);
-    debug_assert!(!creatures
-        .iter()
-        .zip(creatures[1..].iter())
-        .any(|(c1, c2)| c1.position.y > c2.position.y
-            || (c1.position.y == c2.position.y && c1.position.x > c2.position.x)));
     // Using a c-style `for` to be able to modify values in the collection
     let mut finished = false;
     for i in 0..creatures.len() {
@@ -215,7 +239,7 @@ mod test {
 
         let (map, creatures) = build_map(input.iter().map(|s| s.to_string()));
 
-        let result = battle(map, creatures);
+        let result = battle(map, creatures).0;
 
         assert_eq!(result, 27730);
     }
@@ -237,7 +261,7 @@ mod test {
 
         let (map, creatures) = build_map(input.iter().map(|s| s.to_string()));
 
-        let result = battle(map, creatures);
+        let result = battle(map, creatures).0;
 
         assert_eq!(result, 18740);
     }
@@ -257,7 +281,7 @@ mod test {
 
         let (map, creatures) = build_map(input.iter().map(|s| s.to_string()));
 
-        let result = battle(map, creatures);
+        let result = battle(map, creatures).0;
 
         assert_eq!(result, 28944);
     }
@@ -277,7 +301,7 @@ mod test {
 
         let (map, creatures) = build_map(input.iter().map(|s| s.to_string()));
 
-        let result = battle(map, creatures);
+        let result = battle(map, creatures).0;
 
         assert_eq!(result, 36334);
     }
@@ -297,7 +321,7 @@ mod test {
 
         let (map, creatures) = build_map(input.iter().map(|s| s.to_string()));
 
-        let result = battle(map, creatures);
+        let result = battle(map, creatures).0;
 
         assert_eq!(result, 39514);
     }
@@ -317,7 +341,7 @@ mod test {
 
         let (map, creatures) = build_map(input.iter().map(|s| s.to_string()));
 
-        let result = battle(map, creatures);
+        let result = battle(map, creatures).0;
 
         assert_eq!(result, 27755);
     }
