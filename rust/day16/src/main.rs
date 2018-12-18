@@ -1,9 +1,11 @@
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::io::Error;
 
 type Registers = [i32; 4];
+type Instructions<'a> = HashSet<&'a str>;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 enum Input {
@@ -17,9 +19,23 @@ fn main() -> Result<(), Error> {
     let buf_reader = BufReader::new(file);
     let lines = buf_reader.lines().filter_map(|l| l.ok());
 
-    let part1 = part1(lines);
+    let (part1, opcodes, test_program) = parse_input(lines);
+
     println!("Part1 {}", part1);
+
+    let instructions = map_instructions(opcodes);
+
+    let part2 = part2(instructions, test_program);
+
+    println!("Part2 {}", part2[0]);
+
     Ok(())
+}
+
+fn part2(instructions: HashMap<i32, &str>, test_program: Vec<Registers>) -> Registers {
+    test_program.iter().fold([0; 4], |result, input| {
+        execute(instructions[&input[0]], input, result)
+    })
 }
 
 fn execute(instruction: &str, input: &Registers, mut registers: Registers) -> Registers {
@@ -68,7 +84,10 @@ const INSTRUCTIONS: [&'static str; 16] = [
     "gtrr", "eqir", "eqri", "eqrr",
 ];
 
-fn part1<I>(input: I) -> usize
+/// Returns the number of examples containing 3 or more opcodes (part 1)
+/// And a map of opcode -> {instruction}
+/// And the test program
+fn parse_input<'a, I>(input: I) -> (usize, HashMap<i32, Instructions<'a>>, Vec<Registers>)
 where
     I: Iterator<Item = String>,
 {
@@ -77,7 +96,9 @@ where
         .collect::<Vec<_>>();
     let mut before = None;
     let mut instr = None;
-    input
+    let mut instr_map = HashMap::new();
+    let mut test_program = Vec::with_capacity(1000);
+    let result = input
         .iter()
         .filter(|input| {
             match input {
@@ -86,16 +107,20 @@ where
                 }
                 Input::Instr(reg) => {
                     if before.is_none() {
-                        // End of samples and beginning of the test program
-                        return false;
+                        test_program.push(*reg);
+                    } else {
+                        instr = Some(reg);
                     }
-                    instr = Some(reg);
                 }
                 Input::After(reg) => {
                     let n = {
                         let before = before.expect("After called without matching 'Before' line");
                         let instr = instr.expect("After called without matching 'Instr' line");
-                        opcodes(before, instr, reg).len()
+                        let opcodes = opcodes(before, instr, reg);
+                        let result = opcodes.len();
+                        let existing = instr_map.entry(instr[0]).or_insert_with(|| opcodes.clone());
+                        *existing = existing.intersection(&opcodes).map(|x| *x).collect();
+                        result
                     };
                     before = None;
                     instr = None;
@@ -104,7 +129,28 @@ where
             }
             false
         })
-        .count()
+        .count();
+    (result, instr_map, test_program)
+}
+
+fn map_instructions(mut map: HashMap<i32, Instructions>) -> HashMap<i32, &str> {
+    let mut result = HashMap::new();
+    while result.len() != 16 {
+        let (opcode, instructions) = map
+            .iter()
+            .find(|(_, instructions)| instructions.len() == 1)
+            .expect(&format!(
+                "Cannot find any more single instructions before ending the mapping\n{:#?}",
+                result
+            ));
+        let instruction = *instructions.iter().next().unwrap();
+        result.insert(*opcode, instruction);
+        map.remove_entry(&opcode.clone());
+        map.values_mut().for_each(|instructions| {
+            instructions.remove(instruction);
+        });
+    }
+    result
 }
 
 fn parse_line(line: &str) -> Option<Input> {
@@ -140,7 +186,7 @@ fn into_registers(line: &str) -> Registers {
     [reg[0], reg[1], reg[2], reg[3]]
 }
 
-fn opcodes<'a>(before: &Registers, input: &Registers, after: &Registers) -> Vec<&'a str> {
+fn opcodes<'a>(before: &Registers, input: &Registers, after: &Registers) -> HashSet<&'a str> {
     INSTRUCTIONS
         .iter()
         .filter_map(|instr| {
@@ -187,11 +233,10 @@ mod test {
         let input = [9, 2, 1, 2];
         let after = [3, 2, 2, 1];
 
-        let expected = vec![
-            "addi",
-            "mulr",
-            "seti",
-        ];
+        let expected = ["addi", "mulr", "seti"]
+            .iter()
+            .map(|x| *x)
+            .collect::<Instructions>();
 
         let result = opcodes(&before, &input, &after);
 
@@ -225,7 +270,7 @@ mod test {
             .iter()
             .map(|l| l.to_string());
 
-        let result = part1(input);
+        let result = parse_input(input).0;
 
         assert_eq!(result, 1);
     }
