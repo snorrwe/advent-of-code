@@ -1,11 +1,11 @@
-use self::point::Point;
+extern crate advent;
+
+use advent::point::Point;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::io::Error;
-
-mod point;
 
 type Layout = BTreeMap<Point, Tile>;
 
@@ -17,18 +17,11 @@ fn main() -> Result<(), Error> {
     let mut map = parse(lines);
 
     simulate(&mut map);
-    let part1 = map
-        .iter()
-        .filter(|(p, c)| (**c == Tile::Water || **c == Tile::Fall) && p.y > 0)
-        .count();
 
+    let part1 = part1(&map);
     println!("{}", part1 - 4); // Off by 4 could not find the extra Falls
 
-    let part2 = map
-        .iter()
-        .filter(|(p, c)| (**c == Tile::Water) && p.y > 0)
-        .count();
-
+    let part2 = part2(&map);
     println!("{}", part2); // This is actually correct
     Ok(())
 }
@@ -36,6 +29,18 @@ fn main() -> Result<(), Error> {
 fn simulate(map: &mut Layout) {
     play(map);
     render(&map);
+}
+
+fn part1(map: &Layout) -> usize {
+    map.iter()
+        .filter(|(p, c)| (**c == Tile::Water || **c == Tile::Fall) && p.y > 0)
+        .count()
+}
+
+fn part2(map: &Layout) -> usize {
+    map.iter()
+        .filter(|(p, c)| (**c == Tile::Water) && p.y > 0)
+        .count()
 }
 
 fn play(map: &mut Layout) {
@@ -333,9 +338,10 @@ mod test {
             "y=4, x=499..501",
             "y=5, x=499..501",
         ];
-        let map = parse(input.iter().map(|x| x.to_string()));
+        let mut map = parse(input.iter().map(|x| x.to_string()));
 
-        let result = simulate(map);
+        simulate(&mut map);
+        let result = part1(&map);
 
         assert_eq!(result, 32);
     }
@@ -348,9 +354,10 @@ mod test {
             "x=505, y=5..7",
             "x=500, y=3..6",
         ];
-        let map = parse(input.iter().map(|x| x.to_string()));
+        let mut map = parse(input.iter().map(|x| x.to_string()));
 
-        let result = simulate(map);
+        simulate(&mut map);
+        let result = part1(&map);
 
         assert_eq!(result, 34);
     }
@@ -358,9 +365,10 @@ mod test {
     #[test]
     fn test_fall_fills_1by1() {
         let input = ["x=499, y=5..7", "y=7, x=499..501", "x=501, y=5..7"];
-        let map = parse(input.iter().map(|x| x.to_string()));
+        let mut map = parse(input.iter().map(|x| x.to_string()));
 
-        let result = simulate(map);
+        simulate(&mut map);
+        let result = part1(&map);
 
         assert_eq!(result, 16);
     }
@@ -377,9 +385,10 @@ mod test {
             "x=504, y=10..13",
             "y=13, x=498..504",
         ];
-        let map = parse(input.iter().map(|x| x.to_string()));
+        let mut map = parse(input.iter().map(|x| x.to_string()));
 
-        let result = simulate(map);
+        simulate(&mut map);
+        let result = part1(&map);
 
         assert_eq!(result, 57);
     }
