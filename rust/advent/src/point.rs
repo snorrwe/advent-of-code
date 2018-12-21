@@ -36,6 +36,22 @@ impl Point {
             Point::new(x, y + 1),
         ]
     }
+
+    pub fn left() -> Self {
+        Point::new(-1, 0)
+    }
+
+    pub fn right() -> Self {
+        Point::new(1, 0)
+    }
+
+    pub fn top() -> Self {
+        Point::new(0, -1)
+    }
+
+    pub fn bottom() -> Self {
+        Point::new(0, 1)
+    }
 }
 
 impl PartialOrd for Point {
