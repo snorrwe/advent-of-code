@@ -18,11 +18,11 @@ int part2(std::ifstream& input)
     int mod;
     int f = 0;
     while (input >> mod) {
-        int x = fuel(mod);
-        while (x > 0) {
-            f += x;
-            x = fuel(x);
-        }
+        mod = fuel(mod);
+        do {
+            f += mod;
+            mod = fuel(mod);
+        } while (mod > 0);
     }
     return f;
 }
