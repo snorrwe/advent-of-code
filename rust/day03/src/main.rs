@@ -66,12 +66,9 @@ fn test_point_segment(a: Point, b: Point, c: Point) -> bool {
 }
 
 fn signed_triangle_area(a: Point, b: Point, c: Point) -> f32 {
-    let ax = a.x as f32;
-    let ay = a.y as f32;
-    let bx = b.x as f32;
-    let by = b.y as f32;
-    let cx = c.x as f32;
-    let cy = c.y as f32;
+    let [ax, ay, bx, by, cx, cy] = [
+        a.x as f32, a.y as f32, b.x as f32, b.y as f32, c.x as f32, c.y as f32,
+    ];
 
     (ax - cx) * (by - cy) - (ay - cy) * (bx - cx)
 }
@@ -93,6 +90,7 @@ fn test_segment_segment(a: Point, b: Point, c: Point, d: Point) -> Option<Point>
 }
 
 /// Calculate the intersections of two wires
+/// Return the lines of the two wires and the intersection points
 fn intersections(input: &str) -> ([Vec<(Point, Point)>; 2], Vec<Point>) {
     let mut paths = [vec![], vec![]];
     for (i, wire) in input.split("\n").enumerate() {
@@ -114,7 +112,7 @@ fn intersections(input: &str) -> ([Vec<(Point, Point)>; 2], Vec<Point>) {
             paths[i].push((last, current));
         }
     }
-    // Intersections are any point for which l1&l2 is not empty for every (l1, l2) pair in W1 × W2
+    // Intersections are any point for which l1 intersects l2 for every (l1, l2) pair in W1 × W2
     let ints = paths[0]
         .clone()
         .into_iter()
@@ -141,13 +139,13 @@ fn part2(input: &str) -> i32 {
         .map(|p| (*p, [0, 0]))
         .collect::<HashMap<_, _>>();
     for (i, wire) in wires.iter().enumerate() {
-        let mut d = 0;
+        let mut steps = 0;
         for line in wire {
             for inter in intersections
                 .iter()
                 .filter(|p| test_point_segment(line.0, line.1, **p))
             {
-                // 1 line of 1 wirte may only cross a point once
+                // 1 line of 1 wire may only cross a point once
                 assert_eq!(
                     dists.get_mut(&inter).expect("dists")[i],
                     0,
@@ -155,9 +153,9 @@ fn part2(input: &str) -> i32 {
                     line,
                     inter
                 );
-                dists.get_mut(&inter).expect("dists")[i] = d + inter.manhatten(&line.0);
+                dists.get_mut(&inter).expect("dists")[i] = steps + inter.manhatten(&line.0);
             }
-            d += line.0.manhatten(&line.1)
+            steps += line.0.manhatten(&line.1)
         }
     }
     dists
