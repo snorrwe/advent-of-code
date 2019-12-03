@@ -50,6 +50,7 @@ impl Mul<f32> for Point {
     }
 }
 
+/// Test AB segment and C point intersection
 fn test_point_segment(a: Point, b: Point, c: Point) -> bool {
     // We know that these lines are on a manhatten grid so we can start with a
     // separating axis test
@@ -73,6 +74,8 @@ fn signed_triangle_area(a: Point, b: Point, c: Point) -> f32 {
     (ax - cx) * (by - cy) - (ay - cy) * (bx - cx)
 }
 
+/// Test AB and CD segment intersection
+/// Return the point where they intersect if any
 fn test_segment_segment(a: Point, b: Point, c: Point, d: Point) -> Option<Point> {
     let abd = signed_triangle_area(a, b, d);
     let abc = signed_triangle_area(a, b, c);
@@ -114,9 +117,9 @@ fn intersections(input: &str) -> ([Vec<(Point, Point)>; 2], Vec<Point>) {
     }
     // Intersections are any point for which l1 intersects l2 for every (l1, l2) pair in W1 × W2
     let ints = paths[0]
-        .clone()
-        .into_iter()
-        .cartesian_product(paths[1].clone().into_iter())
+        .iter()
+        .cloned()
+        .cartesian_product(paths[1].iter().cloned())
         .filter(|(a, b)| a != b)
         .filter_map(|(a, b)| test_segment_segment(a.0, a.1, b.0, b.1))
         .collect();
