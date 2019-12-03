@@ -11,10 +11,6 @@ impl Point {
     pub fn manhatten(&self, other: &Self) -> i32 {
         (self.x - other.x).abs() + (self.y - other.y).abs()
     }
-
-    pub fn dot(&self, other: &Self) -> i32 {
-        self.x * other.x + self.y + other.y
-    }
 }
 
 impl Add for Point {
@@ -55,18 +51,21 @@ impl Mul<f32> for Point {
 }
 
 fn test_point_segment(a: Point, b: Point, c: Point) -> bool {
+    // We know that these lines are on a manhatten grid so we can start with a
+    // separating axis test
     if (a.x != c.x && a.y != c.y) || (b.x != c.x && b.y != c.y) {
         return false;
     }
     let ab = b - a;
     let ac = c - a;
     // either x or y is 0 in both
-    //
     let f = (ac.x + ac.y) as f32 / (ab.x + ab.y) as f32;
+    // If f < 0 then ab and ac point in different directions
+    // If f > 1 then C is farther from A than B is
     0.0 <= f && f <= 1.0
 }
 
-fn signed_2d_area(a: Point, b: Point, c: Point) -> f32 {
+fn signed_triangle_area(a: Point, b: Point, c: Point) -> f32 {
     let ax = a.x as f32;
     let ay = a.y as f32;
     let bx = b.x as f32;
@@ -78,19 +77,22 @@ fn signed_2d_area(a: Point, b: Point, c: Point) -> f32 {
 }
 
 fn test_segment_segment(a: Point, b: Point, c: Point, d: Point) -> Option<Point> {
-    let a1 = signed_2d_area(a, b, d);
-    let a2 = signed_2d_area(a, b, c);
-    if a1 * a2 < 0.0 {
-        let a3 = signed_2d_area(c, d, a);
-        let a4 = a3 + a2 - a1;
-        if a3 * a4 < 0.0 {
-            let t = a3 / (a3 - a4);
+    let abd = signed_triangle_area(a, b, d);
+    let abc = signed_triangle_area(a, b, c);
+    if abd * abc < 0.0 {
+        // c and d are on different sides of ab
+        let cda = signed_triangle_area(c, d, a);
+        let cdb = cda + abc - abd;
+        if cda * cdb < 0.0 {
+            // a and b are on different sides of cd
+            let t = cda / (cda - cdb);
             return Some(a + (b - a) * t);
         }
     }
     None
 }
 
+/// Calculate the intersections of two wires
 fn intersections(input: &str) -> ([Vec<(Point, Point)>; 2], Vec<Point>) {
     let mut paths = [vec![], vec![]];
     for (i, wire) in input.split("\n").enumerate() {
@@ -112,6 +114,7 @@ fn intersections(input: &str) -> ([Vec<(Point, Point)>; 2], Vec<Point>) {
             paths[i].push((last, current));
         }
     }
+    // Intersections are any point for which l1&l2 is not empty for every (l1, l2) pair in W1 × W2
     let ints = paths[0]
         .clone()
         .into_iter()
@@ -148,7 +151,7 @@ fn part2(input: &str) -> i32 {
                 assert_eq!(
                     dists.get_mut(&inter).expect("dists")[i],
                     0,
-                    "Line: {:?} Point: {:?}",
+                    "line: {:?} point: {:?}",
                     line,
                     inter
                 );
