@@ -1,15 +1,14 @@
-from collections import defaultdict
+from collections import Counter
 
 
 def validate(pw):
     pw = str(pw)
-    return (len(pw) == 6 and list(pw) == sorted(pw)
-            and len(pw) != len(set(pw)))
+    return (list(pw) == sorted(pw) and len(pw) != len(set(pw)))
 
 
-print(validate(111111))
-print(validate(223450))
-print(validate(123789))
+assert(validate(111111))
+assert(not validate(223450))
+assert(not validate(123789))
 
 count = 0
 for i in range(240920, 789857):
@@ -21,16 +20,14 @@ print("part1: ", count)
 
 def validate_p2(pw):
     pw = str(pw)
-    count = defaultdict(lambda: 0)
-    for letter in pw:
-        count[letter] += 1
+    count = Counter(pw)
     pt2 = any(v == 2 for v in count.values())
-    return (len(pw) == 6 and list(pw) == sorted(pw)
-            and len(pw) != len(set(pw)) and pt2)
+    return (list(pw) == sorted(pw) and pt2)
 
-print(validate_p2(112233))
-print(validate_p2(123444))
-print(validate_p2(111122))
+
+assert(validate_p2(112233))
+assert(not validate_p2(123444))
+assert(validate_p2(111122))
 
 count = 0
 for i in range(240920, 789857):
