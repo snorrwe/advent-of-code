@@ -8,14 +8,14 @@ fn get_param_mut<'a>(
 ) -> &'a mut i32 {
     let mode = intr % 10;
     match mode {
-        0 => &mut program[program[ptr + 1] as usize],
+        0 => &mut program[program[ptr] as usize],
         _ => unreachable!(),
     }
 }
 
 fn get_param(intr: i32, ptr: usize, program: &[i32], _memory: &[i32]) -> i32 {
     let mode = intr % 10;
-    let ind = program[ptr + 1];
+    let ind = program[ptr];
     match mode {
         0 => program[ind as usize],
         1 => ind,
@@ -32,16 +32,16 @@ fn execute(input: i32, mut program: Vec<i32>) -> Vec<i32> {
         let f = op % 100;
         match f {
             1 => {
-                let x = get_param(op / 100, ptr, &program, &memory);
-                let y = get_param(op / 1000, ptr + 1, &program, &memory);
-                let z = get_param_mut(op / 10_000, ptr + 2, &mut program, &mut memory);
+                let x = get_param(op / 100, ptr + 1, &program, &memory);
+                let y = get_param(op / 1000, ptr + 2, &program, &memory);
+                let z = get_param_mut(op / 10_000, ptr + 3, &mut program, &mut memory);
                 *z = x + y;
                 ptr += 4;
             }
             2 => {
-                let x = get_param(op / 100, ptr, &program, &memory);
-                let y = get_param(op / 1000, ptr + 1, &program, &memory);
-                let z = get_param_mut(op / 10_000, ptr + 2, &mut program, &mut memory);
+                let x = get_param(op / 100, ptr + 1, &program, &memory);
+                let y = get_param(op / 1000, ptr + 2, &program, &memory);
+                let z = get_param_mut(op / 10_000, ptr + 3, &mut program, &mut memory);
                 *z = x * y;
                 ptr += 4;
             }
@@ -59,8 +59,8 @@ fn execute(input: i32, mut program: Vec<i32>) -> Vec<i32> {
             }
             5 => {
                 // jump if true
-                let x = get_param(op / 100, ptr, &program, &memory);
-                let z = get_param(op / 1000, ptr + 1, &program, &memory);
+                let x = get_param(op / 100, ptr + 1, &program, &memory);
+                let z = get_param(op / 1000, ptr + 2, &program, &memory);
                 if x != 0 {
                     ptr = z as usize;
                 } else {
@@ -69,8 +69,8 @@ fn execute(input: i32, mut program: Vec<i32>) -> Vec<i32> {
             }
             6 => {
                 // jump if false
-                let x = get_param(op / 100, ptr, &program, &memory);
-                let z = get_param(op / 1000, ptr + 1, &program, &memory);
+                let x = get_param(op / 100, ptr + 1, &program, &memory);
+                let z = get_param(op / 1000, ptr + 2, &program, &memory);
                 if x == 0 {
                     ptr = z as usize;
                 } else {
@@ -79,18 +79,18 @@ fn execute(input: i32, mut program: Vec<i32>) -> Vec<i32> {
             }
             7 => {
                 // lt
-                let x = get_param(op / 100, ptr, &program, &memory);
-                let y = get_param(op / 1000, ptr + 1, &program, &memory);
-                let z = get_param_mut(op / 10_000, ptr + 2, &mut program, &mut memory);
+                let x = get_param(op / 100, ptr + 1, &program, &memory);
+                let y = get_param(op / 1000, ptr + 2, &program, &memory);
+                let z = get_param_mut(op / 10_000, ptr + 3, &mut program, &mut memory);
                 let res = x < y;
                 *z = res as i32;
                 ptr += 4;
             }
             8 => {
                 // eq
-                let x = get_param(op / 100, ptr, &program, &memory);
-                let y = get_param(op / 1000, ptr + 1, &program, &memory);
-                let z = get_param_mut(op / 10_000, ptr + 2, &mut program, &mut memory);
+                let x = get_param(op / 100, ptr + 1, &program, &memory);
+                let y = get_param(op / 1000, ptr + 2, &program, &memory);
+                let z = get_param_mut(op / 10_000, ptr + 3, &mut program, &mut memory);
                 let res = x == y;
                 *z = res as i32;
                 ptr += 4;
