@@ -1,3 +1,6 @@
+#![feature(test)]
+extern crate test;
+
 use std::collections::HashMap;
 use std::fs::read_to_string;
 
@@ -64,4 +67,15 @@ fn main() {
     println!("{}", res);
     let res = part2(input);
     println!("{}", res);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test::Bencher;
+
+    #[bench]
+    fn bench_both(b: &mut Bencher) {
+        b.iter(|| main());
+    }
 }
