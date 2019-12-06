@@ -23,7 +23,7 @@ fn cost(initial: i32, node: &str, g: &Graph) -> i32 {
 }
 
 fn get_g<'a>(input: &'a str) -> Graph<'a> {
-    let mut g = Graph::new();
+    let mut g = Graph::with_capacity(1 << 12);
     for conn in input.split('\n') {
         let mut it = conn.split(')');
         if let (Some(a), Some(b)) = (it.next(), it.next()) {
@@ -41,19 +41,19 @@ fn part1(input: &str) -> i32 {
 
 fn part2<'a>(input: &'a str) -> i32 {
     let g = get_g(input);
-    let mut you = HashMap::<&'a str, i32>::new();
-    let mut san = HashMap::<&'a str, i32>::new();
+    let mut you = HashMap::<&'a str, i32>::with_capacity(1 << 8);
+    let mut san = HashMap::<&'a str, i32>::with_capacity(1 << 8);
     let mut y = "YOU";
     let mut s = "SAN";
     let mut i = 0i32;
     loop {
         you.insert(y, i);
         san.insert(s, i);
-        y = g.get(y).expect("y node").parent.expect("y parent");
+        y = g[y].parent.expect("y parent");
         if san.contains_key(y) {
             return san[y] + i - 1;
         }
-        s = g.get(s).expect("s node").parent.expect("s parent");
+        s = g[s].parent.expect("s parent");
         if you.contains_key(s) {
             return you[s] + i - 1;
         }
