@@ -1,3 +1,6 @@
+#![feature(test)]
+extern crate test;
+
 mod input;
 
 #[derive(Debug, Clone)]
@@ -172,9 +175,16 @@ fn main() {
     let input = input::INPUT.to_vec();
     println!("{}", part1(input));
     let input = input::INPUT.to_vec();
-    // let input = vec![
-    //     3, 26, 1001, 26, -4, 26, 3, 27, 1002, 27, 2, 27, 1, 27, 26, 27, 4, 27, 1001, 28, -1, 28,
-    //     1005, 28, 6, 99, 0, 0, 5,
-    // ];
     println!("{}", part2(input));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test::Bencher;
+
+    #[bench]
+    fn bench_both(b: &mut Bencher) {
+        b.iter(|| main());
+    }
 }
