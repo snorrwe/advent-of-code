@@ -1,3 +1,6 @@
+#![feature(test)]
+extern crate test;
+
 use std::fs::read_to_string;
 
 fn part1(image: &str, width: usize, height: usize) -> i32 {
@@ -53,7 +56,7 @@ fn print_image(image: &[char], width: usize, height: usize) {
                 .cloned()
                 .map(|c| match c {
                     '0' => ' ',
-                    '1' => 'i',
+                    '1' => '.',
                     _ => c,
                 })
                 .collect::<String>()
@@ -66,4 +69,15 @@ fn main() {
     let res = part1(&input, 25, 6);
     println!("{:?}", res);
     part2(&input, 25, 6);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test::Bencher;
+
+    #[bench]
+    fn bench_both(b: &mut Bencher) {
+        b.iter(|| main());
+    }
 }
