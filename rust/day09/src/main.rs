@@ -1,4 +1,8 @@
+#![feature(test)]
+extern crate test;
+
 mod input;
+
 fn get_param_mut<'a>(
     intr: i64,
     ptr: usize,
@@ -120,9 +124,20 @@ fn execute(program: &mut [i64], input: i64) -> Vec<i64> {
 
 fn main() {
     let mut program = input::program();
-    program.resize(1 << 14, 0);
+    program.resize(1 << 11, 0);
     println!("Part1: {:?}", execute(&mut program, 1));
     let mut program = input::program();
-    program.resize(1 << 14, 0);
+    program.resize(1 << 11, 0);
     println!("Part2: {:?}", execute(&mut program, 2));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test::Bencher;
+
+    #[bench]
+    fn bench_both(b: &mut Bencher) {
+        b.iter(|| main());
+    }
 }
