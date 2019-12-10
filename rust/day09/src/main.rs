@@ -3,12 +3,12 @@ extern crate test;
 use std::fs::read_to_string;
 
 fn get_param_mut<'a>(
-    intr: i64,
+    instr: i64,
     ptr: usize,
     relative_base: usize,
     program: &'a mut [i64],
 ) -> &'a mut i64 {
-    let mode = intr % 10;
+    let mode = instr % 10;
     let ind = program[ptr];
     match mode {
         0 => &mut program[ind as usize],
@@ -20,8 +20,8 @@ fn get_param_mut<'a>(
     }
 }
 
-fn get_param(intr: i64, ptr: usize, relative_base: usize, program: &[i64]) -> i64 {
-    let mode = intr % 10;
+fn get_param(instr: i64, ptr: usize, relative_base: usize, program: &[i64]) -> i64 {
+    let mode = instr % 10;
     let ind = program[ptr];
     match mode {
         0 => program[ind as usize],
