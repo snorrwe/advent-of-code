@@ -1,7 +1,6 @@
 #![feature(test)]
 extern crate test;
-
-mod input;
+use std::fs::read_to_string;
 
 fn get_param_mut<'a>(
     intr: i64,
@@ -39,12 +38,13 @@ fn execute(program: &mut [i64], input: i64) -> Vec<i64> {
     let mut ptr = 0;
     let mut relative_base = 0;
 
-    let mut output = vec![];
+    let mut output = Vec::with_capacity(16);
     'a: loop {
         let op = program[ptr];
         let f = op % 100;
         match f {
             1 => {
+                // add
                 let x = get_param(op / 100, ptr + 1, relative_base, program);
                 let y = get_param(op / 1000, ptr + 2, relative_base, program);
                 let z = get_param_mut(op / 10_000, ptr + 3, relative_base, program);
@@ -52,6 +52,7 @@ fn execute(program: &mut [i64], input: i64) -> Vec<i64> {
                 ptr += 4;
             }
             2 => {
+                // mul
                 let x = get_param(op / 100, ptr + 1, relative_base, program);
                 let y = get_param(op / 1000, ptr + 2, relative_base, program);
                 let z = get_param_mut(op / 10_000, ptr + 3, relative_base, program);
@@ -109,6 +110,7 @@ fn execute(program: &mut [i64], input: i64) -> Vec<i64> {
                 ptr += 4;
             }
             9 => {
+                // adjust relative_base
                 let x = get_param(op / 100, ptr + 1, relative_base, program);
                 relative_base = (relative_base as i64 + x) as usize;
                 ptr += 2;
@@ -122,13 +124,24 @@ fn execute(program: &mut [i64], input: i64) -> Vec<i64> {
     output
 }
 
+fn run(mut program: Vec<i64>, input: i64) -> Vec<i64> {
+    program.resize(1 << 11, 0);
+    execute(&mut program, input)
+}
+
+fn parse_program(inp: &str) -> Vec<i64> {
+    let program = read_to_string(inp).unwrap();
+    program
+        .split(",")
+        .filter_map(|s| s.parse::<i64>().ok())
+        .collect()
+}
+
 fn main() {
-    let mut program = input::program();
-    program.resize(1 << 11, 0);
-    println!("Part1: {:?}", execute(&mut program, 1));
-    let mut program = input::program();
-    program.resize(1 << 11, 0);
-    println!("Part2: {:?}", execute(&mut program, 2));
+    let program = parse_program("input.txt");
+    println!("Part1: {:?}", run(program, 1));
+    let program = parse_program("input.txt");
+    println!("Part2: {:?}", run(program, 2));
 }
 
 #[cfg(test)]
@@ -137,7 +150,26 @@ mod tests {
     use test::Bencher;
 
     #[bench]
-    fn bench_both(b: &mut Bencher) {
-        b.iter(|| main());
+    fn bench_p1(b: &mut Bencher) {
+        let program = parse_program("input.txt");
+        b.iter(|| {
+            let program = parse_program("input.txt");
+            let program = test::black_box(program);
+            run(program, 1)
+        });
+    }
+
+    #[bench]
+    fn bench_p2(b: &mut Bencher) {
+        b.iter(|| {
+            let program = parse_program("input.txt");
+            let program = test::black_box(program);
+            run(program, 2)
+        });
+    }
+
+    #[bench]
+    fn bench_input_parsing(b: &mut Bencher) {
+        b.iter(|| parse_program("input.txt"));
     }
 }
