@@ -1,3 +1,6 @@
+#![feature(test)]
+extern crate test;
+
 use std::ops::{Add, Div, Mul, Sub};
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
@@ -6,10 +9,6 @@ pub struct Point {
     pub y: i32,
 }
 impl Point {
-    pub fn manhatten(&self, other: &Self) -> i32 {
-        (self.x - other.x).abs() + (self.y - other.y).abs()
-    }
-
     pub fn squared_dist(&self, other: &Self) -> i32 {
         let x = self.x - other.x;
         let y = self.y - other.y;
@@ -64,15 +63,7 @@ impl Mul<i32> for Point {
         }
     }
 }
-impl Mul<f32> for Point {
-    type Output = Point;
-    fn mul(self, other: f32) -> Point {
-        Point {
-            x: (self.x as f32 * other).round() as i32,
-            y: (self.y as f32 * other).round() as i32,
-        }
-    }
-}
+
 /// Compute AB segment and C point distance squared
 fn sq_dist_segment_point(a: Point, b: Point, c: Point) -> i32 {
     let ab = b - a;
@@ -89,15 +80,14 @@ fn sq_dist_segment_point(a: Point, b: Point, c: Point) -> i32 {
     ac.dot(&ac) - e * e / f
 }
 
-fn part1(map: &GameMap) -> (Point, usize) {
-    map.asteriods
+fn part1(asteriods: &Vec<Point>) -> (Point, usize) {
+    asteriods
         .iter()
         .map(|a| {
-            let visible = map
-                .asteriods
+            let visible = asteriods
                 .iter()
                 .filter(|b| {
-                    for c in map.asteriods.iter().filter(|c| *a != **c && b != c) {
+                    for c in asteriods.iter().filter(|c| *a != **c && b != c) {
                         if sq_dist_segment_point(*a, **b, *c) == 0 {
                             return false;
                         }
@@ -111,76 +101,50 @@ fn part1(map: &GameMap) -> (Point, usize) {
         .unwrap()
 }
 
-fn visible(map: &GameMap, a: &Point, out: &mut Vec<(usize, Point)>) {
-    out.clear();
-    out.extend(map.asteriods.iter().cloned().enumerate().filter(|(_, b)| {
-        for c in map.asteriods.iter().filter(|c| *a != **c && b != *c) {
-            if sq_dist_segment_point(*a, *b, *c) == 0 {
-                return false;
-            }
-        }
-        true
-    }));
-}
-
-fn part2(pos: Point, mut map: GameMap, n: usize) -> Point {
-    let mut vis = Vec::with_capacity(map.asteriods.len());
-    visible(&map, &pos, &mut vis);
-    let first = vis
+fn part2(pos: Point, mut asteriods: Vec<Point>, n: usize) -> Point {
+    let first = asteriods
         .iter()
+        .cloned()
+        .enumerate()
         .filter(|(_, c)| c.x == pos.x && pos.y > c.y)
         .min_by_key(|(_, c)| pos.squared_dist(c))
         .unwrap();
-    map.asteriods.remove(first.0);
+    asteriods.swap(0, first.0);
     let mut line = (pos, first.1);
     let mut count = 1;
-    while !map.asteriods.is_empty() {
-        visible(&map, &pos, &mut vis);
-        let (i, c, _o) = vis
+    loop {
+        asteriods[count..].sort_unstable_by_key(|x| {
+            // sort by the angle from line
+            let (a, b) = line;
+            let ab = b - a;
+            let len = ab.len();
+            let x = *x - a;
+            let mut t1 = x.dot(&ab) as f32;
+            t1 /= len * x.len();
+            (t1.acos() * 100_000.0) as i32
+        });
+        let (i, c) = asteriods[count..]
             .iter()
-            .filter(|(_, c)| *c != line.0) // TODO: just remove at the beginning
-            .filter_map(|(i, c)| {
+            .cloned()
+            .enumerate()
+            .find(|(_, c)| {
                 let (a, b) = line;
                 // is C clockwise from AB?
                 let orient = (a.x - c.x) * -(b.y - c.y) + (a.y - c.y) * (b.x - c.x);
                 // and is the angle acute?
-                if orient < 0 && (b - a).dot(&(*c - a)) > 0 {
-                    Some((i, c, orient))
-                } else {
-                    None
-                }
+                orient < 0
             })
-            .min_by(|x, y| {
-                let (a, b) = line;
-                let ab = b - a;
-                let len = ab.len();
-                let x = *x.1 - a;
-                let y = *y.1 - a;
-                let mut t1 = x.dot(&ab) as f32;
-                let mut t2 = y.dot(&ab) as f32;
-                t1 /= len * x.len();
-                t2 /= len * y.len();
-                t1.acos()
-                    .partial_cmp(&t2.acos())
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            })
-            .unwrap();
+            .expect("wtf");
+        asteriods.swap(count, i + count);
         count += 1;
-        line = (pos, *c);
+        line = (pos, c);
         if count == n {
-            return *c;
+            return c;
         }
-        map.asteriods.remove(*i);
     }
-    unreachable!("wtf {:?}", line);
 }
 
-#[derive(Debug, Clone)]
-struct GameMap {
-    asteriods: Vec<Point>,
-}
-
-fn parse(input: &str) -> GameMap {
+fn parse(input: &str) -> Vec<Point> {
     let points = input
         .split('\n')
         .enumerate()
@@ -199,7 +163,7 @@ fn parse(input: &str) -> GameMap {
         .flatten()
         .collect();
 
-    GameMap { asteriods: points }
+    points
 }
 
 fn main() {
@@ -216,6 +180,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test::Bencher;
 
     #[test]
     fn part1_simple() {
@@ -256,5 +221,20 @@ mod tests {
         println!("{:?}", res);
 
         assert_eq!(res, Point { x: 8, y: 2 });
+    }
+
+    #[bench]
+    fn bench_part2(b: &mut Bencher) {
+        let input = std::fs::read_to_string("input.txt").unwrap();
+        let map = parse(&input);
+        let p = part1(&map);
+        b.iter(|| part2(p.0, map.clone(), 200));
+    }
+
+    #[bench]
+    fn bench_part1(b: &mut Bencher) {
+        let input = std::fs::read_to_string("input.txt").unwrap();
+        let map = parse(&input);
+        b.iter(|| part1(&map));
     }
 }
