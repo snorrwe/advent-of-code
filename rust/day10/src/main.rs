@@ -64,38 +64,46 @@ impl Mul<i32> for Point {
     }
 }
 
-/// Compute AB segment and C point distance squared
-fn sq_dist_segment_point(a: Point, b: Point, c: Point) -> i32 {
+/// Test AB segment and C point intersection
+fn on_segment(a: Point, b: Point, c: Point) -> bool {
     let ab = b - a;
     let ac = c - a;
-    let bc = c - b;
     let e = ac.dot(&ab);
     if e < 0 {
-        return ac.dot(&ac);
+        return false;
     };
     let f = ab.dot(&ab);
-    if e >= f {
-        return bc.dot(&bc);
-    }
-    ac.dot(&ac) - e * e / f
+    e < f
 }
 
-fn part1(asteriods: &Vec<Point>) -> (Point, usize) {
+fn part1(asteriods: &mut [Point]) -> (Point, usize) {
     asteriods
         .iter()
+        .cloned()
         .map(|a| {
             let visible = asteriods
                 .iter()
+                .cloned()
                 .filter(|b| {
-                    for c in asteriods.iter().filter(|c| *a != **c && b != c) {
-                        if sq_dist_segment_point(*a, **b, *c) == 0 {
+                    let minx = a.x.min(b.x);
+                    let miny = a.y.min(b.y);
+                    let maxx = a.x.max(b.x);
+                    let maxy = a.y.max(b.y);
+
+                    for c in asteriods
+                        .iter()
+                        .cloned()
+                        .filter(|c| minx <= c.x && miny <= c.y && c.x <= maxx && c.y <= maxy)
+                        .filter(|c| a != *c && b != c)
+                    {
+                        if on_segment(a, *b, c) {
                             return false;
                         }
                     }
                     true
                 })
                 .count();
-            (*a, visible - 1)
+            (a, visible - 1)
         })
         .max_by_key(|(_, i)| *i)
         .unwrap()
@@ -168,9 +176,9 @@ fn parse(input: &str) -> Vec<Point> {
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
-    let map = parse(&input);
+    let mut map = parse(&input);
 
-    let p1 = part1(&map);
+    let p1 = part1(&mut map);
     println!("{:?}", p1);
 
     let p2 = part2(p1.0, map, 200);
@@ -186,9 +194,9 @@ mod tests {
     fn part1_simple() {
         let input = ".#..#\n.....\n#####\n....#\n...##\n";
 
-        let map = parse(input);
+        let mut map = parse(input);
 
-        let res = part1(&map);
+        let res = part1(&mut map);
 
         println!("{:?}", res);
 
@@ -200,9 +208,9 @@ mod tests {
     fn part1_simple_2() {
         let input = "......#.#.\n#..#.#....\n..#######.\n.#.#.###..\n.#..#.....\n..#....#.#\n#..#....#.\n.##.#..###\n##...#..#.\n.#....####\n";
 
-        let map = parse(input);
+        let mut map = parse(input);
 
-        let res = part1(&map);
+        let res = part1(&mut map);
 
         println!("{:?}", res);
 
@@ -226,15 +234,15 @@ mod tests {
     #[bench]
     fn bench_part2(b: &mut Bencher) {
         let input = std::fs::read_to_string("input.txt").unwrap();
-        let map = parse(&input);
-        let p = part1(&map);
+        let mut map = parse(&input);
+        let p = part1(&mut map);
         b.iter(|| part2(p.0, map.clone(), 200));
     }
 
     #[bench]
     fn bench_part1(b: &mut Bencher) {
         let input = std::fs::read_to_string("input.txt").unwrap();
-        let map = parse(&input);
-        b.iter(|| part1(&map));
+        let mut map = parse(&input);
+        b.iter(|| part1(&mut map));
     }
 }
