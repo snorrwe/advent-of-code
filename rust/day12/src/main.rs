@@ -1,19 +1,17 @@
 #![feature(test)]
 extern crate test;
 
-mod point;
-use point::*;
 use std::cmp::Ordering;
 
 #[derive(Debug, Clone, Default, Eq, PartialEq)]
 struct Moons {
-    pub pos: [Point; 4],
-    pub vel: [Point; 4],
+    pub pos: [[i16; 3]; 4],
+    pub vel: [[i16; 3]; 4],
 }
 
 impl Moons {
     pub fn energy(&self) -> i16 {
-        let abssum = |p: &Point| p.x.abs() + p.y.abs() + p.z.abs();
+        let abssum = |p: &[i16; 3]| p.iter().map(|a: &i16| a.abs()).sum::<i16>();
         self.pos
             .iter()
             .map(abssum)
@@ -37,44 +35,52 @@ fn tick(moons: &mut Moons) {
         for j in i + 1..len {
             let p1 = &moons.pos[i];
             let p2 = &moons.pos[j];
-            let (x1, x2) = adjust(p1.x, p2.x);
-            let (y1, y2) = adjust(p1.y, p2.y);
-            let (z1, z2) = adjust(p1.z, p2.z);
+            let (x1, x2) = adjust(p1[0], p2[0]);
+            let (y1, y2) = adjust(p1[1], p2[1]);
+            let (z1, z2) = adjust(p1[2], p2[2]);
 
-            moons.vel[i].x += x1;
-            moons.vel[i].y += y1;
-            moons.vel[i].z += z1;
+            moons.vel[i][0] += x1;
+            moons.vel[i][1] += y1;
+            moons.vel[i][2] += z1;
 
-            moons.vel[j].x += x2;
-            moons.vel[j].y += y2;
-            moons.vel[j].z += z2;
+            moons.vel[j][0] += x2;
+            moons.vel[j][1] += y2;
+            moons.vel[j][2] += z2;
         }
     }
     for (p, v) in moons.pos.iter_mut().zip(moons.vel.iter()) {
-        *p += *v;
+        for i in 0..3 {
+            p[i] += v[i];
+        }
     }
 }
 
 fn part2(moons: &mut Moons, seen: &Moons) -> usize {
     let mut iterations = 0;
+    let mut periods = [0; 3];
     loop {
         tick(moons);
         iterations += 1;
 
-        if moons == seen {
-            return iterations;
+        'a: for j in 0..3 {
+            for i in 0..4 {
+                if moons.pos[i][j] != seen.pos[i][j] || moons.vel[i][j] != seen.vel[i][j] {
+                    continue 'a;
+                }
+            }
+            // if all 4 matches the original position on axis j
+            periods[j] = iterations - periods[j];
+        }
+
+        if periods.iter().all(|x| *x > 0) {
+            return num_integer::lcm(num_integer::lcm(periods[0], periods[1]), periods[2]);
         }
     }
 }
 
 fn main() {
     let mut moons = Moons::default();
-    moons.pos = [
-        Point::new(8, 0, 8),
-        Point::new(0, -5, -10),
-        Point::new(16, 10, -5),
-        Point::new(19, -10, -7),
-    ];
+    moons.pos = [[8, 0, 8], [0, -5, -10], [16, 10, -5], [19, -10, -7]];
 
     let seen = moons.clone();
 
@@ -82,7 +88,8 @@ fn main() {
         tick(&mut moons);
     }
     println!("{}", moons.energy());
-    let iterations = part2(&mut moons, &seen) + 1000;
+    let mut moons = seen.clone();
+    let iterations = part2(&mut moons, &seen);
     println!("Boiii {}", iterations);
 }
 
@@ -94,12 +101,7 @@ mod tests {
     #[bench]
     fn bench_tick(b: &mut Bencher) {
         let mut moons = Moons::default();
-        moons.pos = [
-            Point::new(-1, 0, 2),
-            Point::new(2, -10, -7),
-            Point::new(4, -8, 8),
-            Point::new(3, 5, -1),
-        ];
+        moons.pos = [[-1, 0, 2], [2, -10, -7], [4, -8, 8], [3, 5, -1]];
         let seen = moons.clone();
 
         b.iter(move || {
@@ -109,15 +111,24 @@ mod tests {
         })
     }
 
+    #[bench]
+    fn bench_p2(b: &mut Bencher) {
+        let mut moons = Moons::default();
+        moons.pos = [[8, 0, 8], [0, -5, -10], [16, 10, -5], [19, -10, -7]];
+
+        let seen = moons.clone();
+
+        b.iter(move || {
+            part2(&mut moons, &seen);
+            test::black_box(&moons);
+            moons == seen
+        })
+    }
+
     #[test]
     fn simple_example() {
         let mut moons = Moons::default();
-        moons.pos = [
-            Point::new(-1, 0, 2),
-            Point::new(2, -10, -7),
-            Point::new(4, -8, 8),
-            Point::new(3, 5, -1),
-        ];
+        moons.pos = [[-1, 0, 2], [2, -10, -7], [4, -8, 8], [3, 5, -1]];
 
         for _ in 0..10 {
             tick(&mut moons);
@@ -131,12 +142,7 @@ mod tests {
     #[test]
     fn part2_simple_example() {
         let mut moons = Moons::default();
-        moons.pos = [
-            Point::new(-1, 0, 2),
-            Point::new(2, -10, -7),
-            Point::new(4, -8, 8),
-            Point::new(3, 5, -1),
-        ];
+        moons.pos = [[-1, 0, 2], [2, -10, -7], [4, -8, 8], [3, 5, -1]];
 
         let seen = moons.clone();
 
@@ -148,12 +154,7 @@ mod tests {
     #[test]
     fn part2_long_example() {
         let mut moons = Moons::default();
-        moons.pos = [
-            Point::new(-8, -10, 0),
-            Point::new(5, 5, 10),
-            Point::new(2, -7, 3),
-            Point::new(9, -8, -3),
-        ];
+        moons.pos = [[-8, -10, 0], [5, 5, 10], [2, -7, 3], [9, -8, -3]];
 
         let seen = moons.clone();
 
@@ -165,12 +166,7 @@ mod tests {
     #[test]
     fn simple_example2() {
         let mut moons = Moons::default();
-        moons.pos = [
-            Point::new(-8, -10, 0),
-            Point::new(5, 5, 10),
-            Point::new(2, -7, 3),
-            Point::new(9, -8, -3),
-        ];
+        moons.pos = [[-8, -10, 0], [5, 5, 10], [2, -7, 3], [9, -8, -3]];
 
         for _ in 0..100 {
             tick(&mut moons);
