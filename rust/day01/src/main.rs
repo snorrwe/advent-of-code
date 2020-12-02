@@ -41,7 +41,7 @@ fn main() {
 
     let res = solve(&inp);
 
-    println!("p1: {:?}", res);
+    println!("{:?}", res);
 }
 
 #[cfg(test)]
