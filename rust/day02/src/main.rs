@@ -8,6 +8,8 @@ fn solve(inp: &str) -> [usize; 2] {
     let mut res = [0, 0];
     for line in inp.split('\n') {
         if let Some(caps) = re.captures(line) {
+            // caps.get(0) returns the whole match
+            // then indices return the groups; (the parts in '()')
             let min: usize = caps.get(1).unwrap().as_str().parse().unwrap();
             let max: usize = caps.get(2).unwrap().as_str().parse().unwrap();
             let letter: char = caps.get(3).unwrap().as_str().chars().next().unwrap();
