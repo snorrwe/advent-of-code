@@ -4,7 +4,7 @@ use std::io::Read;
 fn binary(chars: &str, mut min: u32, mut max: u32, split_left: char, split_right: char) -> u32 {
     debug_assert!(min < max);
     debug_assert!((max & 1) == 1, "max must be odd");
-    max = max + 1;
+    max += 1;
     for chr in chars.chars() {
         let mid = (max + min) / 2;
         debug_assert!(mid > 0);
@@ -38,6 +38,20 @@ fn seat_id(line: &str) -> u32 {
     row * 8 + col
 }
 
+fn part2(ids: impl Iterator<Item = u32>) -> u32 {
+    let mut seen = vec![false; 128 * 8];
+    for id in ids {
+        seen[id as usize] = true;
+    }
+    seen.iter()
+        .cloned()
+        .enumerate()
+        .skip(1)
+        .find(|(id, s)| !s && seen[id - 1] && seen[id + 1])
+        .map(|(id, _)| id as u32)
+        .unwrap()
+}
+
 fn main() {
     let mut input = String::new();
 
@@ -46,6 +60,10 @@ fn main() {
     let max = input.lines().map(|line| seat_id(line)).max().unwrap();
 
     println!("p1: {:?}", max);
+
+    let id = part2(input.lines().map(|line| seat_id(line)));
+
+    println!("p2: {:?}", id);
 }
 
 #[cfg(test)]
