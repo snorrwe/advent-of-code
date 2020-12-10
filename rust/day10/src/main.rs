@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use arrayvec::ArrayVec;
 use std::collections::{HashMap, HashSet};
 
@@ -56,8 +59,6 @@ fn part1(g: &Graph) -> i32 {
 }
 
 fn part2(g: &Graph) -> usize {
-    let target = g.keys().max().unwrap() + 3;
-
     let edges = topological_sort(g);
 
     let mut counts: HashMap<i32, usize> = HashMap::new();
@@ -74,6 +75,7 @@ fn part2(g: &Graph) -> usize {
     counts[&0]
 }
 
+/// returns vertices topologically sorted IN REVERSE ORDER!
 fn topological_sort(g: &Graph) -> Vec<i32> {
     let mut visited = HashSet::new();
     let mut stack = Vec::with_capacity(g.len());
@@ -110,130 +112,4 @@ fn main() {
     println!("part 1: {}", res);
     let res = part2(&graph);
     println!("part 2: {}", res);
-}
-
-#[test]
-fn part1_1() {
-    let inp = r#"
-16
-10
-15
-5
-1
-11
-7
-19
-6
-12
-4
-        "#;
-    let nums = parse(inp);
-
-    let res = part1(&nums);
-    assert_eq!(res, 35);
-}
-
-#[test]
-fn part1_2() {
-    let inp = r#"
-
-28
-33
-18
-42
-31
-14
-46
-20
-48
-47
-24
-23
-49
-45
-19
-38
-39
-11
-1
-32
-25
-35
-8
-17
-7
-9
-4
-2
-34
-10
-3
-        "#;
-    let nums = parse(inp);
-
-    let res = part1(&nums);
-    assert_eq!(res, 220);
-}
-
-#[test]
-fn part2_1() {
-    let inp = r#"
-16
-10
-15
-5
-1
-11
-7
-19
-6
-12
-4
-        "#;
-    let nums = parse(inp);
-
-    let res = part2(&nums);
-    assert_eq!(res, 8);
-}
-
-#[test]
-fn part2_2() {
-    let inp = r#"
-
-28
-33
-18
-42
-31
-14
-46
-20
-48
-47
-24
-23
-49
-45
-19
-38
-39
-11
-1
-32
-25
-35
-8
-17
-7
-9
-4
-2
-34
-10
-3
-        "#;
-    let nums = parse(inp);
-
-    let res = part2(&nums);
-    assert_eq!(res, 19208);
 }
