@@ -1,5 +1,5 @@
 use arrayvec::ArrayVec;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 type Graph = HashMap<i32, ArrayVec<[i32; 3]>>;
 
@@ -7,6 +7,7 @@ type Graph = HashMap<i32, ArrayVec<[i32; 3]>>;
 fn parse(inp: &str) -> Graph {
     let mut res: Vec<i32> = inp.lines().filter_map(|line| line.parse().ok()).collect();
 
+    res.push(0); // wall socket
     res.sort_unstable();
     res.push(res.last().unwrap() + 3); // our device
 
@@ -33,7 +34,6 @@ fn _build_graph(inp: &[i32], g: &mut Graph) {
 fn part1(g: &Graph) -> i32 {
     // find a fully connected path
     let mut path = Vec::with_capacity(g.len() + 2);
-    path.push(0);
     path.extend(g.keys());
     path.sort_unstable();
     path.push(path.last().unwrap() + 3); // our device
@@ -57,25 +57,46 @@ fn part1(g: &Graph) -> i32 {
 
 fn part2(g: &Graph) -> usize {
     let target = g.keys().max().unwrap() + 3;
-    _reachable(target, 0, g) * 2
+
+    let edges = topological_sort(g);
+
+    let mut counts: HashMap<i32, usize> = HashMap::new();
+    counts.insert(edges[0], 1);
+    for i in 1..edges.len() {
+        let children = &g[&edges[i]];
+        let mut c = 0;
+        for child in children {
+            c += counts.get(child).cloned().unwrap_or(0);
+        }
+        counts.insert(edges[i], c);
+    }
+
+    counts[&0]
 }
 
-/// count valid arrangements
-fn _reachable(to: i32, from: i32, g: &Graph) -> usize {
-    let mut res = 0;
-    for i in 1..=3 {
-        let n = from + i;
-        if let Some(children) = g.get(&n) {
-            for node in children {
-                if node == &to {
-                    return res + 1;
-                }
-                let r = _reachable(to, *node, g);
-                res += r;
+fn topological_sort(g: &Graph) -> Vec<i32> {
+    let mut visited = HashSet::new();
+    let mut stack = Vec::with_capacity(g.len());
+
+    for node in g.keys() {
+        if !visited.contains(node) {
+            topological_sort_unil(*node, g, &mut visited, &mut stack);
+        }
+    }
+
+    stack
+}
+
+fn topological_sort_unil(v: i32, g: &Graph, visited: &mut HashSet<i32>, stack: &mut Vec<i32>) {
+    visited.insert(v);
+    if let Some(children) = g.get(&v) {
+        for child in children {
+            if !visited.contains(child) {
+                topological_sort_unil(*child, g, visited, stack);
             }
         }
     }
-    res
+    stack.push(v);
 }
 
 fn main() {
