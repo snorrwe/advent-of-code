@@ -152,7 +152,6 @@ fn part2(grid: &mut Grid) -> usize {
 
 fn main() {
     let mut input = String::new();
-
     std::io::Read::read_to_string(&mut std::io::stdin(), &mut input).unwrap();
 
     let mut grid = parse(input.as_str());
