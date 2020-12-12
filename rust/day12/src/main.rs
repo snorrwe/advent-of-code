@@ -1,26 +1,7 @@
-use std::mem::swap;
+mod part1;
 
-fn rotate(deg: i32, dir: char, [mut x, mut y]: [i32; 2]) -> [i32; 2] {
-    match dir {
-        'L' => {
-            for _ in 0..deg / 90 {
-                swap(&mut x, &mut y);
-                x *= -1;
-            }
-        }
-        'R' => {
-            for _ in 0..deg / 90 {
-                swap(&mut x, &mut y);
-                y *= -1;
-            }
-        }
-        _ => unreachable!(),
-    }
-    [x, y]
-}
-
-fn part1(inp: &str) -> u32 {
-    let mut vel = [1, 0];
+fn part2(inp: &str) -> u32 {
+    let mut vel = [10, 1];
     let mut pos = [0, 0];
 
     for line in inp.lines() {
@@ -38,19 +19,19 @@ fn part1(inp: &str) -> u32 {
                     pos[1] += vy;
                 }
                 'E' => {
-                    pos[0] += magnitude.unwrap();
+                    vel[0] += magnitude.unwrap();
                 }
                 'W' => {
-                    pos[0] -= magnitude.unwrap();
+                    vel[0] -= magnitude.unwrap();
                 }
                 'N' => {
-                    pos[1] += magnitude.unwrap();
+                    vel[1] += magnitude.unwrap();
                 }
                 'S' => {
-                    pos[1] -= magnitude.unwrap();
+                    vel[1] -= magnitude.unwrap();
                 }
                 c @ 'L' | c @ 'R' => {
-                    vel = rotate(magnitude.unwrap(), c, vel);
+                    vel = part1::rotate(magnitude.unwrap(), c, vel);
                 }
                 _ => { /*skip*/ }
             }
@@ -65,23 +46,15 @@ fn main() {
     let mut input = String::new();
     std::io::Read::read_to_string(&mut std::io::stdin(), &mut input).unwrap();
 
-    let p1 = part1(input.as_str());
+    let p1 = part1::part1(input.as_str());
     println!("{}", p1);
+    let p2 = part2(input.as_str());
+    println!("{}", p2);
 }
 
 #[test]
-fn rotattion_1() {
-    let xy = [1, 0];
-    let a = rotate(90, 'L', xy);
-    let b = rotate(90, 'R', xy);
-
-    assert_eq!(a, [0, 1]);
-    assert_eq!(b, [0, -1]);
-}
-
-#[test]
-fn test_part1() {
-    let res = part1(
+fn test_part2() {
+    let res = part2(
         r#"
 F10
 N3
@@ -91,5 +64,5 @@ F11
 "#,
     );
 
-    assert_eq!(res, 25);
+    assert_eq!(res, 286);
 }
