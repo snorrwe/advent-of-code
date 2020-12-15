@@ -54,18 +54,22 @@ fn part2(inp: &str) -> u64 {
             let val: u64 = val.next().unwrap().parse().expect("parse");
 
             // set the masked bits
-            for (i, m) in mask
+            for (offset, m) in mask
                 .iter()
+                .rev()
                 .enumerate()
                 .filter_map(|(i, m)| m.map(|m| (i, m)))
+            // bit offset and `m` mask bit where the mask is set
             {
-                let offset = 35 - i;
                 index |= (m as usize) << offset;
             }
             let index_orig = index;
             let mut indices = vec![index_orig];
             for (i, _) in mask.iter().rev().enumerate().filter(|(_, m)| m.is_none()) {
                 // for each 'none' mask set both memory values
+                //
+                // by flipping the `i`th bit of each index we already have, and extending the result.
+                // this will double the number of indices we have in each iteration
                 //
                 let news = indices
                     .iter()
