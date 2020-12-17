@@ -149,6 +149,10 @@ name = "day15"
 version = "0.1.0"
 
 [[package]]
+name = "day16"
+version = "0.1.0"
+
+[[package]]
 name = "du-core"
 version = "0.1.0"
 source = "git+https://github.com/snorrwe/nd.git?branch=main#1667f0c2c39f60159128039fda5fb6ef8f6c9e96"
