@@ -11,17 +11,30 @@ pub fn build(b: *std.build.Builder) void {
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const mode = b.standardReleaseOptions();
 
-    const exe = b.addExecutable("day01", "src/main.zig");
+    const exe = b.addExecutable("day01p1", "part1/main.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.install();
 
-    const run_cmd = exe.run();
-    run_cmd.step.dependOn(b.getInstallStep());
+    const run_cmd1 = exe.run();
+    run_cmd1.step.dependOn(b.getInstallStep());
     if (b.args) |args| {
-        run_cmd.addArgs(args);
+        run_cmd1.addArgs(args);
+    }
+    const run_p1 = b.step("run1", "Run part 1");
+    run_p1.dependOn(&run_cmd1.step);
+
+    const exe2 = b.addExecutable("day01p2", "part2/main.zig");
+    exe2.setTarget(target);
+    exe2.setBuildMode(mode);
+    exe2.install();
+
+    const run_cmd2 = exe2.run();
+    run_cmd2.step.dependOn(b.getInstallStep());
+    if (b.args) |args| {
+        run_cmd2.addArgs(args);
     }
 
-    const run_step = b.step("run", "Run the app");
-    run_step.dependOn(&run_cmd.step);
+    const run_p2 = b.step("run2", "Run part 2");
+    run_p2.dependOn(&run_cmd2.step);
 }
