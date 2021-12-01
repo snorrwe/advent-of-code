@@ -11,7 +11,7 @@ pub fn build(b: *std.build.Builder) void {
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const mode = b.standardReleaseOptions();
 
-    const exe = b.addExecutable("day01p1", "part1/main.zig");
+    const exe = b.addExecutable("day01p1", "part1.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.install();
@@ -24,7 +24,7 @@ pub fn build(b: *std.build.Builder) void {
     const run_p1 = b.step("run1", "Run part 1");
     run_p1.dependOn(&run_cmd1.step);
 
-    const exe2 = b.addExecutable("day01p2", "part2/main.zig");
+    const exe2 = b.addExecutable("day01p2", "part2.zig");
     exe2.setTarget(target);
     exe2.setBuildMode(mode);
     exe2.install();
