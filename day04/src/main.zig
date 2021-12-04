@@ -3,14 +3,14 @@ const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 
 const Board = struct {
-    values: []i32,
+    values: []i64,
     marked: []bool,
     alloc: *Allocator,
     size: usize,
 
     pub fn init(size: usize, alloc: *Allocator) !Board {
         const cap = size * size;
-        var values = try alloc.alloc(i32, cap);
+        var values = try alloc.alloc(i64, cap);
         var marked = try alloc.alloc(bool, cap);
 
         return Board{
@@ -27,7 +27,7 @@ const Board = struct {
         return row * self.size + column;
     }
 
-    pub fn find(self: *Board, value: i32) ?usize {
+    pub fn find(self: *Board, value: i64) ?usize {
         for (self.values) |item, i| {
             if (item == value) {
                 return i;
@@ -36,14 +36,14 @@ const Board = struct {
         return null;
     }
 
-    pub fn mark(self: *Board, value: i32) void {
+    pub fn mark(self: *Board, value: i64) void {
         if (self.find(value)) |i| {
             self.marked[i] = true;
         }
     }
 
-    pub fn score(self: *Board) i32 {
-        var sum: i32 = 0;
+    pub fn score(self: *Board) i64 {
+        var sum: i64 = 0;
         for (self.values) |item, i| {
             const reee: bool = !self.marked[i];
             if (reee) {
@@ -94,12 +94,12 @@ const Board = struct {
 };
 
 const Input = struct {
-    input: ArrayList(i32),
+    input: ArrayList(i64),
     boards: ArrayList(Board),
 };
 
 fn readInput(allocator: *Allocator) !Input {
-    var input = ArrayList(i32).init(allocator);
+    var input = ArrayList(i64).init(allocator);
     var boards = ArrayList(Board).init(allocator);
 
     const stdin = std.io.getStdIn().reader();
@@ -109,14 +109,14 @@ fn readInput(allocator: *Allocator) !Input {
     if (try stdin.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         var it = std.mem.split(u8, line[0 .. line.len - 1], ",");
         while (it.next()) |item| {
-            const inp = try std.fmt.parseInt(i32, item, 10);
+            const inp = try std.fmt.parseInt(i64, item, 10);
             try input.append(inp);
         }
     }
     // load boards
     var currentBoard: ?*Board = null;
     var rowI: usize = 0;
-    var row = ArrayList(i32).init(allocator);
+    var row = ArrayList(i64).init(allocator);
     while (try stdin.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         if (line.len <= 1) {
             // empty line, init the next board
@@ -126,7 +126,7 @@ fn readInput(allocator: *Allocator) !Input {
         // read the row
         var it = std.mem.split(u8, line[0 .. line.len - 1], " ");
         while (it.next()) |item| {
-            const num = std.fmt.parseInt(i32, item, 10) catch {
+            const num = std.fmt.parseInt(i64, item, 10) catch {
                 continue;
             };
             try row.append(num);
@@ -139,7 +139,7 @@ fn readInput(allocator: *Allocator) !Input {
 
         if (currentBoard) |board| {
             const dst = board.values[rowI * board.size .. (rowI + 1) * board.size];
-            std.mem.copy(i32, dst, row.items);
+            std.mem.copy(i64, dst, row.items);
             row.clearRetainingCapacity();
         }
 
@@ -159,22 +159,45 @@ pub fn main() anyerror!void {
 
     var data = try readInput(allocator);
 
-    var winningScore: i32 = undefined;
+    var winningScore: i64 = undefined;
 
-    m: for (data.input.items) |value| {
-        for (data.boards.items) |*board, i| {
+    // part 1
+    var firstWinInp: usize = 0;
+    for (data.input.items) |value, i| {
+        for (data.boards.items) |*board, j| {
             board.mark(value);
             if (board.isWinner()) {
-                const unmarkedScore = board.score();
                 winningScore = board.score() * value;
-                std.log.debug(
-                    "Winning board. Id: {d}, Input: {d}, UnmarkedScore: {d}, Score: {d}\n",
-                    .{ i, value, unmarkedScore, winningScore },
-                );
-                break :m;
+                firstWinInp = i;
+
+                _ = data.boards.swapRemove(j);
             }
+        }
+        if (firstWinInp != 0) {
+            break;
         }
     }
 
-    std.log.info("part1: {d}\n", .{winningScore});
+    // part2
+    var lastScore: i64 = winningScore;
+    var toRemove = ArrayList(usize).init(allocator);
+    p2: for (data.input.items[firstWinInp + 1 ..]) |value| {
+        toRemove.clearRetainingCapacity();
+        for (data.boards.items) |*board, i| {
+            board.mark(value);
+            if (board.isWinner()) {
+                lastScore = board.score() * value;
+                if (data.boards.items.len == 1) {
+                    break :p2;
+                }
+                try toRemove.append(i);
+            }
+        }
+        std.sort.sort(usize, toRemove.items, {}, comptime std.sort.desc(usize));
+        for (toRemove.items) |i| {
+            _ = data.boards.swapRemove(i);
+        }
+    }
+
+    std.log.info("part1: {d} part2: {d}\n", .{ winningScore, lastScore });
 }
