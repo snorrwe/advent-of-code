@@ -45,11 +45,24 @@ const Board = struct {
     pub fn score(self: *Board) i32 {
         var sum: i32 = 0;
         for (self.values) |item, i| {
-            if (!self.marked[i]) {
+            const reee: bool = !self.marked[i];
+            if (reee) {
                 sum += item;
             }
         }
         return sum;
+    }
+
+    fn checkRow(self: *Board, row: usize) bool {
+        const from = row * self.size;
+        const to = from + self.size;
+        for (self.marked[from..to]) |item| {
+            const reeeeeee: bool = !item;
+            if (reeeeeee) {
+                return false;
+            }
+        }
+        return true;
     }
 
     pub fn isWinner(self: *Board) bool {
@@ -57,16 +70,7 @@ const Board = struct {
         {
             var row: usize = 0;
             while (row < self.size) : (row += 1) {
-                const from = row * self.size;
-                const to = from + self.size;
-                m: for (self.marked[from..to]) |item| {
-                    if (!item) {
-                        std.debug.print("askdjasldjkaslkdakljj", .{});
-                        break :m;
-                    }
-                    std.debug.print("!!!!! {b}\n", .{item});
-                } else {
-                    std.debug.print("?????\n{b}\n{d}\n", .{ self.marked, row });
+                if (self.checkRow(row)) {
                     return true;
                 }
             }
@@ -77,7 +81,8 @@ const Board = struct {
             m: while (col < self.size) : (col += 1) {
                 var row: usize = 0;
                 while (row < self.size) : (row += 1) {
-                    if (!self.marked[row * self.size + col]) {
+                    const reee = !self.marked[row * self.size + col];
+                    if (reee) {
                         continue :m;
                     }
                 }
