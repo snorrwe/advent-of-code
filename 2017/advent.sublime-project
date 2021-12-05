@@ -1,0 +1,20 @@
+{
+    "build_systems": [
+        {
+            "shell_cmd": "start env\\Scripts\\activate",
+            "working_dir": "${project_path}",
+            "name": "Open VEnv"
+        }
+    ],
+    "folders": [
+        {
+            "path": ".",
+            "file_exclude_patterns": ["__*.ninja"]
+        }
+    ],
+    "settings": {
+        "cmake": {
+            "build_folder": "${project_path}/build"
+        },
+    }
+}
