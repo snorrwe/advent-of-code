@@ -1,0 +1,13 @@
+[package]
+authors = ["Daniel Kiss <littlesnorrboy@gmail.com>"]
+edition = "2018"
+name = "day19"
+version = "0.1.0"
+
+[dependencies]
+tracing = "0.1"
+tracing-subscriber = { version = "0.2" }
+
+[dev-dependencies]
+env_logger = "*"
+test-env-log = { version = "0.2", features = ["trace"] }
