@@ -2,10 +2,8 @@ use std::{collections::HashMap, mem::swap};
 
 fn parse_point(inp: &str) -> [i32; 2] {
     let mut inp = inp.split(',');
-    let x = inp.next().unwrap();
-    let y = inp.next().unwrap();
-    let x = x.parse().unwrap();
-    let y = y.parse().unwrap();
+    let x = inp.next().expect("x next").parse().expect("x parse");
+    let y = inp.next().expect("y next").parse().expect("y parse");
     [x, y]
 }
 
@@ -37,10 +35,8 @@ fn main() {
     let mut diagram = HashMap::<_, isize>::with_capacity(500 * 500);
     // part 1
     let mut count_p1 = 0;
-    for [[mut x1, mut y1], [mut x2, mut y2]] in lines
-        .iter()
-        .copied()
-        .filter(|[a, b]| a[0] == b[0] || a[1] == b[1])
+    for [[mut x1, mut y1], [mut x2, mut y2]] in
+        lines.iter().filter(|[a, b]| a[0] == b[0] || a[1] == b[1])
     {
         if x1 > x2 {
             swap(&mut x1, &mut x2);
@@ -48,6 +44,7 @@ fn main() {
         if y1 > y2 {
             swap(&mut y1, &mut y2);
         }
+        assert!(x1 - x2 == 0 || y1 - y2 == 0);
         for y in y1..=y2 {
             for x in x1..=x2 {
                 let entry = diagram.entry([x, y]).or_default();
@@ -62,11 +59,7 @@ fn main() {
 
     // part2
     let mut count_p2 = count_p1;
-    for [[x1, y1], [x2, y2]] in lines
-        .iter()
-        .copied()
-        .filter(|[a, b]| a[0] != b[0] && a[1] != b[1])
-    {
+    for [[x1, y1], [x2, y2]] in lines.iter().filter(|[a, b]| a[0] != b[0] && a[1] != b[1]) {
         // diagonals
         //
         assert!((x2 - x1).abs() == (y2 - y1).abs());
