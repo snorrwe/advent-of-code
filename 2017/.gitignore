@@ -1,0 +1,13 @@
+*.sublime-workspace
+*.exe
+*.cache
+__pycache__
+.build
+.lbuild
+*.ninja*
+bin
+*.o
+*.o-*
+*.d
+env
+*.egg-info
