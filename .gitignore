@@ -28,3 +28,8 @@ day05/input.txt
 2021/day05/input.txt
 2021/day01/input.txt
 2021/day02/input.txt
+*.pyc
+*.exe
+2016/day2/day2_input.txt
+2016/day3/day3_input.txt
+2016/day4/day4_input.txt
