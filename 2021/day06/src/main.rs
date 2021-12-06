@@ -1,4 +1,4 @@
-fn update(eta: &mut [usize; 9]) {
+fn update(eta: &mut [u32; 9]) {
     let zero = eta[0];
     for i in 1..=8 {
         eta[i - 1] = eta[i];
@@ -25,20 +25,25 @@ fn main() {
         }
     }
 
+    let start = std::time::Instant::now();
+
     // part1
     //
     for _ in 0..80 {
         update(&mut eta);
     }
 
-    let p1: usize = eta.iter().sum();
+    let p1: usize = eta.iter().map(|x| *x as usize).sum();
 
     // part2
     //
     for _ in 80..256 {
         update(&mut eta);
     }
+    let end = std::time::Instant::now();
 
-    let p2: usize = eta.iter().sum();
-    println!("Part1: {}, Part 2: {}", p1, p2);
+    let dur = end - start;
+
+    let p2: usize = eta.iter().map(|x| *x as usize).sum();
+    println!("Part1: {}, Part 2: {} t: {:?}", p1, p2, dur);
 }
