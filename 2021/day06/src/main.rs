@@ -1,6 +1,16 @@
-type Fishies = Vec<i32>;
+type FishiesETA = Vec<u8>;
+type ETA = [usize; 9];
 
-fn update(fishies: &mut Fishies)  {
+fn update2(eta: &mut ETA) {
+    let zero = eta[0];
+    for i in 1..=8 {
+        eta[i - 1] = eta[i];
+    }
+    eta[6] += zero;
+    eta[8] = zero;
+}
+
+fn update1(fishies: &mut FishiesETA) {
     let mut spawn = 0;
     for eta in fishies.iter_mut() {
         if *eta == 0 {
@@ -25,20 +35,32 @@ fn strip_line_ends(line: &str) -> &str {
 fn main() {
     let mut buffer = String::new();
 
-    let mut fishies = Fishies::with_capacity(1024);
+    let mut fishies = FishiesETA::with_capacity(1024);
+    let mut eta = [0; 9];
 
     if let Ok(size) = std::io::stdin().read_line(&mut buffer) {
         assert!(size > 0);
         for item in strip_line_ends(&buffer).split(',') {
-            fishies.push(item.parse().unwrap());
+            let i = item.parse().unwrap();
+            fishies.push(i);
+            eta[i as usize] += 1;
         }
     }
 
     // part1
     //
     for _ in 0..80 {
-        update(&mut fishies);
+        update1(&mut fishies);
     }
 
     println!("Part 1: {}", fishies.len());
+
+    // part2
+    //
+    for _ in 0..256 {
+        update2(&mut eta);
+    }
+
+    let p2: usize = eta.iter().sum();
+    println!("Part 2: {}", p2);
 }
