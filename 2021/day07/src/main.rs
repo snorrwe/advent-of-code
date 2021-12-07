@@ -1,5 +1,7 @@
 fn main() {
     let mut horizontal: Vec<i32> = Vec::with_capacity(512);
+    let mut min = i32::MAX;
+    let mut max = i32::MIN;
 
     let mut buffer = String::with_capacity(1024);
     if let Ok(size) = std::io::stdin().read_line(&mut buffer) {
@@ -12,6 +14,10 @@ fn main() {
             .split(',')
         {
             let i: i32 = item.parse().unwrap();
+
+            min = i.min(min);
+            max = i.max(max);
+
             horizontal.push(i);
         }
     }
@@ -24,8 +30,7 @@ fn main() {
 
     println!("Part1: {}", p1);
 
-    let p2: i32 = horizontal
-        .iter()
+    let p2: i32 = (min..=max)
         .map(|pos| {
             horizontal
                 .iter()
