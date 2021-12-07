@@ -7,12 +7,7 @@ fn main() {
     if let Ok(size) = std::io::stdin().read_line(&mut buffer) {
         assert!(size > 2);
         let line: &str = &buffer;
-        for item in line
-            .strip_suffix("\r\n")
-            .or_else(|| line.strip_suffix('\n'))
-            .unwrap_or(line)
-            .split(',')
-        {
+        for item in line.trim_end().split(',') {
             let i: i32 = item.parse().unwrap();
 
             min = i.min(min);
