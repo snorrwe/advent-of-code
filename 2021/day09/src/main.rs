@@ -1,3 +1,7 @@
+use std::collections::HashSet;
+
+use rayon::prelude::*;
+
 type Grid = Vec<u32>;
 
 fn index(x: isize, y: isize, width: isize, height: isize) -> Option<usize> {
@@ -5,6 +9,62 @@ fn index(x: isize, y: isize, width: isize, height: isize) -> Option<usize> {
         return None;
     }
     (y * width + x).try_into().ok()
+}
+
+/// none if not a low point
+fn get_risk(grid: &[u32], x: isize, y: isize, width: isize, height: isize) -> Option<u32> {
+    let h = grid[index(x, y, width, height).unwrap()];
+
+    for dy in [-1, 1] {
+        if let Some(i) = index(x, y + dy, width, height) {
+            if grid[i] <= h {
+                return None;
+            }
+        }
+    }
+    for dx in [-1, 1] {
+        if let Some(i) = index(x + dx, y, width, height) {
+            if grid[i] <= h {
+                return None;
+            }
+        }
+    }
+
+    let risk = h + 1;
+    Some(risk)
+}
+
+fn visit_basin(
+    visited: &mut HashSet<[isize; 2]>,
+    grid: &[u32],
+    x: isize,
+    y: isize,
+    width: isize,
+    height: isize,
+    mut h: u32,
+) {
+    if visited.contains(&[x, y]) {
+        return;
+    }
+    match index(x, y, width, height) {
+        Some(i) => {
+            if grid[i] < h || grid[i] == 9 {
+                return;
+            }
+            visited.insert([x, y]);
+            h = grid[i];
+        }
+        None => return,
+    }
+
+    for dy in [-1, 1] {
+        let y = y + dy;
+        visit_basin(visited, grid, x, y, width, height, h);
+    }
+    for dx in [-1, 1] {
+        let x = x + dx;
+        visit_basin(visited, grid, x, y, width, height, h);
+    }
 }
 
 fn main() {
@@ -41,29 +101,35 @@ fn main() {
     // part 1
     //
     let mut p1 = 0;
+    let mut low_points = Vec::with_capacity(512);
     for y in 0..height {
-        'row: for x in 0..width {
-            let h = grid[index(x, y, width, height).unwrap()];
-
-            for dy in [-1, 1] {
-                if let Some(i) = index(x, y + dy, width, height) {
-                    if grid[i] <= h {
-                        continue 'row;
-                    }
-                }
+        for x in 0..width {
+            if let Some(risk) = get_risk(&grid, x, y, width, height) {
+                p1 += risk;
+                low_points.push([x, y]);
             }
-            for dx in [-1, 1] {
-                if let Some(i) = index(x + dx, y, width, height) {
-                    if grid[i] <= h {
-                        continue 'row;
-                    }
-                }
-            }
-
-            let risk = h + 1;
-            p1 += risk;
         }
     }
 
     println!("Part1: {}", p1);
+
+    // part 2
+    //
+
+    let grid = grid.as_slice();
+    let mut basins = low_points
+        .par_iter()
+        .map(|[x, y]| {
+            let mut visited = HashSet::new();
+            let h = grid[index(*x, *y, width, height).unwrap()];
+            visit_basin(&mut visited, grid, *x, *y, width, height, h);
+            visited.len()
+        })
+        .collect::<Vec<_>>();
+
+    basins.par_sort();
+
+    let p2: usize = basins[basins.len() - 3..].iter().product();
+
+    println!("Part2: {}", p2);
 }
