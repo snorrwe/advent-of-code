@@ -109,8 +109,6 @@ fn main() {
         }
     }
 
-    println!("Part1: {}", p1);
-
     // part 2
     //
     let grid = grid.as_slice();
@@ -127,5 +125,5 @@ fn main() {
 
     let p2: usize = basins[basins.len() - 3..].iter().product();
 
-    println!("Part2: {}", p2);
+    println!("Part1: {} Part2: {}", p1, p2);
 }
