@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use rayon::prelude::*;
 
 type Grid = Vec<u32>;
@@ -35,36 +33,36 @@ fn get_risk(grid: &[u32], x: isize, y: isize, width: isize, height: isize) -> Op
 }
 
 fn visit_basin(
-    visited: &mut HashSet<[isize; 2]>,
+    visited: &mut Vec<bool>,
     grid: &[u32],
     x: isize,
     y: isize,
     width: isize,
     height: isize,
     mut h: u32,
-) {
-    if visited.contains(&[x, y]) {
-        return;
-    }
+    mut count: usize,
+) -> usize {
     match index(x, y, width, height) {
         Some(i) => {
-            if grid[i] < h || grid[i] == 9 {
-                return;
+            if visited[i] || grid[i] < h || grid[i] == 9 {
+                return count;
             }
-            visited.insert([x, y]);
+            visited[i] = true;
             h = grid[i];
+            count += 1;
         }
-        None => return,
+        None => return count,
     }
 
     for dy in [-1, 1] {
         let y = y + dy;
-        visit_basin(visited, grid, x, y, width, height, h);
+        count = visit_basin(visited, grid, x, y, width, height, h, count);
     }
     for dx in [-1, 1] {
         let x = x + dx;
-        visit_basin(visited, grid, x, y, width, height, h);
+        count = visit_basin(visited, grid, x, y, width, height, h, count);
     }
+    count
 }
 
 fn main() {
@@ -115,15 +113,13 @@ fn main() {
 
     // part 2
     //
-
     let grid = grid.as_slice();
     let mut basins = low_points
         .par_iter()
         .map(|[x, y]| {
-            let mut visited = HashSet::new();
+            let mut visited = vec![false; grid.len()];
             let h = grid[index(*x, *y, width, height).unwrap()];
-            visit_basin(&mut visited, grid, *x, *y, width, height, h);
-            visited.len()
+            visit_basin(&mut visited, grid, *x, *y, width, height, h, 0)
         })
         .collect::<Vec<_>>();
 
