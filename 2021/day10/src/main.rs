@@ -12,18 +12,12 @@ fn matches(start: char, end: char) -> bool {
     }
 }
 
-fn score(end: char) -> usize {
-    match end {
+fn score(c: char) -> usize {
+    match c {
         '}' => 1197,
         ')' => 3,
         ']' => 57,
         '>' => 25137,
-        _ => 0,
-    }
-}
-
-fn score_v2(end: char) -> usize {
-    match end {
         '{' => 3,
         '(' => 1,
         '[' => 2,
@@ -32,20 +26,15 @@ fn score_v2(end: char) -> usize {
     }
 }
 
-fn parse_line(line: &str, p1: &mut usize, s: &mut Vec<char>) -> bool {
-    s.clear();
+fn parse_line(line: &str, p1: &mut usize, stack: &mut Vec<char>) -> bool {
+    stack.clear();
     for token in line.chars() {
         if is_start(token) {
-            s.push(token);
+            stack.push(token);
         } else {
-            match s.last() {
-                Some(c) => {
-                    if matches(*c, token) {
-                        s.pop();
-                    } else {
-                        *p1 += score(token);
-                        return false;
-                    }
+            match stack.last().filter(|c| matches(**c, token)) {
+                Some(_) => {
+                    stack.pop();
                 }
                 None => {
                     *p1 += score(token);
@@ -59,7 +48,7 @@ fn parse_line(line: &str, p1: &mut usize, s: &mut Vec<char>) -> bool {
 
 fn main() {
     let mut buffer = String::with_capacity(1024);
-    let mut s = Vec::new();
+    let mut stack = Vec::new();
     let mut p1 = 0;
     let mut p2 = Vec::new();
     while let Ok(_size) = std::io::stdin().read_line(&mut buffer) {
@@ -67,14 +56,13 @@ fn main() {
         if line.len() == 0 {
             break;
         }
-        if parse_line(line, &mut p1, &mut s) {
-            let mut score = 0;
-            while let Some(c) = s.pop() {
-                score *= 5;
-                score += score_v2(c);
+        if parse_line(line, &mut p1, &mut stack) {
+            let mut acc = 0;
+            while let Some(c) = stack.pop() {
+                acc *= 5;
+                acc += score(c);
             }
-            p2.push(score);
-            // incomplete
+            p2.push(acc);
         }
         buffer.clear();
     }
