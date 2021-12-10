@@ -1,45 +1,44 @@
 use rayon::prelude::*;
 
-type Grid = Vec<u32>;
+type Grid = Vec<u8>;
 
-fn index(x: isize, y: isize, width: isize, height: isize) -> Option<usize> {
+fn index(x: i32, y: i32, width: i32, height: i32) -> Option<usize> {
     if x >= width || y >= height || x < 0 || y < 0 {
         return None;
     }
-    (y * width + x).try_into().ok()
+    Some((y * width + x) as usize)
 }
 
 /// none if not a low point
-fn get_risk(grid: &[u32], x: isize, y: isize, width: isize, height: isize) -> Option<u32> {
+fn get_risk(grid: &[u8], x: i32, y: i32, width: i32, height: i32) -> u32 {
     let h = grid[index(x, y, width, height).unwrap()];
 
     for dy in [-1, 1] {
         if let Some(i) = index(x, y + dy, width, height) {
             if grid[i] <= h {
-                return None;
+                return 0;
             }
         }
     }
     for dx in [-1, 1] {
         if let Some(i) = index(x + dx, y, width, height) {
             if grid[i] <= h {
-                return None;
+                return 0;
             }
         }
     }
 
-    let risk = h + 1;
-    Some(risk)
+    h as u32 + 1
 }
 
 fn visit_basin(
     visited: &mut Vec<bool>,
-    grid: &[u32],
-    x: isize,
-    y: isize,
-    width: isize,
-    height: isize,
-    mut h: u32,
+    grid: &[u8],
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+    mut h: u8,
     mut count: usize,
 ) -> usize {
     match index(x, y, width, height) {
@@ -67,8 +66,8 @@ fn visit_basin(
 
 fn main() {
     let mut grid = Grid::with_capacity(16000);
-    let mut width = 0isize;
-    let mut height = 0isize;
+    let mut width = 0i32;
+    let mut height = 0i32;
 
     let mut buffer = String::with_capacity(1024);
     let stdin = std::io::stdin();
@@ -77,10 +76,10 @@ fn main() {
         assert!(!line.is_empty());
 
         for num in line.chars() {
-            grid.push(num.to_digit(10).unwrap());
+            grid.push(num as u8 - '0' as u8);
         }
         height += 1;
-        width = grid.len() as isize;
+        width = grid.len() as i32;
     }
     buffer.clear();
     while let Ok(_size) = stdin.read_line(&mut buffer) {
@@ -88,9 +87,9 @@ fn main() {
         if line.is_empty() {
             break;
         }
-        assert!(line.len() as isize == width);
+        assert!(line.len() as i32 == width);
         for num in line.chars() {
-            grid.push(num.to_digit(10).unwrap());
+            grid.push(num as u8 - '0' as u8);
         }
         height += 1;
         buffer.clear();
@@ -100,10 +99,12 @@ fn main() {
     //
     let mut p1 = 0;
     let mut low_points = Vec::with_capacity(512);
+    let grid = grid.as_slice();
     for y in 0..height {
         for x in 0..width {
-            if let Some(risk) = get_risk(&grid, x, y, width, height) {
-                p1 += risk;
+            let risk = get_risk(&grid, x, y, width, height);
+            p1 += risk;
+            if risk > 0 {
                 low_points.push([x, y]);
             }
         }
@@ -111,7 +112,6 @@ fn main() {
 
     // part 2
     //
-    let grid = grid.as_slice();
     let mut basins = low_points
         .par_iter()
         .map(|[x, y]| {
