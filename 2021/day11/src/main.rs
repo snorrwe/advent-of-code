@@ -84,6 +84,23 @@ fn main() {
             &mut p1,
         );
     }
+    let mut p2 = 101;
+    loop {
+        let mut delta = 0;
+        update(
+            p2,
+            &mut grid,
+            &mut timestamp,
+            &mut todo,
+            width as i32,
+            height as i32,
+            &mut delta,
+        );
+        if delta == grid.len() {
+            break;
+        }
+        p2 += 1;
+    }
 
-    println!("P1: {}", p1);
+    println!("P1: {} P2: {}", p1, p2);
 }
