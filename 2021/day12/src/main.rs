@@ -27,20 +27,24 @@ fn main() {
 
     let mut explored = HashSet::new();
     let mut p1 = 0;
-    visit_paths(&graph, "start", &mut explored, &mut p1);
+    visit_paths_p1(&graph, "start", &mut explored, &mut p1);
 
-    println!("P1: {}", p1);
+    let mut explored = HashMap::new();
+    let mut p2 = 0;
+    let mut small_twice = false;
+    visit_paths_p2(&graph, "start", &mut explored, &mut p2, &mut small_twice);
+
+    println!("P1: {} P2: {}", p1, p2);
 }
 
 // dfs
-fn visit_paths<'a>(
+fn visit_paths_p1<'a>(
     graph: &Edges<'a>,
     parent: &'a str,
     explored: &mut HashSet<&'a str>,
     count: &mut usize,
 ) {
     if parent == "end" {
-        // dbg!(&path[1..]);
         *count += 1;
         return;
     }
@@ -50,8 +54,44 @@ fn visit_paths<'a>(
             // big caves can be visited multiple times
             || (node.chars().next().unwrap().is_uppercase())
         {
-            visit_paths(graph, node, explored, count);
+            visit_paths_p1(graph, node, explored, count);
         }
     }
     explored.remove(parent);
+}
+
+fn visit_paths_p2<'a>(
+    graph: &Edges<'a>,
+    parent: &'a str,
+    explored: &mut HashMap<&'a str, usize>,
+    count: &mut usize,
+    small_twice: &mut bool,
+) {
+    if parent == "end" {
+        *count += 1;
+        return;
+    }
+
+    let exp = explored.entry(parent).or_insert(0);
+    *exp += 1;
+    if *exp == 2 && parent.chars().next().unwrap().is_lowercase() {
+        if *small_twice {
+            *exp -= 1;
+            return;
+        }
+        *small_twice = true;
+    }
+    for node in graph[parent].iter().copied() {
+        //big caves can be visited multiple times
+        if (node.chars().next().unwrap().is_uppercase())
+            || (node != "start" && explored.get(node).map(|n| *n <= 1).unwrap_or(true))
+        {
+            visit_paths_p2(graph, node, explored, count, small_twice);
+        }
+    }
+    let exp = explored.entry(parent).or_insert(0);
+    *exp -= 1;
+    if *exp == 1 && parent.chars().next().unwrap().is_lowercase() {
+        *small_twice = false;
+    }
 }
