@@ -1,0 +1,9 @@
+{
+  "name": "day5",
+  "version": "1.0.0",
+  "main": "main.js",
+  "license": "MIT",
+  "dependencies": {
+    "md5": "^2.3.0"
+  }
+}
