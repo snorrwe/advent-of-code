@@ -7,7 +7,7 @@ fn char_to_prio(c: u8) i32 {
     return 27 + (c - 'A');
 }
 
-fn solve(input: []const u8) anyerror!i32 {
+fn part1(input: []const u8) anyerror!i32 {
     var it = std.mem.split(u8, input, "\n");
     const allocator = std.heap.page_allocator;
     var sacka = std.AutoHashMap(u8, void).init(allocator);
@@ -35,6 +35,43 @@ fn solve(input: []const u8) anyerror!i32 {
     return result;
 }
 
+fn part2(input: []const u8) anyerror!i32 {
+    var it = std.mem.split(u8, input, "\n");
+    const allocator = std.heap.page_allocator;
+    var sacka = std.AutoHashMap(u8, void).init(allocator);
+    var sackb = std.AutoHashMap(u8, void).init(allocator);
+    var sackc = std.AutoHashMap(u8, void).init(allocator);
+    var result: i32 = 0;
+    while (it.next()) |linea| {
+        if (linea.len == 0) {
+            break;
+        }
+        sacka.clearRetainingCapacity();
+        sackb.clearRetainingCapacity();
+        sackc.clearRetainingCapacity();
+
+        const lineb = it.next().?;
+        const linec = it.next().?;
+
+        for (linea) |c| {
+            try sacka.put(c, void{});
+        }
+        for (lineb) |c| {
+            try sackb.put(c, void{});
+        }
+        for (linec) |c| {
+            try sackc.put(c, void{});
+        }
+        var jt = sacka.keyIterator();
+        while (jt.next()) |a| {
+            if (sackb.contains(a.*) and sackc.contains(a.*)) {
+                result += char_to_prio(a.*);
+            }
+        }
+    }
+    return result;
+}
+
 pub fn main() anyerror!void {
     var file = try std.fs.cwd().openFile("input.txt", .{});
     defer file.close();
@@ -43,13 +80,16 @@ pub fn main() anyerror!void {
     var a = gpa.allocator();
 
     var input = try file.readToEndAlloc(a, 32000);
-    var result = try solve(input);
 
+    var result = try part1(input);
     std.log.info("part1: {}", .{result});
+
+    result = try part2(input);
+    std.log.info("part2: {}", .{result});
 }
 
-test "basic test" {
-    const result = try solve(
+test "part1 test" {
+    const result = try part1(
         \\vJrwpWtwJgWrhcsFMMfFFhFp
         \\jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
         \\PmmdzqPrVvPwwTWBwg
@@ -58,4 +98,16 @@ test "basic test" {
         \\CrZsJsPPZsGzwwsLwLmpwMDw
     );
     try std.testing.expectEqual(result, 157);
+}
+
+test "part2 test" {
+    const result = try part2(
+        \\vJrwpWtwJgWrhcsFMMfFFhFp
+        \\jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+        \\PmmdzqPrVvPwwTWBwg
+        \\wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+        \\ttgJtRGJQctTZtZT
+        \\CrZsJsPPZsGzwwsLwLmpwMDw
+    );
+    try std.testing.expectEqual(result, 70);
 }
