@@ -1,71 +1,59 @@
 const std = @import("std");
 
-fn char_to_prio(c: u8) i32 {
+fn char_to_prio(c: u8) usize {
     if ('a' <= c and c <= 'z') {
         return (c - 'a') + 1;
     }
     return 27 + (c - 'A');
 }
 
-fn part1(input: []const u8) anyerror!i32 {
+fn part1(input: []const u8) anyerror!usize {
     var it = std.mem.split(u8, input, "\n");
-    const allocator = std.heap.page_allocator;
-    var sacka = std.AutoHashMap(u8, void).init(allocator);
-    var sackb = std.AutoHashMap(u8, void).init(allocator);
-    var result: i32 = 0;
+    var result: usize = 0;
     while (it.next()) |line| {
-        sacka.clearRetainingCapacity();
-        sackb.clearRetainingCapacity();
+        var sack = std.mem.zeroes([27 * 2]u8);
 
         const len = line.len;
         const l2 = len / 2;
         for (line[0..l2]) |c| {
-            try sacka.put(c, void{});
+            sack[char_to_prio(c)] = 1;
         }
         for (line[l2..len]) |c| {
-            try sackb.put(c, void{});
-        }
-        var jt = sacka.keyIterator();
-        while (jt.next()) |a| {
-            if (sackb.contains(a.*)) {
-                result += char_to_prio(a.*);
+            const p = char_to_prio(c);
+            if (sack[p] == 1) {
+                sack[p] += 1;
+                result += p;
             }
         }
     }
     return result;
 }
 
-fn part2(input: []const u8) anyerror!i32 {
+fn part2(input: []const u8) anyerror!usize {
     var it = std.mem.split(u8, input, "\n");
-    const allocator = std.heap.page_allocator;
-    var sacka = std.AutoHashMap(u8, void).init(allocator);
-    var sackb = std.AutoHashMap(u8, void).init(allocator);
-    var sackc = std.AutoHashMap(u8, void).init(allocator);
-    var result: i32 = 0;
+    var result: usize = 0;
     while (it.next()) |linea| {
         if (linea.len == 0) {
             break;
         }
-        sacka.clearRetainingCapacity();
-        sackb.clearRetainingCapacity();
-        sackc.clearRetainingCapacity();
+        // use a bitfields to mark what priority was seen
+        // in which line
+        var sack = std.mem.zeroes([27 * 2]u8);
 
         const lineb = it.next().?;
         const linec = it.next().?;
 
         for (linea) |c| {
-            try sacka.put(c, void{});
+            sack[char_to_prio(c)] |= 1;
         }
         for (lineb) |c| {
-            try sackb.put(c, void{});
+            sack[char_to_prio(c)] |= 2;
         }
         for (linec) |c| {
-            try sackc.put(c, void{});
-        }
-        var jt = sacka.keyIterator();
-        while (jt.next()) |a| {
-            if (sackb.contains(a.*) and sackc.contains(a.*)) {
-                result += char_to_prio(a.*);
+            const i = char_to_prio(c);
+            if (sack[i] == (2 | 1)) {
+                sack[i] |= 4;
+                result += i;
             }
         }
     }
