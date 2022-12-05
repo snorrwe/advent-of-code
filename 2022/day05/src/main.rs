@@ -3,7 +3,7 @@ use std::{collections::VecDeque, str::Lines};
 use regex::Regex;
 
 fn parse_crates<'a>(lines: &mut Lines<'a>, stacks: &mut Vec<VecDeque<&'a str>>) {
-    let re = Regex::new(r"\[([A-Z])\]|( {3})").unwrap();
+    let re = Regex::new(r"\[([A-Z])\]").unwrap();
     while let Some(line) = lines.next() {
         if line.len() == 0 {
             break;
