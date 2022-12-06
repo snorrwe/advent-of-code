@@ -1,40 +1,59 @@
-fn part1(line: &str) -> usize {
-    'a: for i in 0..line.len() - 4 {
-        let p = line.get(i..i + 4).unwrap();
-        for (i, a) in p.chars().enumerate() {
-            for (j, b) in p.chars().enumerate() {
+fn solve(line: &[u8], window_size: usize) -> usize {
+    'a: for (i, window) in line.windows(window_size).enumerate() {
+        for (i, a) in window.iter().enumerate() {
+            for (j, b) in window.iter().enumerate() {
                 if i == j {
                     continue;
                 }
-                if a == b {
+                if *a == *b {
                     continue 'a;
                 }
             }
         }
-        return i + 4;
+        return i + window_size;
     }
+
     unreachable!()
 }
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
-    let p1 = part1(&input);
+    let p1 = solve(input.as_bytes(), 4);
     println!("p1: {}", p1);
+    let p2 = solve(input.as_bytes(), 14);
+    println!("p2: {}", p2);
 }
 
 #[test]
 fn part1_test() {
-    let res = part1("mjqjpqmgbljsphdztnvjfqwrcgsmlb");
+    let res = solve(b"mjqjpqmgbljsphdztnvjfqwrcgsmlb", 4);
     assert_eq!(res, 7);
 
-    let res = part1("bvwbjplbgvbhsrlpgdmjqwftvncz");
+    let res = solve(b"bvwbjplbgvbhsrlpgdmjqwftvncz", 4);
     assert_eq!(res, 5);
 
-    let res = part1("nppdvjthqldpwncqszvftbrmjlhg");
+    let res = solve(b"nppdvjthqldpwncqszvftbrmjlhg", 4);
     assert_eq!(res, 6);
 
-    let res = part1("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg");
+    let res = solve(b"nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg", 4);
     assert_eq!(res, 10);
-    let res = part1("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw");
+    let res = solve(b"zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw", 4);
     assert_eq!(res, 11);
+}
+
+#[test]
+fn part2_test() {
+    let res = solve(b"mjqjpqmgbljsphdztnvjfqwrcgsmlb", 14);
+    assert_eq!(res, 19);
+
+    let res = solve(b"bvwbjplbgvbhsrlpgdmjqwftvncz", 14);
+    assert_eq!(res, 23);
+
+    let res = solve(b"nppdvjthqldpwncqszvftbrmjlhg", 14);
+    assert_eq!(res, 23);
+
+    let res = solve(b"nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg", 14);
+    assert_eq!(res, 29);
+    let res = solve(b"zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw", 14);
+    assert_eq!(res, 26);
 }
