@@ -25,7 +25,7 @@ enum Cmd {
     Ls,
 }
 
-fn part1(input: &str) -> i32 {
+fn parse_input(input: &str) -> Dir {
     let mut root = Dir::default();
     let mut current_dir = &mut root;
     let mut current_path = PathBuf::from("/");
@@ -74,6 +74,10 @@ fn part1(input: &str) -> i32 {
             }
         }
     }
+    root
+}
+
+fn part1(root: &Dir) -> i32 {
     let mut res = 0;
     for dir in root.iter_dirs() {
         let s = dir.size();
@@ -84,15 +88,33 @@ fn part1(input: &str) -> i32 {
     res
 }
 
+fn part2(root: &Dir) -> i32 {
+    const TOTAL: i32 = 70000000;
+    const REQUIRED: i32 = TOTAL - 30000000;
+    let total_used = root.size();
+
+    let mut result = total_used;
+    for dir in root.iter_dirs() {
+        let size = dir.size();
+        if total_used - size < REQUIRED && size < result {
+            result = size;
+        }
+    }
+    result
+}
+
 fn main() {
     let inp = std::fs::read_to_string("input.txt").unwrap();
-    let p1 = part1(&inp);
+    let root = parse_input(&inp);
+    let p1 = part1(&root);
     println!("part1: {p1}");
+    let p2 = part2(&root);
+    println!("part2: {p2}");
 }
 
 #[test]
 fn part1_test() {
-    let res = part1(
+    let root = parse_input(
         r#"$ cd /
 $ ls
 dir a
@@ -117,6 +139,38 @@ $ ls
 5626152 d.ext
 7214296 k"#,
     );
+    let res = part1(&root);
 
     assert_eq!(95437, res);
+}
+#[test]
+fn part2_test() {
+    let root = parse_input(
+        r#"$ cd /
+$ ls
+dir a
+14848514 b.txt
+8504156 c.dat
+dir d
+$ cd a
+$ ls
+dir e
+29116 f
+2557 g
+62596 h.lst
+$ cd e
+$ ls
+584 i
+$ cd ..
+$ cd ..
+$ cd d
+$ ls
+4060174 j
+8033020 d.log
+5626152 d.ext
+7214296 k"#,
+    );
+    let res = part2(&root);
+
+    assert_eq!(24933642, res);
 }
