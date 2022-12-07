@@ -1,7 +1,13 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::HashMap,
+    path::PathBuf,
+    sync::atomic::{AtomicI32, Ordering},
+};
 
 #[derive(Default, Debug)]
 struct Dir {
+    /// size cache
+    size: AtomicI32,
     files: HashMap<String, i32>,
     children: HashMap<String, Dir>,
     parent: Option<*mut Dir>,
@@ -9,9 +15,16 @@ struct Dir {
 
 impl Dir {
     fn size(&self) -> i32 {
+        let size = self.size.load(Ordering::Relaxed);
+        if size > 0 {
+            return size;
+        }
+
         let res: i32 = self.files.iter().map(|(_, x)| *x).sum();
         let ch: i32 = self.children.iter().map(|(_, c)| c.size()).sum();
-        res + ch
+        let size = res + ch;
+        self.size.store(size, Ordering::Relaxed);
+        size
     }
 
     fn iter_dirs<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self> + 'a> {
