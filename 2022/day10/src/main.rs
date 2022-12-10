@@ -1,48 +1,77 @@
-fn interesting(time: isize) -> bool {
+fn interesting(time: i32) -> bool {
     (time - 20) % 40 == 0
 }
 
-fn part1(input: &str) -> isize {
+fn time_to_crt(time: usize) -> [usize; 2] {
+    let row = time / 40;
+    let col = time - row * 40;
+    [col, row]
+}
+
+fn draw_sprite(crt: &mut [[u8; 40]; 6], time: i32, x: i32) {
+    let [col, row] = time_to_crt(time as usize);
+    let mut visible = false;
+    for i in -1..=1 {
+        if x + i == col as i32 {
+            visible = true;
+            break;
+        }
+    }
+    if visible {
+        crt[row][col] = b'#';
+    }
+}
+
+fn run(input: &str) -> (i32, String) {
     let mut x = 1;
-    let mut time = 1;
+    let mut time = 0;
     let mut signal = 0;
+    let mut crt = [[b'.'; 40]; 6];
     for line in input.lines() {
         let mut opargs = line.split(" ");
         match opargs.next().unwrap() {
             "noop" => {
+                draw_sprite(&mut crt, time, x);
                 if interesting(time) {
                     signal += x * time;
                 }
                 time += 1;
             }
             "addx" => {
-                let arg: isize = opargs.next().unwrap().parse().unwrap();
-                if interesting(time) {
-                    signal += x * time;
+                for d in 0..2 {
+                    let time = time + d;
+                    if interesting(time) {
+                        signal += x * time;
+                    }
+                    draw_sprite(&mut crt, time, x);
                 }
-                if interesting(time + 1) {
-                    signal += x * (time + 1);
-                }
-                time += 2;
+                let arg: i32 = opargs.next().unwrap().parse().unwrap();
                 x += arg;
+                time += 2;
             }
             _ => unreachable!(),
         }
     }
-    signal
+    let crt = crt
+        .into_iter()
+        .flat_map(|x| {
+            x.into_iter()
+                .map(|x| x as char)
+                .chain(std::iter::once('\n'))
+        })
+        .collect();
+    (signal, crt)
 }
 
 fn main() {
     let program = std::fs::read_to_string("input.txt").unwrap();
 
-    let res = part1(&program);
-    println!("p1: {res}");
+    let (p1, p2) = run(&program);
+    println!("p1: {p1}");
+    println!("p2:\n{p2}");
 }
 
-#[test]
-fn part1_test() {
-    let res = part1(
-        r#"addx 15
+const _PROGRAM: &str = r#"addx 15
 addx -11
 addx 6
 addx -3
@@ -187,8 +216,26 @@ addx -6
 addx -11
 noop
 noop
-noop"#,
-    );
+noop"#;
+
+#[test]
+fn part1_test() {
+    let (res, _) = run(_PROGRAM);
 
     assert_eq!(13140, res);
+}
+
+#[test]
+fn part2_test() {
+    let (_, p2) = run(_PROGRAM);
+
+    let exp = r#"##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######.....
+"#;
+
+    assert_eq!(exp, p2, "\n\nexp:\n{exp}\nactual:\n{p2}");
 }
