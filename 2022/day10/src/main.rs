@@ -24,14 +24,14 @@ fn draw_sprite(crt: &mut [[u8; 40]; 6], time: i32, x: i32) {
 
 fn run(input: &str) -> (i32, String) {
     let mut x = 1;
-    let mut time = 0;
+    let mut time = 1;
     let mut signal = 0;
     let mut crt = [[b'.'; 40]; 6];
     for line in input.lines() {
         let mut opargs = line.split(" ");
         match opargs.next().unwrap() {
             "noop" => {
-                draw_sprite(&mut crt, time, x);
+                draw_sprite(&mut crt, time - 1, x);
                 if interesting(time) {
                     signal += x * time;
                 }
@@ -43,7 +43,7 @@ fn run(input: &str) -> (i32, String) {
                     if interesting(time) {
                         signal += x * time;
                     }
-                    draw_sprite(&mut crt, time, x);
+                    draw_sprite(&mut crt, time - 1, x);
                 }
                 let arg: i32 = opargs.next().unwrap().parse().unwrap();
                 x += arg;
