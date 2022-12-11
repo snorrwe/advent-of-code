@@ -3,8 +3,8 @@ use std::cell::RefCell;
 
 #[derive(Debug, Clone, Copy)]
 enum Opt {
-    MulConst(i32),
-    AddConst(i32),
+    MulConst(u64),
+    AddConst(u64),
     Square,
     Noop,
 }
@@ -17,11 +17,11 @@ impl Default for Opt {
 
 type MonkeId = usize;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 struct Monke {
     opt: Opt,
-    items: Vec<i32>,
-    test: i32,
+    items: Vec<u64>,
+    test: u64,
     iftrue: MonkeId,
     iffalse: MonkeId,
 }
@@ -111,14 +111,43 @@ fn part1(mut monkeys: Vec<RefCell<Monke>>) -> usize {
     inspects[0] * inspects[1]
 }
 
+fn part2(mut monkeys: Vec<RefCell<Monke>>) -> usize {
+    let mut inspects = monkeys.iter().map(|_| 0).collect::<Vec<_>>();
+    let m: u64 = monkeys.iter().map(|m|m.borrow().test).product();
+    for _turn in 0..10000 {
+        for (monkey_id, monkey) in monkeys.iter().enumerate() {
+            let mut monkey = monkey.borrow_mut();
+            let items = std::mem::take(&mut monkey.items);
+            for item in items {
+                inspects[monkey_id] += 1;
+                let item = match monkey.opt {
+                    Opt::MulConst(i) => item * i,
+                    Opt::AddConst(i) => item + i,
+                    Opt::Square => item * item,
+                    Opt::Noop => unreachable!(),
+                };
+                let item = item % m;
+                if item % monkey.test == 0 {
+                    monkeys[monkey.iftrue].borrow_mut().items.push(item);
+                } else {
+                    monkeys[monkey.iffalse].borrow_mut().items.push(item);
+                }
+            }
+        }
+    }
+    inspects.sort_by(|a, b| b.cmp(a));
+    inspects[0] * inspects[1]
+}
+
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
 
     let monkeys = parse(&input);
 
-    let res = part1(monkeys);
-
+    let res = part1(monkeys.clone());
     println!("part1: {res}");
+    let res = part2(monkeys);
+    println!("part2: {res}");
 }
 
 #[test]
@@ -154,4 +183,41 @@ Monkey 3:
     );
 
     let res = part1(monkeys);
+    assert_eq!(res, 10605);
+}
+
+#[test]
+fn part2_test() {
+    let monkeys = parse(
+        r#"Monkey 0:
+  Starting items: 79, 98
+  Operation: new = old * 19
+  Test: divisible by 23
+    If true: throw to monkey 2
+    If false: throw to monkey 3
+
+Monkey 1:
+  Starting items: 54, 65, 75, 74
+  Operation: new = old + 6
+  Test: divisible by 19
+    If true: throw to monkey 2
+    If false: throw to monkey 0
+
+Monkey 2:
+  Starting items: 79, 60, 97
+  Operation: new = old * old
+  Test: divisible by 13
+    If true: throw to monkey 1
+    If false: throw to monkey 3
+
+Monkey 3:
+  Starting items: 74
+  Operation: new = old + 3
+  Test: divisible by 17
+    If true: throw to monkey 0
+    If false: throw to monkey 1"#,
+    );
+
+    let res = part2(monkeys);
+    assert_eq!(res, 2713310158);
 }
