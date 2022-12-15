@@ -148,3 +148,12 @@ impl Neg for IVec2 {
 pub fn read_input()->String {
     std::fs::read_to_string("input.txt").unwrap()
 }
+
+pub fn walk_square(from: IVec2, to: IVec2) -> impl Iterator<Item = IVec2> {
+    debug_assert!(from.x <= to.x);
+    debug_assert!(from.y <= to.y);
+
+    let fx = from.x;
+    let tx = to.x;
+    (from.y..=to.y).flat_map(move |y| (fx..=tx).map(move |x| IVec2::new(x, y)))
+}

@@ -1,5 +1,5 @@
-use utils::IVec2;
 use std::collections::HashSet;
+use utils::IVec2;
 
 #[derive(Debug)]
 struct Sensor {
@@ -41,8 +41,8 @@ fn parse(input: &str) -> Map {
         let beacon = IVec2::new(tox, toy);
         let radius = beacon.manhatten(pos);
 
-        result.min = result.min.min(fromx-radius);
-        result.max = result.max.max(fromx+radius);
+        result.min = result.min.min(fromx - radius);
+        result.max = result.max.max(fromx + radius);
 
         result.sensors.push(Sensor { pos, radius });
         result.beacons.insert(beacon);
@@ -53,7 +53,6 @@ fn parse(input: &str) -> Map {
 
 fn part1(map: &Map, y: i32) -> usize {
     let mut count = 0;
-    dbg!(map.min, map.max);
     'x: for x in map.min..=map.max {
         let pos = IVec2::new(x, y);
         for s in map.sensors.iter() {
@@ -66,12 +65,26 @@ fn part1(map: &Map, y: i32) -> usize {
     count
 }
 
+fn part2(map: &Map, max: i32) -> usize {
+    'a: for pos in utils::walk_square(IVec2::ZERO, IVec2::splat(max)) {
+        for s in map.sensors.iter() {
+            if s.contains(pos) {
+                continue 'a;
+            }
+        }
+        return (pos.x as usize * 4000000) + pos.y as usize;
+    }
+    unreachable!()
+}
+
 fn main() {
     let input = utils::read_input();
     let map = parse(&input);
 
     let res = part1(&map, 2000000);
     println!("part1: {res}");
+    let res = part2(&map, 4000000);
+    println!("part2: {res}");
 }
 
 #[test]
@@ -97,6 +110,27 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3"#,
     assert_eq!(26, res);
     let res = part1(&m, 11);
     assert_eq!(27, res);
-    let res = part1(&m, 9);
-    assert_eq!(24, res);
+}
+
+#[test]
+fn part2_test() {
+    let m = parse(
+        r#"Sensor at x=2, y=18: closest beacon is at x=-2, y=15
+Sensor at x=9, y=16: closest beacon is at x=10, y=16
+Sensor at x=13, y=2: closest beacon is at x=15, y=3
+Sensor at x=12, y=14: closest beacon is at x=10, y=16
+Sensor at x=10, y=20: closest beacon is at x=10, y=16
+Sensor at x=14, y=17: closest beacon is at x=10, y=16
+Sensor at x=8, y=7: closest beacon is at x=2, y=10
+Sensor at x=2, y=0: closest beacon is at x=2, y=10
+Sensor at x=0, y=11: closest beacon is at x=2, y=10
+Sensor at x=20, y=14: closest beacon is at x=25, y=17
+Sensor at x=17, y=20: closest beacon is at x=21, y=22
+Sensor at x=16, y=7: closest beacon is at x=15, y=3
+Sensor at x=14, y=3: closest beacon is at x=15, y=3
+Sensor at x=20, y=1: closest beacon is at x=15, y=3"#,
+    );
+
+    let res = part2(&m, 20);
+    assert_eq!(56000011, res);
 }
