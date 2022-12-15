@@ -83,7 +83,7 @@ fn parse(input: &str) -> Vec<RefCell<Monke>> {
     result
 }
 
-fn part1(mut monkeys: Vec<RefCell<Monke>>) -> usize {
+fn part1(monkeys: Vec<RefCell<Monke>>) -> usize {
     let mut inspects = monkeys.iter().map(|_| 0).collect::<Vec<_>>();
     for _turn in 0..20 {
         for (monkey_id, monkey) in monkeys.iter().enumerate() {
@@ -110,7 +110,7 @@ fn part1(mut monkeys: Vec<RefCell<Monke>>) -> usize {
     inspects[0] * inspects[1]
 }
 
-fn part2(mut monkeys: Vec<RefCell<Monke>>) -> usize {
+fn part2(monkeys: Vec<RefCell<Monke>>) -> usize {
     let mut inspects = monkeys.iter().map(|_| 0).collect::<Vec<_>>();
     let m: u64 = monkeys.iter().map(|m|m.borrow().test).product();
     for _turn in 0..10000 {
