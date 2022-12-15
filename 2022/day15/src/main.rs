@@ -1,4 +1,5 @@
 use utils::IVec2;
+use std::collections::HashSet;
 
 #[derive(Debug)]
 struct Sensor {
@@ -8,14 +9,14 @@ struct Sensor {
 
 impl Sensor {
     pub fn contains(&self, point: IVec2) -> bool {
-        let IVec2 { x, y } = point;
-        x < self.pos.x + self.radius && self.pos.x - self.radius < x && y < self.pos.y + self.radius && self.pos.y - self.radius < y
+        self.pos.manhatten(point) <= self.radius
     }
 }
 
 #[derive(Default, Debug)]
 struct Map {
     sensors: Vec<Sensor>,
+    beacons: HashSet<IVec2>,
     min: i32,
     max: i32,
 }
@@ -38,13 +39,13 @@ fn parse(input: &str) -> Map {
 
         let pos = IVec2::new(fromx, fromy);
         let beacon = IVec2::new(tox, toy);
-
-        result.min = result.min.min(tox);
-        result.max = result.max.max(tox);
-
         let radius = beacon.manhatten(pos);
 
+        result.min = result.min.min(fromx-radius);
+        result.max = result.max.max(fromx+radius);
+
         result.sensors.push(Sensor { pos, radius });
+        result.beacons.insert(beacon);
     }
 
     result
@@ -52,24 +53,24 @@ fn parse(input: &str) -> Map {
 
 fn part1(map: &Map, y: i32) -> usize {
     let mut count = 0;
-    'x: for x in map.min+1..map.max {
+    dbg!(map.min, map.max);
+    'x: for x in map.min..=map.max {
         let pos = IVec2::new(x, y);
         for s in map.sensors.iter() {
-            if s.contains(pos) {
+            if s.contains(pos) && pos != s.pos && !map.beacons.contains(&pos) {
                 count += 1;
                 continue 'x;
             }
         }
     }
-
     count
 }
 
 fn main() {
     let input = utils::read_input();
     let map = parse(&input);
-    let res = part1(&map, 2000000);
 
+    let res = part1(&map, 2000000);
     println!("part1: {res}");
 }
 
@@ -94,4 +95,8 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3"#,
 
     let res = part1(&m, 10);
     assert_eq!(26, res);
+    let res = part1(&m, 11);
+    assert_eq!(27, res);
+    let res = part1(&m, 9);
+    assert_eq!(24, res);
 }
