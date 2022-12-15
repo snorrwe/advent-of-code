@@ -145,3 +145,6 @@ impl Neg for IVec2 {
     }
 }
 
+pub fn read_input()->String {
+    std::fs::read_to_string("input.txt").unwrap()
+}

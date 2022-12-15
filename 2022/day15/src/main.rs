@@ -1,0 +1,97 @@
+use utils::IVec2;
+
+#[derive(Debug)]
+struct Sensor {
+    pos: IVec2,
+    radius: i32,
+}
+
+impl Sensor {
+    pub fn contains(&self, point: IVec2) -> bool {
+        let IVec2 { x, y } = point;
+        x < self.pos.x + self.radius && self.pos.x - self.radius < x && y < self.pos.y + self.radius && self.pos.y - self.radius < y
+    }
+}
+
+#[derive(Default, Debug)]
+struct Map {
+    sensors: Vec<Sensor>,
+    min: i32,
+    max: i32,
+}
+
+fn parse(input: &str) -> Map {
+    let regex = regex::Regex::new(
+        r"Sensor at x=(-?\d+), y=(-?\d+): closest beacon is at x=(-?\d+), y=(-?\d+)",
+    )
+    .unwrap();
+
+    let mut result = Map::default();
+    result.min = std::i32::MAX;
+    result.max = std::i32::MIN;
+    for line in input.lines() {
+        let caps = regex.captures(line).unwrap();
+        let fromx = caps.get(1).unwrap().as_str().parse().unwrap();
+        let fromy = caps.get(2).unwrap().as_str().parse().unwrap();
+        let tox = caps.get(3).unwrap().as_str().parse().unwrap();
+        let toy = caps.get(4).unwrap().as_str().parse().unwrap();
+
+        let pos = IVec2::new(fromx, fromy);
+        let beacon = IVec2::new(tox, toy);
+
+        result.min = result.min.min(tox);
+        result.max = result.max.max(tox);
+
+        let radius = beacon.manhatten(pos);
+
+        result.sensors.push(Sensor { pos, radius });
+    }
+
+    result
+}
+
+fn part1(map: &Map, y: i32) -> usize {
+    let mut count = 0;
+    'x: for x in map.min+1..map.max {
+        let pos = IVec2::new(x, y);
+        for s in map.sensors.iter() {
+            if s.contains(pos) {
+                count += 1;
+                continue 'x;
+            }
+        }
+    }
+
+    count
+}
+
+fn main() {
+    let input = utils::read_input();
+    let map = parse(&input);
+    let res = part1(&map, 2000000);
+
+    println!("part1: {res}");
+}
+
+#[test]
+fn part1_test() {
+    let m = parse(
+        r#"Sensor at x=2, y=18: closest beacon is at x=-2, y=15
+Sensor at x=9, y=16: closest beacon is at x=10, y=16
+Sensor at x=13, y=2: closest beacon is at x=15, y=3
+Sensor at x=12, y=14: closest beacon is at x=10, y=16
+Sensor at x=10, y=20: closest beacon is at x=10, y=16
+Sensor at x=14, y=17: closest beacon is at x=10, y=16
+Sensor at x=8, y=7: closest beacon is at x=2, y=10
+Sensor at x=2, y=0: closest beacon is at x=2, y=10
+Sensor at x=0, y=11: closest beacon is at x=2, y=10
+Sensor at x=20, y=14: closest beacon is at x=25, y=17
+Sensor at x=17, y=20: closest beacon is at x=21, y=22
+Sensor at x=16, y=7: closest beacon is at x=15, y=3
+Sensor at x=14, y=3: closest beacon is at x=15, y=3
+Sensor at x=20, y=1: closest beacon is at x=15, y=3"#,
+    );
+
+    let res = part1(&m, 10);
+    assert_eq!(26, res);
+}
