@@ -65,7 +65,6 @@ fn part1(cave: &Cave) -> usize {
     let mut sand_count = 0;
     'p1: loop {
         let mut sand = IVec2::new(500, 1);
-        if cave.contains(&sand) {}
         'sand: loop {
             if sand.y > bottom {
                 break 'p1 sand_count;
@@ -84,11 +83,38 @@ fn part1(cave: &Cave) -> usize {
     }
 }
 
+fn part2(cave: &Cave) -> usize {
+    let bottom = cave.bottom + 2;
+    let mut cave = cave.rocks.clone();
+    let mut sand_count = 0;
+    let contains = |p: IVec2, cave: &HashSet<IVec2>| cave.contains(&p) || p.y == bottom;
+    loop {
+        let mut sand = IVec2::new(500, 0);
+        if cave.contains(&sand) {
+            return sand_count;
+        }
+        'sand: loop {
+            for d in [IVec2::Y, IVec2::new(-1, 1), IVec2::new(1, 1)] {
+                let s = sand + d;
+                if !contains(s, &cave) {
+                    sand = s;
+                    continue 'sand;
+                }
+            }
+            cave.insert(sand);
+            sand_count += 1;
+            break;
+        }
+    }
+}
+
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
     let cave = parse(&input);
     let res = part1(&cave);
     println!("part1: {res}");
+    let res = part2(&cave);
+    println!("part2: {res}");
 }
 
 #[test]
@@ -100,4 +126,15 @@ fn test_part1() {
 
     let res = part1(&grid);
     assert_eq!(24, res);
+}
+
+#[test]
+fn test_part2() {
+    let grid = parse(
+        r#"498,4 -> 498,6 -> 496,6
+503,4 -> 502,4 -> 502,9 -> 494,9"#,
+    );
+
+    let res = part2(&grid);
+    assert_eq!(93, res);
 }
