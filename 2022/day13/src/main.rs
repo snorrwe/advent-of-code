@@ -1,4 +1,4 @@
-#[derive(Debug, Eq, PartialEq, serde::Deserialize)]
+#[derive(Debug, Eq, PartialEq, serde::Deserialize, Ord, Clone)]
 #[serde(untagged)]
 enum Packet {
     Int(u32),
@@ -56,6 +56,29 @@ fn part1(p: &[Packet]) -> usize {
     count
 }
 
+fn part2(mut p: Vec<Packet>) -> usize {
+    let divider1 = Packet::List(vec![Packet::List(vec![Packet::Int(2)])]);
+    let divider2 = Packet::List(vec![Packet::List(vec![Packet::Int(6)])]);
+    p.push(divider1.clone());
+    p.push(divider2.clone());
+
+    p.sort_unstable();
+
+    let mut i1 = 0;
+    let mut i2 = 0;
+
+    for (i, p) in p.iter().enumerate() {
+        if p == &divider1 {
+            i1 = i+1;
+        }
+        if p == &divider2 {
+            i2 = i+1;
+        }
+    }
+
+    i1 * i2
+}
+
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
 
@@ -63,6 +86,8 @@ fn main() {
 
     let res = part1(&packets);
     println!("p1: {res}");
+    let res = part2(packets);
+    println!("p2: {res}");
 }
 
 #[test]
@@ -96,4 +121,37 @@ fn part1_test() {
     let res = part1(&packets);
 
     assert_eq!(13, res);
+}
+
+#[test]
+fn part2_test() {
+    const INPUT: &str = r#"[1,1,3,1,1]
+[1,1,5,1,1]
+
+[[1],[2,3,4]]
+[[1],4]
+
+[9]
+[[8,7,6]]
+
+[[4,4],4,4]
+[[4,4],4,4,4]
+
+[7,7,7,7]
+[7,7,7]
+
+[]
+[3]
+
+[[[]]]
+[[]]
+
+[1,[2,[3,[4,[5,6,7]]]],8,9]
+[1,[2,[3,[4,[5,6,0]]]],8,9]"#;
+
+    let packets = parse(INPUT);
+
+    let res = part2(packets);
+
+    assert_eq!(140, res);
 }
