@@ -55,7 +55,7 @@ fn part1(map: &Map, y: i32) -> usize {
     let mut count = 0;
     'x: for x in map.min..=map.max {
         let pos = IVec2::new(x, y);
-        if !map.beacons.contains(&pos) {
+        if map.beacons.contains(&pos) {
             continue;
         }
         for s in map.sensors.iter() {
