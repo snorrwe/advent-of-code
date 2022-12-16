@@ -68,56 +68,24 @@ fn part1(map: &Map, y: i32) -> usize {
     count
 }
 
-fn reduce_ranges(ranges: &mut Vec<std::ops::RangeInclusive<i32>>) {
-    ranges.sort_by_key(|r| *r.start());
-    let mut reduced = true;
-    while reduced && !ranges.is_empty() {
-        reduced = false;
-        for i in (0..ranges.len() - 1).rev() {
-            if ranges[i].contains(ranges[i + 1].start()) {
-                let r0 = ranges.pop().unwrap();
-                let r1 = ranges.pop().unwrap();
-
-                ranges.push(*r1.start()..=*r0.end());
-                reduced = true;
-            }
-        }
-    }
-}
-
 fn part2(map: &Map, max: i32) -> usize {
-    let mut validx = Vec::with_capacity(map.sensors.len());
-    for y in 0..=max {
-        for s in map.sensors.iter() {
-            let mut minx = max;
-            let mut maxx = 0;
-            let d = (s.pos.y - y).abs();
-            if d >= s.radius {
+    for s in map.sensors.iter() {
+        'a: for x in -s.radius - 1..=s.radius + 1 {
+            let y = s.radius + 1 - x.abs();
+            let x = s.pos.x + x;
+            let y = s.pos.y + y;
+
+            if x < 0 || x > max || y < 0 || y > max {
                 continue;
             }
-            let r = s.radius - d;
-            let m = s.pos.x - r;
-            if m >= 0 && m <= max {
-                minx = minx.min(m);
-            }
-            let m = s.pos.x + r;
-            if m >= 0 && m <= max {
-                maxx = maxx.max(m);
-            }
-            validx.push(0..=minx);
-            validx.push(maxx..=max);
-        }
-        reduce_ranges(&mut validx);
-        for range in validx.drain(..) {
-            'a: for x in range {
-                let pos = IVec2::new(x, y);
-                for s in map.sensors.iter() {
-                    if s.contains(pos) {
-                        continue 'a;
-                    }
+
+            let pos = IVec2::new(x, y);
+            for s in map.sensors.iter() {
+                if s.contains(pos) {
+                    continue 'a;
                 }
-                return (pos.x as usize * 4000000) + pos.y as usize;
             }
+            return (pos.x as usize * 4000000) + pos.y as usize;
         }
     }
     unreachable!()
@@ -127,8 +95,8 @@ fn main() {
     let input = utils::read_input();
     let map = parse(&input);
 
-    //let res = part1(&map, 2000000);
-    //println!("part1: {res}");
+    let res = part1(&map, 2000000);
+    println!("part1: {res}");
     let res = part2(&map, 4000000);
     println!("part2: {res}");
 }
