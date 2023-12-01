@@ -21,7 +21,6 @@ zoneight234
 """
 
 digits = [
-    "zero",
     "one",
     "two",
     "three",
@@ -51,7 +50,7 @@ for line in input1.splitlines():
         except:
             for j, digit in enumerate(digits):
                 if line[i:].startswith(digit):
-                    c = j
+                    c = j + 1
                     if not first2:
                         first2 = c
                     last2 = c
