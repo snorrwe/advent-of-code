@@ -17,7 +17,6 @@ fn part1(s: &str, rules: &HashMap<&str, i32>) -> i32 {
             continue;
         };
         let (_, [id]) = id.extract();
-        let id: i32 = id.parse().unwrap();
         for cubes in cubesre.captures_iter(line) {
             let (_, [n, color]) = cubes.extract();
             let n: i32 = n.parse().unwrap();
@@ -25,7 +24,7 @@ fn part1(s: &str, rules: &HashMap<&str, i32>) -> i32 {
                 continue 'lines;
             }
         }
-        possible += id;
+        possible += id.parse::<i32>().unwrap();
     }
     possible
 }
