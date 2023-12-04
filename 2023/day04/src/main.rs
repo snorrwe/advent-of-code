@@ -1,9 +1,11 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 fn main() {
     let inp = std::fs::read_to_string("input.txt").unwrap();
     let res = part1(&inp);
     println!("part1: {res}");
+    let res = part2(&inp);
+    println!("part2: {res}");
 }
 
 fn part1(inp: &str) -> i32 {
@@ -40,6 +42,44 @@ fn part1(inp: &str) -> i32 {
     total
 }
 
+fn part2(inp: &str) -> i32 {
+    let cardre = regex::Regex::new(r"Card\s+(\d+):(.*)").unwrap();
+    let numre = regex::Regex::new(r"(\d+)").unwrap();
+
+    let mut winning_numbers = HashSet::<&str>::new();
+    let mut cards = HashMap::<i32, i32>::new();
+
+    for line in inp.lines() {
+        let Some(cap) = cardre.captures(line) else {
+            continue;
+        };
+        let (_, [id, scores]) = cap.extract();
+        let (winning, elf) = scores.split_once('|').unwrap();
+        winning_numbers.clear();
+
+        let id: i32 = id.parse().unwrap();
+
+        let n_cards = *cards.entry(id).or_insert(1);
+
+        for n in numre.captures_iter(winning) {
+            let (_, [n]) = n.extract();
+            winning_numbers.insert(n);
+        }
+
+        let mut count = 0;
+        for n in numre.captures_iter(elf) {
+            let (_, [n]) = n.extract();
+            if winning_numbers.contains(&n) {
+                count += 1;
+            }
+        }
+        for i in 1..=count {
+            *cards.entry(id + i).or_insert(1) += n_cards;
+        }
+    }
+    cards.values().sum()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -57,5 +97,11 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
         let result = part1(INPUT);
 
         assert_eq!(result, 13);
+    }
+
+    #[test]
+    fn test_p2() {
+        let result = part2(INPUT);
+        assert_eq!(result, 30);
     }
 }
