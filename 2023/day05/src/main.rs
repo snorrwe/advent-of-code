@@ -1,9 +1,11 @@
+use rayon::prelude::*;
 use std::collections::HashMap;
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
     let mapping = parse(&input);
     println!("{}", part1(&mapping));
+    println!("{}", part2(&mapping));
 }
 
 #[derive(Debug)]
@@ -26,6 +28,32 @@ struct Input<'a> {
     mappings: HashMap<(&'a str, &'a str), Mapping>,
     graph: HashMap<&'a str, &'a str>,
     seeds: Vec<i64>,
+}
+
+fn part2(input: &Input) -> i64 {
+    input
+        .seeds
+        .iter()
+        .step_by(2)
+        .copied()
+        .zip(input.seeds.iter().skip(1).step_by(2).copied())
+        .filter_map(|(src, len)| {
+            (0..len)
+                .par_bridge()
+                .map(|i| {
+                    let mut src = src + i;
+                    let mut current = "seed";
+                    while current != "location" {
+                        let to = input.graph[current];
+                        src = input.mappings[&(current, to)].map(src);
+                        current = to;
+                    }
+                    src
+                })
+                .min()
+        })
+        .min()
+        .unwrap()
 }
 
 fn part1(input: &Input) -> i64 {
@@ -143,5 +171,12 @@ humidity-to-location map:
         let map = parse(INPUT);
         let res = part1(&map);
         assert_eq!(res, 35);
+    }
+
+    #[test]
+    fn test_p2() {
+        let map = parse(INPUT);
+        let res = part2(&map);
+        assert_eq!(res, 46);
     }
 }
