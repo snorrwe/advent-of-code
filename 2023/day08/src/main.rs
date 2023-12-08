@@ -1,5 +1,6 @@
+use std::collections::HashMap;
+
 use num::integer::lcm;
-use rustc_hash::FxHashMap as HashMap;
 
 fn main() {
     let inp = std::fs::read_to_string("input.txt").unwrap();
