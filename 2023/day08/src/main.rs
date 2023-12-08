@@ -41,6 +41,7 @@ fn part2(inp: &Input) -> i64 {
     let mut period_len = vec![0; current.len()];
     let mut i = 0;
 
+    let mut done = 0;
     loop {
         steps += 1;
         let c = inp.instructions[i];
@@ -51,7 +52,6 @@ fn part2(inp: &Input) -> i64 {
             _ => unreachable!(),
         };
 
-        let mut done = 0;
         for (j, current) in current.iter_mut().enumerate() {
             *current = inp.graph[*current][i];
             if current.ends_with("Z") {
