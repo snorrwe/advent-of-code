@@ -1,10 +1,11 @@
-use std::collections::HashMap;
+use rustc_hash::FxHashMap as HashMap;
 
 fn main() {
     let inp = std::fs::read_to_string("input.txt").unwrap();
     let inp = parse(inp.as_str());
 
     println!("{}", part1(&inp));
+    println!("{}", part2(&inp));
 }
 
 fn part1(inp: &Input) -> i64 {
@@ -29,11 +30,50 @@ fn part1(inp: &Input) -> i64 {
     }
 }
 
+fn part2(inp: &Input) -> i64 {
+    let mut steps = 0;
+    let mut current = inp
+        .graph
+        .keys()
+        .copied()
+        .filter(|k| k.ends_with("A"))
+        .collect::<Vec<_>>();
+    let mut period_len = vec![0; current.len()];
+    let mut i = 0;
+
+    loop {
+        steps += 1;
+        let c = inp.instructions[i];
+        i = (i + 1) % inp.instructions.len();
+        let i = match c {
+            b'R' => 1,
+            b'L' => 0,
+            _ => unreachable!(),
+        };
+
+        let mut done = 0;
+        for (j, current) in current.iter_mut().enumerate() {
+            *current = inp.graph[*current][i];
+            if current.ends_with("Z") {
+                if period_len[j] == 0 {
+                    period_len[j] = steps;
+                    done += 1;
+                }
+            }
+        }
+
+        if done == current.len() {
+            println!("{:?}", period_len);
+            todo!()
+        }
+    }
+}
+
 fn parse(s: &str) -> Input {
     let mut lines = s.lines();
     let instructions = lines.next().unwrap().as_bytes();
 
-    let mut graph = HashMap::new();
+    let mut graph = HashMap::default();
 
     let instr_re = regex::Regex::new(r"(\w+) = \((\w+), (\w+)\)").unwrap();
 
@@ -53,6 +93,7 @@ fn parse(s: &str) -> Input {
     }
 }
 
+#[derive(Debug)]
 struct Input<'a> {
     instructions: &'a [u8],
     graph: HashMap<&'a str, [&'a str; 2]>,
@@ -80,6 +121,18 @@ BBB = (AAA, ZZZ)
 ZZZ = (ZZZ, ZZZ)
 "#;
 
+    const INPUT3: &str = r#"LR
+
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)
+"#;
+
     #[test]
     fn test_p11() {
         let inp = parse(INPUT1);
@@ -92,5 +145,12 @@ ZZZ = (ZZZ, ZZZ)
         let inp = parse(INPUT2);
 
         assert_eq!(part1(&inp), 6);
+    }
+
+    #[test]
+    fn test_p21() {
+        let inp = parse(INPUT3);
+
+        assert_eq!(part2(&inp), 6);
     }
 }
