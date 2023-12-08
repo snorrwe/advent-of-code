@@ -1,3 +1,4 @@
+use num::integer::lcm;
 use rustc_hash::FxHashMap as HashMap;
 
 fn main() {
@@ -38,7 +39,7 @@ fn part2(inp: &Input) -> i64 {
         .copied()
         .filter(|k| k.ends_with("A"))
         .collect::<Vec<_>>();
-    let mut period_len = vec![0; current.len()];
+    let mut period_len = vec![0i64; current.len()];
     let mut i = 0;
 
     let mut done = 0;
@@ -63,10 +64,10 @@ fn part2(inp: &Input) -> i64 {
         }
 
         if done == current.len() {
-            println!("{:?}", period_len);
-            todo!()
+            break;
         }
     }
+    period_len.iter().copied().reduce(|a, b| lcm(a, b)).unwrap()
 }
 
 fn parse(s: &str) -> Input {
