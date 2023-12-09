@@ -68,7 +68,6 @@ fn part2_recursive(sequence: &[i64]) -> i64 {
 
     let delta = part2_recursive(&sequence);
 
-    dbg!(&sequence, delta);
     sequence[0] - delta
 }
 
