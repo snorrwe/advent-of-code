@@ -185,7 +185,7 @@ fn part1(input: &Input) -> (i32, HashMap<Point, i32>) {
 }
 
 #[allow(unused)]
-fn printcontour(loop_pts: &HashMap<Point, i32>, input: &Input) {
+fn print_contour(loop_pts: &HashMap<Point, i32>, input: &Input) {
     let height = input.grid.len();
     let width = input.grid[0].len();
 
@@ -228,13 +228,6 @@ fn part2(input: &Input, loop_pts: &HashMap<Point, i32>) -> i32 {
     // top edge, leftmost pos
     let start = loop_pts_vec[0];
 
-    // TODO: support 'S'?
-    assert_eq!(
-        input.grid[start[1] as usize].as_bytes()[start[0] as usize],
-        b'F',
-        "{}",
-        input.grid[start[1] as usize].as_bytes()[start[0] as usize] as char,
-    );
     // walk the contour, mark areas inside the loop
     let mut visited = HashSet::new();
     let mut todo = VecDeque::new();
@@ -255,43 +248,7 @@ fn part2(input: &Input, loop_pts: &HashMap<Point, i32>) -> i32 {
         let c = input.grid[current[1] as usize].as_bytes()[current[0] as usize];
         let delta = [current[0] - from[0], current[1] - from[1]];
         match c {
-            b'F' => {
-                if delta[0] == -1 {
-                    tangent = rotate_cw(tangent);
-                } else {
-                    assert_eq!(delta[1], -1);
-                    tangent = rotate_ccw(tangent);
-                }
-                mark_neighbour(current, tangent);
-            }
-            b'7' => {
-                if delta[0] == 1 {
-                    tangent = rotate_ccw(tangent);
-                } else {
-                    assert_eq!(delta[1], -1);
-                    tangent = rotate_cw(tangent);
-                }
-                mark_neighbour(current, tangent);
-            }
-            b'J' => {
-                if delta[0] == 1 {
-                    tangent = rotate_cw(tangent);
-                } else {
-                    assert_eq!(delta[1], 1);
-                    tangent = rotate_ccw(tangent);
-                }
-                mark_neighbour(current, tangent);
-            }
-            b'L' => {
-                if delta[0] == -1 {
-                    tangent = rotate_ccw(tangent);
-                } else {
-                    assert_eq!(delta[1], 1);
-                    tangent = rotate_cw(tangent);
-                }
-                mark_neighbour(current, tangent);
-            }
-            b'S' => {
+            b'F' | b'7' | b'J' | b'L' | b'S' => {
                 let next = input.connections[&current]
                     .iter()
                     .find(|n| *n != &from)
@@ -299,7 +256,7 @@ fn part2(input: &Input, loop_pts: &HashMap<Point, i32>) -> i32 {
 
                 let dd = [next[0] - current[0], next[1] - current[1]];
                 if dd != delta {
-                    // S is a corner
+                    // is a corner
                     let det = delta[0] * dd[1] - delta[1] * dd[0];
                     match det {
                         1 => tangent = rotate_ccw(tangent),
@@ -307,6 +264,7 @@ fn part2(input: &Input, loop_pts: &HashMap<Point, i32>) -> i32 {
                         _ => unreachable!(),
                     }
                 }
+                mark_neighbour(current, tangent);
             }
             _ => {}
         }
@@ -326,7 +284,6 @@ fn part2(input: &Input, loop_pts: &HashMap<Point, i32>) -> i32 {
         .filter(|(_, _, c)| **c == 1)
         .map(|(x, y, _)| [x as i32, y as i32])
         .collect::<Vec<_>>();
-    dbg!(todo.len());
 
     while let Some(pos) = todo.pop() {
         for delta in [[1, 0], [-1, 0], [0, 1], [0, -1]] {
@@ -432,7 +389,7 @@ L7JLJL-JLJLJL--JLJ.L"#,
     fn test_p2_4() {
         let inp = parse(
             r#"...........
-.F---S---7.
+.S-------7.
 .|F-----7|.
 .||.....||.
 .||.....||.
