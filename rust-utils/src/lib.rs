@@ -176,6 +176,16 @@ impl<T> Grid<T> {
         }
     }
 
+    pub fn from_data(data: Vec<T>, width: usize) -> Self {
+        assert_eq!(data.len() % width, 0);
+        let height = data.len() / width;
+        Self {
+            data,
+            width,
+            height,
+        }
+    }
+
     pub fn insert(&mut self, x: usize, y: usize, item: T) {
         assert!(x < self.width);
         assert!(y < self.height);
