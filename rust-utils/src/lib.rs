@@ -158,3 +158,33 @@ pub fn walk_square(from: IVec2, to: IVec2) -> impl Iterator<Item = IVec2> {
     (from.y..=to.y).flat_map(move |y| (fx..=tx).map(move |x| IVec2::new(x, y)))
 }
 
+pub struct Grid<T> {
+    pub data: Vec<T>,
+    pub width: usize,
+    pub height: usize,
+}
+
+impl<T> Grid<T> {
+    pub fn new(width: usize, height: usize) -> Self
+    where
+        T: Default + Clone,
+    {
+        Self {
+            data: vec![Default::default(); width * height],
+            width,
+            height,
+        }
+    }
+
+    pub fn insert(&mut self, x: usize, y: usize, item: T) {
+        assert!(x < self.width);
+        assert!(y < self.height);
+        self.data[y * self.width + x] = item;
+    }
+
+    pub fn get(&self, x: usize, y: usize) -> &T {
+        assert!(x < self.width);
+        assert!(y < self.height);
+        &self.data[y * self.width + x]
+    }
+}
