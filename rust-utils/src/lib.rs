@@ -197,4 +197,14 @@ impl<T> Grid<T> {
         assert!(y < self.height);
         &self.data[y * self.width + x]
     }
+
+    pub fn row(&self, y: usize) -> &[T] {
+        assert!(y < self.height);
+        &self.data[y * self.width..(y + 1) * self.width]
+    }
+
+    pub fn row_mut(&mut self, y: usize) -> &mut [T] {
+        assert!(y < self.height);
+        &mut self.data[y * self.width..(y + 1) * self.width]
+    }
 }
