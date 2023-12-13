@@ -207,4 +207,8 @@ impl<T> Grid<T> {
         assert!(y < self.height);
         &mut self.data[y * self.width..(y + 1) * self.width]
     }
+
+    pub fn rows(&self) -> impl Iterator<Item = &[T]> {
+        (0..self.height).map(|y| self.row(y))
+    }
 }
