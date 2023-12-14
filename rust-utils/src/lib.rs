@@ -164,6 +164,15 @@ pub struct Grid<T> {
     pub height: usize,
 }
 
+impl<T> PartialEq for Grid<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.width == other.width && self.height == other.height && self.data == other.data
+    }
+}
+
 impl<T> Clone for Grid<T>
 where
     T: Clone,
