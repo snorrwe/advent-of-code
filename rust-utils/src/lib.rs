@@ -164,6 +164,17 @@ pub struct Grid<T> {
     pub height: usize,
 }
 
+impl<T> std::hash::Hash for Grid<T>
+where
+    T: std::hash::Hash,
+{
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.width.hash(state);
+        self.height.hash(state);
+        self.data.hash(state);
+    }
+}
+
 impl<T> PartialEq for Grid<T>
 where
     T: PartialEq,
