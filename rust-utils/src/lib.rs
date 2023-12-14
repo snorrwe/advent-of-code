@@ -164,6 +164,38 @@ pub struct Grid<T> {
     pub height: usize,
 }
 
+impl<T> std::fmt::Debug for Grid<T>
+where
+    T: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{} {}", self.width, self.height)?;
+        for row in self.rows() {
+            for i in row {
+                write!(f, "{i:?}\t")?;
+            }
+            writeln!(f, "")?;
+        }
+        Ok(())
+    }
+}
+
+impl<T> std::fmt::Display for Grid<T>
+where
+    T: std::fmt::Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{} {}", self.width, self.height)?;
+        for row in self.rows() {
+            for i in row {
+                write!(f, "{i}\t")?;
+            }
+            writeln!(f, "")?;
+        }
+        Ok(())
+    }
+}
+
 impl<T> Grid<T> {
     pub fn new(width: usize, height: usize) -> Self
     where
