@@ -272,4 +272,9 @@ impl<T> Grid<T> {
     {
         self.data.fill(value);
     }
+
+    pub fn col(&self, x: usize) -> impl Iterator<Item = &T> {
+        assert!(x < self.width);
+        (0..self.height).map(move |y| &self.row(y)[x])
+    }
 }
