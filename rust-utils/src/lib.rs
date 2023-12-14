@@ -164,6 +164,19 @@ pub struct Grid<T> {
     pub height: usize,
 }
 
+impl<T> Clone for Grid<T>
+where
+    T: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            data: self.data.clone(),
+            width: self.width,
+            height: self.height,
+        }
+    }
+}
+
 impl<T> std::fmt::Debug for Grid<T>
 where
     T: std::fmt::Debug,
