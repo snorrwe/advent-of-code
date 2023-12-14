@@ -265,4 +265,11 @@ impl<T> Grid<T> {
     pub fn rows(&self) -> impl Iterator<Item = &[T]> {
         (0..self.height).map(|y| self.row(y))
     }
+
+    pub fn fill(&mut self, value: T)
+    where
+        T: Clone,
+    {
+        self.data.fill(value);
+    }
 }
