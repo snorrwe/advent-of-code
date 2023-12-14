@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 type Grid = utils::Grid<u8>;
 
 fn main() {
@@ -106,43 +108,63 @@ fn part2(input: &str) -> usize {
         rocks_grid.insert(*x, *y, 1);
     }
 
-    let mut i = 0;
     let delta = [(0, -1), (-1, 0), (0, 1), (1, 0)];
     let width = rocks_grid.width;
     let height = rocks_grid.height;
 
-    for _ in 0..1000000000 {
-        let d = delta[i];
-        i = (i + 1) % delta.len();
-        loop {
-            let mut changed = false;
+    let mut patterns = HashMap::new();
+    let mut patterns_list = Vec::default();
 
-            for rock in rocks.iter_mut() {
-                if rock.0 + 1 == width || rock.0 == 0 || rock.1 + 1 == height || rock.1 == 0 {
-                    continue;
-                }
-                let (x, y) = *rock;
-                let x = x as isize;
-                let y = y as isize;
+    patterns.insert(rocks_grid.clone(), patterns_list.len());
+    patterns_list.push(rocks_grid.clone());
 
-                let dx = (x + d.0) as usize;
-                let dy = (y + d.1) as usize;
+    let ticks = 1000000000;
+    let pattern_start = 'find: {
+        for _ in 0..ticks {
+            for d in delta {
+                loop {
+                    let mut changed = false;
 
-                if *terrain.get(dx, dy) == b'.' && *rocks_grid.get(dx, dy) == 0 {
-                    changed = true;
-                    rocks_grid.insert(x as usize, y as usize, 0);
-                    rocks_grid.insert(dx, dy, 1);
-                    *rock = (rock.0, rock.1 - 1);
+                    for rock in rocks.iter_mut() {
+                        let rx = rock.0 as isize + d.0;
+                        let ry = rock.1 as isize + d.1;
+                        if rx < 0 || ry < 0 || rx >= width as isize || ry >= height as isize {
+                            continue;
+                        }
+                        let (x, y) = *rock;
+                        let x = x as isize;
+                        let y = y as isize;
+
+                        let dx = (x + d.0) as usize;
+                        let dy = (y + d.1) as usize;
+
+                        if *terrain.get(dx, dy) == b'.' && *rocks_grid.get(dx, dy) == 0 {
+                            changed = true;
+                            rocks_grid.insert(x as usize, y as usize, 0);
+                            rocks_grid.insert(dx, dy, 1);
+                            *rock = (dx, dy);
+                        }
+                    }
+
+                    if !changed {
+                        break;
+                    }
                 }
             }
-
-            if !changed {
-                break;
+            if let Some(i) = patterns.get(&rocks_grid) {
+                break 'find *i;
             }
+            patterns.insert(rocks_grid.clone(), patterns_list.len());
+            patterns_list.push(rocks_grid.clone());
         }
-    }
+        unreachable!()
+    };
 
-    rocks_grid
+    let offset = pattern_start;
+    let ticks = ticks - offset;
+    let i = ticks % (patterns.len() - pattern_start);
+
+    patterns_list[offset + i]
         .rows()
         .enumerate()
         .map(|(y, row)| (height - y) * row.iter().filter(|c| **c == 1).count())
