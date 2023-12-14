@@ -164,6 +164,8 @@ pub struct Grid<T> {
     pub height: usize,
 }
 
+impl<T> Eq for Grid<T> where T: Eq {}
+
 impl<T> std::hash::Hash for Grid<T>
 where
     T: std::hash::Hash,
