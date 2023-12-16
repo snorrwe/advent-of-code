@@ -290,6 +290,10 @@ impl<T> Grid<T> {
         assert!(x < self.width);
         (0..self.height).map(move |y| &self.row(y)[x])
     }
+
+    pub fn contains_point(&self, pos: IVec2) -> bool {
+        0 <= pos.x && (pos.x as usize) < self.width && 0 <= pos.y && (pos.y as usize) < self.height
+    }
 }
 
 impl<T> Index<IVec2> for Grid<T> {
