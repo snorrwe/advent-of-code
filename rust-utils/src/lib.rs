@@ -291,3 +291,20 @@ impl<T> Grid<T> {
         (0..self.height).map(move |y| &self.row(y)[x])
     }
 }
+
+impl<T> Index<IVec2> for Grid<T> {
+    type Output = T;
+    fn index(&self, index: IVec2) -> &Self::Output {
+        assert!(index.x >= 0);
+        assert!(index.y >= 0);
+        &self.row(index.y as usize)[index.x as usize]
+    }
+}
+
+impl<T> IndexMut<IVec2> for Grid<T> {
+    fn index_mut(&mut self, index: IVec2) -> &mut Self::Output {
+        assert!(index.x >= 0);
+        assert!(index.y >= 0);
+        &mut self.row_mut(index.y as usize)[index.x as usize]
+    }
+}
