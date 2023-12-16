@@ -149,7 +149,10 @@ pub fn read_input() -> String {
     std::fs::read_to_string("input.txt").unwrap()
 }
 
-pub fn walk_square(from: IVec2, to: IVec2) -> impl Iterator<Item = IVec2> {
+/// Visit all points in the axis aligned rectangle.
+/// from = top left
+/// to = bottom right (inclusive)
+pub fn walk_rectangle(from: IVec2, to: IVec2) -> impl Iterator<Item = IVec2> {
     debug_assert!(from.x <= to.x);
     debug_assert!(from.y <= to.y);
 
