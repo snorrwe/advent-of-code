@@ -40,36 +40,8 @@ fn count_energized(grid: &Grid<u8>, start: IVec2, start_dir: IVec2) -> usize {
                         continue;
                     }
                 }
-                b'\\' => match (dir.x, dir.y) {
-                    (1, 0) => {
-                        dir = IVec2::Y;
-                    }
-                    (-1, 0) => {
-                        dir = -IVec2::Y;
-                    }
-                    (0, 1) => {
-                        dir = IVec2::X;
-                    }
-                    (0, -1) => {
-                        dir = -IVec2::X;
-                    }
-                    _ => unreachable!(),
-                },
-                b'/' => match (dir.x, dir.y) {
-                    (1, 0) => {
-                        dir = -IVec2::Y;
-                    }
-                    (-1, 0) => {
-                        dir = IVec2::Y;
-                    }
-                    (0, 1) => {
-                        dir = -IVec2::X;
-                    }
-                    (0, -1) => {
-                        dir = IVec2::X;
-                    }
-                    _ => unreachable!(),
-                },
+                b'\\' => dir = IVec2::new(dir.y, dir.x),
+                b'/' => dir = -IVec2::new(dir.y, dir.x),
                 _ => unreachable!(),
             }
             pos = pos + dir;
