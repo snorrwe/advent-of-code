@@ -56,6 +56,16 @@ impl IVec2 {
     pub const fn splat(val: i32) -> Self {
         Self::new(val, val)
     }
+
+    /// assumes Y down
+    pub fn rotate_ccw(self) -> Self {
+        Self::new(self.y, -self.x)
+    }
+
+    /// assumes Y down
+    pub fn rotate_cw(self) -> Self {
+        Self::new(-self.y, self.x)
+    }
 }
 
 impl Add for IVec2 {
