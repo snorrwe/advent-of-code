@@ -234,6 +234,20 @@ where
     }
 }
 
+impl Grid<u8> {
+    pub fn from_ascii_lines(lines: &str) -> anyhow::Result<Self> {
+        let Some(width) = lines.lines().next().map(|l| l.len()) else {
+            anyhow::bail!("No lines found");
+        };
+        let data = lines
+            .lines()
+            .take_while(|l| l.len() == width)
+            .flat_map(|l| l.bytes())
+            .collect();
+        Ok(Grid::from_data(data, width))
+    }
+}
+
 impl<T> Grid<T> {
     pub fn new(width: usize, height: usize) -> Self
     where
