@@ -4,9 +4,22 @@ use utils::{Grid, IVec2};
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
+    let grid = parse(&input);
 
-    println!("{}", part1(input.as_str()));
-    println!("{}", part2(input.as_str()));
+    println!("{}", part1(&grid));
+    println!("{}", part2(&grid));
+}
+
+fn parse(input: &str) -> Grid<u8> {
+    let input = input.trim();
+    let width = input.lines().next().map(|l| l.len()).unwrap();
+    let data = input
+        .lines()
+        .take_while(|l| l.len() == width)
+        .flat_map(|l| l.bytes())
+        .map(|c| c - b'0')
+        .collect();
+    Grid::from_data(data, width)
 }
 
 #[derive(PartialEq, Eq)]
@@ -30,30 +43,23 @@ impl Ord for Node {
     }
 }
 
-fn part1(input: &str) -> usize {
-    let grid = {
-        let width = input.lines().next().map(|l| l.len()).unwrap();
-        let data = input
-            .lines()
-            .take_while(|l| l.len() == width)
-            .flat_map(|l| l.bytes())
-            .map(|c| c - b'0')
-            .collect();
-        Grid::from_data(data, width)
-    };
+fn part1(grid: &Grid<u8>) -> usize {
+    solve(&grid, 0, 3)
+}
 
+fn solve(grid: &Grid<u8>, min: i32, max: i32) -> usize {
     let end = IVec2::new(grid.width as i32 - 1, grid.height as i32 - 1);
     let mut todo: BinaryHeap<_> = [
         Node {
             pos: IVec2::ZERO,
             dir: IVec2::X,
-            steps: 1,
+            steps: 0,
             cost: 0,
         },
         Node {
             pos: IVec2::ZERO,
             dir: IVec2::Y,
-            steps: 1,
+            steps: 0,
             cost: 0,
         },
     ]
@@ -69,6 +75,9 @@ fn part1(input: &str) -> usize {
     }) = todo.pop()
     {
         if pos == end {
+            if steps < min {
+                continue;
+            }
             return cost_so_far;
         }
         let mut enqueue = |pos, dir, steps| {
@@ -84,17 +93,19 @@ fn part1(input: &str) -> usize {
                 });
             }
         };
-        if steps < 3 {
+        if steps < max {
             enqueue(pos, dir, steps + 1);
         }
-        enqueue(pos, dir.rotate_ccw(), 1);
-        enqueue(pos, dir.rotate_cw(), 1);
+        if steps >= min {
+            enqueue(pos, dir.rotate_ccw(), 1);
+            enqueue(pos, dir.rotate_cw(), 1);
+        }
     }
     unreachable!()
 }
 
-fn part2(input: &str) -> i32 {
-    todo!()
+fn part2(grid: &Grid<u8>) -> usize {
+    solve(&grid, 4, 10)
 }
 
 #[cfg(test)]
@@ -117,15 +128,30 @@ mod tests {
 
     #[test]
     fn test_p1() {
-        let res = part1(INPUT);
+        let grid = parse(INPUT);
+        let res = part1(&grid);
 
         assert_eq!(res, 102);
     }
 
     #[test]
     fn test_p2() {
-        let res = part2(INPUT);
+        let grid = parse(INPUT);
+        let res = part2(&grid);
+        assert_eq!(res, 94);
+    }
 
-        assert_eq!(res, 42);
+    #[test]
+    fn test_p2_2() {
+        let grid = parse(
+            r#"111111111111
+999999999991
+999999999991
+999999999991
+999999999991
+"#,
+        );
+        let res = part2(&grid);
+        assert_eq!(res, 71);
     }
 }
