@@ -66,6 +66,14 @@ impl IVec2 {
     pub fn rotate_cw(self) -> Self {
         Self::new(-self.y, self.x)
     }
+
+    pub fn min(self, rhs: Self) -> Self {
+        Self::new(self.x.min(rhs.x), self.y.min(rhs.y))
+    }
+
+    pub fn max(self, rhs: Self) -> Self {
+        Self::new(self.x.max(rhs.x), self.y.max(rhs.y))
+    }
 }
 
 impl Add for IVec2 {
