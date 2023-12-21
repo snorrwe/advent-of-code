@@ -47,37 +47,31 @@ fn part1(input: &str) -> usize {
     }
 
     let s = (max + IVec2::ONE) - min;
-    // move min to zero
-    let max = max - min;
 
-    const FILL: u8 = 255;
+    const FILL_CONTOUR: u8 = 255;
+    const FILL_INSIDE: u8 = 128;
 
     let mut grid = Grid::new(s.x as usize, s.y as usize);
+    // fill contour
+    let mut start = IVec2::ZERO;
+    let n = visited.len() as i32;
     for pos in visited {
-        grid[pos - min] = FILL;
+        grid[pos - min] = FILL_CONTOUR;
+        start += pos - min;
     }
     grid.save_as_image("grid_contour.png");
 
-    let min = IVec2::ZERO;
-    for y in min.y..=max.y {
-        let row = grid.row_mut(y as usize);
-        let mut is_inside = false;
-        let mut groups = row.group_by_mut(|a, b| a == b);
+    let mut q = Vec::new();
+    // pray that the average point is inside
+    q.push(start / n);
 
-        // 1st chunk is special
-        if let Some(chunk) = groups.next() {
-            if chunk[0] != 0 {
-                is_inside = true;
-            }
-        }
-
-        for chunk in groups {
-            if chunk[0] != 0 {
-                if chunk.len() % 2 == 1 {
-                    is_inside = !is_inside;
-                }
-            } else if is_inside {
-                chunk.fill(FILL);
+    // flood fill
+    while let Some(p) = q.pop() {
+        grid[p] = FILL_INSIDE;
+        for d in [IVec2::X, IVec2::Y, -IVec2::X, -IVec2::Y] {
+            let p = p + d;
+            if grid[p] == 0 {
+                q.push(p);
             }
         }
     }
