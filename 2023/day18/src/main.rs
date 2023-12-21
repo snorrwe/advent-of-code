@@ -63,6 +63,8 @@ fn part1(input: &str) -> usize {
             .skip(b as usize)
             .step_by(2)
         {
+            // BUG: wether or not we need to skip a chunk depends on the numberof walls
+            // between. if even we don't skip, if odd, we skip
             chunk.fill(1);
         }
     }
