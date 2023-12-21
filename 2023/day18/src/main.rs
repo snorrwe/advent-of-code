@@ -50,10 +50,14 @@ fn part1(input: &str) -> usize {
     // move min to zero
     let max = max - min;
 
+    const FILL: u8 = 255;
+
     let mut grid = Grid::new(s.x as usize, s.y as usize);
     for pos in visited {
-        grid[pos - min] = 1u8;
+        grid[pos - min] = FILL;
     }
+    grid.save_as_image("grid_contour.png");
+
     let min = IVec2::ZERO;
     for y in min.y..=max.y {
         let row = grid.row_mut(y as usize);
@@ -62,23 +66,23 @@ fn part1(input: &str) -> usize {
 
         // 1st chunk is special
         if let Some(chunk) = groups.next() {
-            if chunk[0] == 1 {
+            if chunk[0] != 0 {
                 is_inside = true;
             }
         }
 
         for chunk in groups {
-            if chunk[0] == 1 {
+            if chunk[0] != 0 {
                 if chunk.len() % 2 == 1 {
                     is_inside = !is_inside;
                 }
             } else if is_inside {
-                chunk.fill(1);
+                chunk.fill(FILL);
             }
         }
     }
 
-    println!("{grid}");
+    grid.save_as_image("grid_filled.png");
 
     grid.rows()
         .flat_map(|r| r.iter())
