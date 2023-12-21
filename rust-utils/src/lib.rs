@@ -1,6 +1,7 @@
 use std::{
     fmt::Display,
     ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Neg, Sub, SubAssign},
+    path::Path,
 };
 
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash)]
@@ -349,5 +350,15 @@ impl<T> IndexMut<IVec2> for Grid<T> {
         assert!(index.x >= 0);
         assert!(index.y >= 0);
         &mut self.row_mut(index.y as usize)[index.x as usize]
+    }
+}
+
+#[cfg(feature = "image")]
+impl Grid<u8> {
+    pub fn save_as_image(&self, path: impl AsRef<Path>) {
+        let img: image::GrayImage =
+            image::ImageBuffer::from_vec(self.width as u32, self.height as u32, self.data.clone())
+                .unwrap();
+        img.save(path).unwrap();
     }
 }

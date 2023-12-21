@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.75"
+image = { version = "0.24.7", optional = true }
