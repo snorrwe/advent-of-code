@@ -1,3 +1,5 @@
+#![feature(slice_group_by)]
+
 use std::collections::HashSet;
 
 use utils::{Grid, IVec2};
@@ -53,21 +55,30 @@ fn part1(input: &str) -> usize {
         grid[pos - min] = 1u8;
     }
     let min = IVec2::ZERO;
-
     for y in min.y..=max.y {
         let row = grid.row_mut(y as usize);
-        let b = row[0] == 0;
-        for chunk in row
-            .split_mut(|x| *x != 0)
-            .filter(|c| !c.is_empty())
-            .skip(b as usize)
-            .step_by(2)
-        {
-            // BUG: wether or not we need to skip a chunk depends on the numberof walls
-            // between. if even we don't skip, if odd, we skip
-            chunk.fill(1);
+        let mut is_inside = false;
+        let mut groups = row.group_by_mut(|a, b| a == b);
+
+        // 1st chunk is special
+        if let Some(chunk) = groups.next() {
+            if chunk[0] == 1 {
+                is_inside = true;
+            }
+        }
+
+        for chunk in groups {
+            if chunk[0] == 1 {
+                if chunk.len() % 2 == 1 {
+                    is_inside = !is_inside;
+                }
+            } else if is_inside {
+                chunk.fill(1);
+            }
         }
     }
+
+    println!("{grid}");
 
     grid.rows()
         .flat_map(|r| r.iter())
