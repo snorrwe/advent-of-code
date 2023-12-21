@@ -84,8 +84,83 @@ fn part1(input: &str) -> usize {
         .count()
 }
 
-fn part2(input: &str) -> i32 {
-    todo!()
+fn part2(input: &str) -> usize {
+    let mut pos = IVec2::ZERO;
+
+    let mut contour = HashSet::new();
+    contour.insert(pos);
+
+    let mut min = pos;
+    let mut max = pos;
+
+    for line in input.lines() {
+        let split = line.split_ascii_whitespace();
+        let Some(hex) = split.skip(2).next() else {
+            continue;
+        };
+        let hex = hex.as_bytes();
+        let digits = &hex[2..8];
+        let n = &digits[0..5];
+        let d = digits[5];
+        let n = std::str::from_utf8(n).unwrap();
+        let n = usize::from_str_radix(n, 16).unwrap();
+
+        let dir = match d {
+            b'0' => IVec2::X,
+            b'1' => IVec2::Y,
+            b'2' => -IVec2::X,
+            b'3' => -IVec2::Y,
+            _ => unreachable!(),
+        };
+
+        for _ in 0..n {
+            pos += dir;
+            max = max.max(pos);
+            min = min.min(pos);
+            contour.insert(pos);
+        }
+    }
+
+    dbg!(min, max, max - min, contour.len());
+
+    todo!();
+
+    let s = (max + IVec2::ONE) - min;
+
+    const FILL_CONTOUR: u8 = 255;
+    const FILL_INSIDE: u8 = 128;
+
+    let mut grid = Grid::new(s.x as usize, s.y as usize);
+    // fill contour
+    let mut start = IVec2::ZERO;
+    let n = contour.len() as i32;
+    for pos in contour {
+        grid[pos - min] = FILL_CONTOUR;
+        start += pos - min;
+    }
+    grid.save_as_image("grid_contour.png");
+
+    let mut q = Vec::new();
+    // pray that the average point is inside
+    q.push(start / n);
+
+    // flood fill
+    while let Some(p) = q.pop() {
+        grid[p] = FILL_INSIDE;
+        for d in [IVec2::X, IVec2::Y, -IVec2::X, -IVec2::Y] {
+            let p = p + d;
+            if grid[p] == 0 {
+                q.push(p);
+            }
+        }
+    }
+
+    grid.save_as_image("grid_filled.png");
+
+    grid.rows()
+        .flat_map(|r| r.iter())
+        .filter(|x| **x != 0)
+        .count()
 }
 
 #[cfg(test)]
@@ -118,6 +193,6 @@ U 2 (#7a21e3)"#;
     fn test_p2() {
         let res = part2(INPUT);
 
-        assert_eq!(res, 42);
+        assert_eq!(res, 952408144115);
     }
 }
