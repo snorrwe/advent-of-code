@@ -93,6 +93,7 @@ fn segment_intersect(from0: i32, to0: i32, from1: i32, to1: i32) -> Option<[i32;
     Some([from1.max(from0), to1.min(to0)])
 }
 
+/// add the areas of recrangles building the shape
 fn part2(input: &str) -> usize {
     let mut pos = IVec2::ZERO;
 
@@ -145,6 +146,7 @@ fn part2(input: &str) -> usize {
         // profit
         debug_assert!(!contour.is_empty());
         let mut i = contour.len() - 1;
+        // segments are sorted by Y so the first match is the best one
         let inter = loop {
             let candidate = &contour[i];
             let inter = segment_intersect(
@@ -162,35 +164,28 @@ fn part2(input: &str) -> usize {
         let inter = inter.unwrap();
         let bottom_segment = contour.remove(i);
 
+        // the common area will be added, push the remaining segment parts back into the contour
         if bottom_segment.0.x != inter[0] {
             let segment = (
                 bottom_segment.0,
                 IVec2::new(inter[0] - 1, bottom_segment.0.y),
             );
-            if segment.1.x != segment.0.x {
-                contour.insert(i, segment);
-            }
+            contour.insert(i, segment);
         }
         if bottom_segment.1.x != inter[1] {
             let segment = (
                 IVec2::new(inter[1] + 1, bottom_segment.1.y),
                 bottom_segment.1,
             );
-            if segment.1.x != segment.0.x {
-                contour.insert(i, segment);
-            }
+            contour.insert(i, segment);
         }
         if top_segment.0.x != inter[0] {
             let segment = (top_segment.0, IVec2::new(inter[0] - 1, top_segment.0.y));
-            if segment.1.x != segment.0.x {
-                contour.insert(i, segment);
-            }
+            contour.push(segment);
         }
         if top_segment.1.x != inter[1] {
             let segment = (IVec2::new(inter[1] + 1, top_segment.1.y), top_segment.1);
-            if segment.1.x != segment.0.x {
-                contour.insert(i, segment);
-            }
+            contour.push(segment);
         }
 
         let width = inter[1] - inter[0];
