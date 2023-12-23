@@ -84,14 +84,19 @@ fn part1(input: &str) -> usize {
         .count()
 }
 
+fn segment_intersect(from0: i32, to0: i32, from1: i32, to1: i32) -> Option<[i32; 2]> {
+    debug_assert!(from0 <= to0);
+    debug_assert!(from1 <= to1);
+    if to0 < from1 || to1 < from0 {
+        return None;
+    }
+    Some([from1.max(from0), to1.min(to0)])
+}
+
 fn part2(input: &str) -> usize {
     let mut pos = IVec2::ZERO;
 
-    let mut contour = HashSet::new();
-    contour.insert(pos);
-
-    let mut min = pos;
-    let mut max = pos;
+    let mut contour = Vec::new();
 
     for line in input.lines() {
         let split = line.split_ascii_whitespace();
@@ -103,7 +108,7 @@ fn part2(input: &str) -> usize {
         let n = &digits[0..5];
         let d = digits[5];
         let n = std::str::from_utf8(n).unwrap();
-        let n = usize::from_str_radix(n, 16).unwrap();
+        let n = i32::from_str_radix(n, 16).unwrap();
 
         let dir = match d {
             b'0' => IVec2::X,
@@ -113,54 +118,88 @@ fn part2(input: &str) -> usize {
             _ => unreachable!(),
         };
 
-        for _ in 0..n {
-            pos += dir;
-            max = max.max(pos);
-            min = min.min(pos);
-            contour.insert(pos);
+        let end = pos + dir * n;
+        if dir.y == 0 {
+            // contour only has the horizontal line segments
+            contour.push((pos, end));
         }
+        pos = end;
     }
 
-    dbg!(min, max, max - min, contour.len());
+    contour.iter_mut().for_each(|(a, b)| {
+        if a.x > b.x {
+            std::mem::swap(a, b);
+        }
+    });
+    // sort contour from bottom to top (pop removes the topmost segment)
+    contour.sort_by_key(|(from, _to)| -from.y);
 
-    todo!();
+    let mut total = 0;
+    while let Some(top_segment) = contour.pop() {
+        // search for intersection
+        //
+        // remove the intersection
+        // push the remaining segments back, in the appropriate positions so the vec remains sorted
+        //
+        // ???
+        // profit
+        debug_assert!(!contour.is_empty());
+        let mut i = contour.len() - 1;
+        let inter = loop {
+            let candidate = &contour[i];
+            let inter = segment_intersect(
+                top_segment.0.x,
+                top_segment.1.x,
+                candidate.0.x,
+                candidate.1.x,
+            );
+            debug_assert!(inter.is_some() || i > 0, "{:#?}", contour);
+            if inter.is_some() {
+                break inter;
+            }
+            i -= 1;
+        };
+        let inter = inter.unwrap();
+        let bottom_segment = contour.remove(i);
 
-    let s = (max + IVec2::ONE) - min;
-
-    const FILL_CONTOUR: u8 = 255;
-    const FILL_INSIDE: u8 = 128;
-
-    let mut grid = Grid::new(s.x as usize, s.y as usize);
-    // fill contour
-    let mut start = IVec2::ZERO;
-    let n = contour.len() as i32;
-    for pos in contour {
-        grid[pos - min] = FILL_CONTOUR;
-        start += pos - min;
-    }
-    grid.save_as_image("grid_contour.png");
-
-    let mut q = Vec::new();
-    // pray that the average point is inside
-    q.push(start / n);
-
-    // flood fill
-    while let Some(p) = q.pop() {
-        grid[p] = FILL_INSIDE;
-        for d in [IVec2::X, IVec2::Y, -IVec2::X, -IVec2::Y] {
-            let p = p + d;
-            if grid[p] == 0 {
-                q.push(p);
+        if bottom_segment.0.x != inter[0] {
+            let segment = (
+                bottom_segment.0,
+                IVec2::new(inter[0] - 1, bottom_segment.0.y),
+            );
+            if segment.1.x != segment.0.x {
+                contour.insert(i, segment);
             }
         }
+        if bottom_segment.1.x != inter[1] {
+            let segment = (
+                IVec2::new(inter[1] + 1, bottom_segment.1.y),
+                bottom_segment.1,
+            );
+            if segment.1.x != segment.0.x {
+                contour.insert(i, segment);
+            }
+        }
+        if top_segment.0.x != inter[0] {
+            let segment = (top_segment.0, IVec2::new(inter[0] - 1, top_segment.0.y));
+            if segment.1.x != segment.0.x {
+                contour.insert(i, segment);
+            }
+        }
+        if top_segment.1.x != inter[1] {
+            let segment = (IVec2::new(inter[1] + 1, top_segment.1.y), top_segment.1);
+            if segment.1.x != segment.0.x {
+                contour.insert(i, segment);
+            }
+        }
+
+        let width = inter[1] - inter[0];
+        let height = bottom_segment.0.y - top_segment.0.y;
+
+        total += width as usize * height as usize;
     }
 
-    grid.save_as_image("grid_filled.png");
-
-    grid.rows()
-        .flat_map(|r| r.iter())
-        .filter(|x| **x != 0)
-        .count()
+    total
 }
 
 #[cfg(test)]
