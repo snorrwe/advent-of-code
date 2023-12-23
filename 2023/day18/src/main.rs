@@ -98,26 +98,15 @@ fn split_segment_by_intersection(
     inter: [i32; 2],
     i: usize,
     contour: &mut Vec<(IVec2, IVec2)>,
-) -> usize {
-    let mut extra = 0;
+) {
     if segment.1.x != inter[1] {
-        let ssegment = (IVec2::new(inter[1] + 1, segment.1.y), segment.1);
-        if ssegment.1.x == ssegment.0.x {
-            contour.insert(i, segment);
-            return;
-        } else {
-            contour.insert(i, ssegment);
-        }
+        let segment = (IVec2::new(inter[1] + 1, segment.1.y), segment.1);
+        contour.insert(i, segment);
     }
     if segment.0.x != inter[0] {
         let segment = (segment.0, IVec2::new(inter[0] - 1, segment.0.y));
-        if segment.1.x == segment.0.x {
-            extra += 1;
-        } else {
-            contour.insert(i, segment);
-        }
+        contour.insert(i, segment);
     }
-    extra
 }
 
 /// add the areas of recrangles building the shape
@@ -126,7 +115,6 @@ fn part2(input: &str) -> usize {
 
     let mut contour = Vec::new();
 
-    let mut contour_len = 0;
     for line in input.lines() {
         let split = line.split_ascii_whitespace();
         let Some(hex) = split.skip(2).next() else {
@@ -148,7 +136,6 @@ fn part2(input: &str) -> usize {
         };
 
         let end = pos + dir * n;
-        contour_len += n as usize;
         if dir.y == 0 {
             // contour only has the horizontal line segments
             contour.push((pos, end));
@@ -184,7 +171,7 @@ fn part2(input: &str) -> usize {
                 candidate.0.x,
                 candidate.1.x,
             );
-            debug_assert!(inter.is_some() || i > 0, "{:#?}", contour);
+            debug_assert!(inter.is_some() || i > 0, "{:#?}\n{total}", contour);
             if inter.is_some() {
                 break inter;
             }
@@ -193,14 +180,21 @@ fn part2(input: &str) -> usize {
         let inter = inter.unwrap();
         let bottom_segment = contour.remove(i);
 
-        // the common area will be added, push the remaining segment parts back into the contour
-        let mut extra = split_segment_by_intersection(bottom_segment, inter, i, &mut contour);
-        extra += split_segment_by_intersection(top_segment, inter, contour.len(), &mut contour);
-
         let width = inter[1] - inter[0] + 1;
-        let height = bottom_segment.0.y - top_segment.0.y + 1;
+        debug_assert!(width >= 1);
+        let mut height = bottom_segment.0.y - top_segment.0.y + 1;
+        debug_assert!(height >= 1);
+        // the common area will be added, push the remaining segment parts back into the contour
+        // if len is 1, then push the entire bottom segment back
+        if width == 1 {
+            height -= 1;
+            contour.insert(i, bottom_segment);
+        } else {
+            split_segment_by_intersection(bottom_segment, inter, i, &mut contour);
+        }
+        split_segment_by_intersection(top_segment, inter, contour.len(), &mut contour);
 
-        total += (width as usize + extra) * height as usize;
+        total += (width as usize) * (height as usize);
     }
 
     total
