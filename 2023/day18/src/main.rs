@@ -114,6 +114,7 @@ fn part2(input: &str) -> usize {
     let mut pos = IVec2::ZERO;
 
     let mut contour = Vec::new();
+    let mut contour_size = 0;
 
     for line in input.lines() {
         let split = line.split_ascii_whitespace();
@@ -140,6 +141,7 @@ fn part2(input: &str) -> usize {
             // contour only has the horizontal line segments
             contour.push((pos, end));
         }
+        contour_size += n as usize;
         pos = end;
     }
 
@@ -152,7 +154,7 @@ fn part2(input: &str) -> usize {
     contour.sort_by_key(|(from, _to)| -from.y);
 
     let mut total = 0;
-    while let Some(top_segment) = contour.pop() {
+    'main: while let Some(top_segment) = contour.pop() {
         // search for intersection
         //
         // remove the intersection
@@ -160,7 +162,9 @@ fn part2(input: &str) -> usize {
         //
         // ???
         // profit
-        debug_assert!(!contour.is_empty());
+        if contour.is_empty() {
+            break;
+        }
         let mut i = contour.len() - 1;
         // segments are sorted by Y so the first match is the best one
         let inter = loop {
@@ -171,27 +175,28 @@ fn part2(input: &str) -> usize {
                 candidate.0.x,
                 candidate.1.x,
             );
-            debug_assert!(inter.is_some() || i > 0, "{:#?}\n{total}", contour);
             if inter.is_some() {
                 break inter;
+            }
+            if i == 0 {
+                // no segments intersecting to the bottom
+                total += (top_segment.1.x - top_segment.0.x) as usize;
+                continue 'main;
             }
             i -= 1;
         };
         let inter = inter.unwrap();
-        let bottom_segment = contour.remove(i);
+        let bottom_segment = contour[i];
 
+        debug_assert_ne!(top_segment.0.y, bottom_segment.0.y);
+
+        // width is inclusive, height excludes the bottom
         let width = inter[1] - inter[0] + 1;
         debug_assert!(width >= 1);
-        let mut height = bottom_segment.0.y - top_segment.0.y + 1;
+        let height = bottom_segment.0.y - top_segment.0.y;
         debug_assert!(height >= 1);
         // the common area will be added, push the remaining segment parts back into the contour
-        // if len is 1, then push the entire bottom segment back
-        if width == 1 {
-            height -= 1;
-            contour.insert(i, bottom_segment);
-        } else {
-            split_segment_by_intersection(bottom_segment, inter, i, &mut contour);
-        }
+        // split_segment_by_intersection(bottom_segment, inter, i, &mut contour);
         split_segment_by_intersection(top_segment, inter, contour.len(), &mut contour);
 
         total += (width as usize) * (height as usize);
