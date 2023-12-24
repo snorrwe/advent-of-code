@@ -119,11 +119,19 @@ struct HorizontalSegment {
     sign: i32,
 }
 
+#[derive(Debug, Clone, Copy)]
+struct VerticalSegment {
+    from: i32,
+    to: i32,
+    x: i32,
+}
+
 /// add the areas of recrangles building the shape
 fn part2(input: &str) -> usize {
     let mut pos = IVec2::ZERO;
 
     let mut contour = Vec::new();
+    let mut vertical_contour = Vec::new();
 
     for line in input.lines() {
         let split = line.split_ascii_whitespace();
@@ -153,6 +161,12 @@ fn part2(input: &str) -> usize {
                 to: end.x,
                 y: pos.y,
                 sign: dir.x,
+            });
+        } else {
+            vertical_contour.push(VerticalSegment {
+                from: pos.y,
+                to: end.y,
+                x: pos.x,
             });
         }
         pos = end;
@@ -223,6 +237,14 @@ fn part2(input: &str) -> usize {
 
         total += (width as usize) * (height as usize);
     }
+
+    // remove duplicate points (the corners)
+    total -= vertical_contour.len() * 2;
+    // add the vertical contour. account for stragglers in "U shapes"
+    total += vertical_contour
+        .into_iter()
+        .map(|c| c.to.abs_diff(c.from) as usize + 1)
+        .sum::<usize>();
 
     total
 }
