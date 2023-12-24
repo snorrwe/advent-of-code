@@ -163,6 +163,7 @@ fn part2(input: &str) -> usize {
         // ???
         // profit
         if contour.is_empty() {
+            total += (top_segment.1.x - top_segment.0.x) as usize + 1;
             break;
         }
         let mut i = contour.len() - 1;
@@ -180,7 +181,7 @@ fn part2(input: &str) -> usize {
             }
             if i == 0 {
                 // no segments intersecting to the bottom
-                total += (top_segment.1.x - top_segment.0.x) as usize;
+                total += (top_segment.1.x - top_segment.0.x) as usize + 1;
                 continue 'main;
             }
             i -= 1;
