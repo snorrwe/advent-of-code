@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
 
@@ -5,32 +7,105 @@ fn main() {
     println!("{}", part2(input.as_str()));
 }
 
+#[derive(Clone, Copy, Debug)]
+enum Next<'a> {
+    Accept,
+    Reject,
+    Continue,
+    Rule(&'a str),
+}
+
+type Parts<'a> = HashMap<&'a str, i32>;
+
+type Workflows<'a> = HashMap<&'a str, Vec<Box<dyn Fn(&Parts<'a>) -> Next<'a>>>>;
+
+fn parse_next(rule: &str) -> Next {
+    match rule {
+        "A" => Next::Accept,
+        "R" => Next::Reject,
+        _ => Next::Rule(rule),
+    }
+}
+
 fn part1(input: &str) -> i32 {
     let mut lines = input.lines();
     let workflowre = regex::Regex::new(r"(\w+)\{(.*,?)+\}").unwrap();
     let rulere = regex::Regex::new(r"(\w+)([<>])(\d+):(\w+)").unwrap();
+    let mut workflows = Workflows::new();
     for line in &mut lines {
-        dbg!(line);
         let Some(caps) = workflowre.captures(line) else {
             break;
         };
 
         let (_, [name, rules]) = caps.extract();
 
-        dbg!(name);
         for rule in rules.split(',') {
             match rulere.captures(rule) {
                 Some(cap) => {
-                    dbg!(cap);
+                    let (_, [entry, op, n, next]) = cap.extract();
+                    let n = n.parse().unwrap();
+                    let next = parse_next(next);
+                    workflows
+                        .entry(name)
+                        .or_default()
+                        .push(Box::new(move |x| match op {
+                            "<" => {
+                                if x[entry] < n {
+                                    next
+                                } else {
+                                    Next::Continue
+                                }
+                            }
+                            ">" => {
+                                if x[entry] > n {
+                                    next
+                                } else {
+                                    Next::Continue
+                                }
+                            }
+                            _ => unreachable!(),
+                        }));
                 }
                 None => {
-                    dbg!(rule);
+                    let next = parse_next(rule);
+                    workflows
+                        .entry(name)
+                        .or_default()
+                        .push(Box::new(move |_x| next));
                 }
             }
         }
     }
-    for line in lines {}
-    todo!()
+
+    let partre = regex::Regex::new(r"(\w+)=(\d+)").unwrap();
+    let mut parts = HashMap::new();
+    let mut result = 0;
+    for line in lines {
+        parts.clear();
+        for cap in partre.captures_iter(line) {
+            let (_, [entry, n]) = cap.extract();
+            parts.insert(entry, n.parse().unwrap());
+        }
+        if parts.is_empty() {
+            break;
+        }
+        let mut next = Next::Rule("in");
+        while let Next::Rule(r) = next {
+            let workflow = &workflows[r];
+            for w in workflow {
+                next = w(&parts);
+                if !matches!(next, Next::Continue) {
+                    break;
+                }
+            }
+        }
+        if let Next::Accept = next {
+            for i in parts.values() {
+                result += *i;
+            }
+        }
+    }
+    result
 }
 
 fn part2(input: &str) -> i32 {
@@ -64,7 +139,7 @@ hdj{m>838:A,pv}
     fn test_p1() {
         let res = part1(INPUT);
 
-        assert_eq!(res, 42);
+        assert_eq!(res, 19114);
     }
 
     #[test]
