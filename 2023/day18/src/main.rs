@@ -200,17 +200,25 @@ fn part2(input: &str) -> usize {
             i -= 1;
         };
         let inter = inter.unwrap();
-        let bottom_segment = contour[i];
+        let bottom_segment = contour.remove(i);
 
         debug_assert_ne!(top_segment.y, bottom_segment.y);
 
         // width is inclusive, height excludes the bottom
         let width = inter[1] - inter[0] + 1;
         debug_assert!(width >= 1);
-        let height = bottom_segment.y - top_segment.y;
+        let mut height = bottom_segment.y - top_segment.y;
         debug_assert!(height >= 1);
         // the common area will be added, push the remaining segment parts back into the contour
-        split_segment_by_intersection(bottom_segment, inter, i, &mut contour);
+        if top_segment.sign != bottom_segment.sign {
+            height += 1; // account for the removed segment's height
+            split_segment_by_intersection(bottom_segment, inter, i, &mut contour);
+        } else {
+            // if going in the same direction, then put the bottom segment back
+            // this happens in a "Z shape"
+            debug_assert_eq!(width, 1);
+            contour.insert(i, bottom_segment);
+        }
         split_segment_by_intersection(top_segment, inter, contour.len(), &mut contour);
 
         total += (width as usize) * (height as usize);
