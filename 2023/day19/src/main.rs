@@ -108,7 +108,7 @@ fn part1(input: &str) -> i32 {
     result
 }
 
-fn part2(input: &str) -> i32 {
+fn part2(input: &str) -> usize {
     todo!()
 }
 
@@ -146,6 +146,6 @@ hdj{m>838:A,pv}
     fn test_p2() {
         let res = part2(INPUT);
 
-        assert_eq!(res, 42);
+        assert_eq!(res, 167409079868000);
     }
 }
