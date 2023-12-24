@@ -123,8 +123,7 @@ fn part2(input: &str) -> usize {
         .enumerate()
         .map(|(i, p)| {
             let q = contour[(i + 1) % contour.len()];
-            (p.y as i64 + q.y as i64) * (p.x as i64 - q.x as i64)
-            // (p.x as i64 * q.y as i64) - (p.y as i64 * q.x as i64)
+            (p.x as i64 * q.y as i64) - (p.y as i64 * q.x as i64)
         })
         .sum::<i64>()
         .abs() as usize
