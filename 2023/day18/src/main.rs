@@ -84,54 +84,11 @@ fn part1(input: &str) -> usize {
         .count()
 }
 
-fn segment_intersect(from0: i32, to0: i32, from1: i32, to1: i32) -> Option<[i32; 2]> {
-    debug_assert!(from0 <= to0);
-    debug_assert!(from1 <= to1);
-    if to0 < from1 || to1 < from0 {
-        return None;
-    }
-    Some([from1.max(from0), to1.min(to0)])
-}
-
-fn split_segment_by_intersection(
-    segment: HorizontalSegment,
-    inter: [i32; 2],
-    i: usize,
-    contour: &mut Vec<HorizontalSegment>,
-) {
-    if segment.to != inter[1] {
-        let mut segment = segment;
-        segment.from = inter[1] + 1;
-        contour.insert(i, segment);
-    }
-    if segment.from != inter[0] {
-        let mut segment = segment;
-        segment.to = inter[0] - 1;
-        contour.insert(i, segment);
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-struct HorizontalSegment {
-    from: i32,
-    to: i32,
-    y: i32,
-    sign: i32,
-}
-
-#[derive(Debug, Clone, Copy)]
-struct VerticalSegment {
-    from: i32,
-    to: i32,
-    x: i32,
-}
-
 /// add the areas of recrangles building the shape
-fn part2(input: &str) -> usize {
+fn part2(input: &str) -> i64 {
     let mut pos = IVec2::ZERO;
 
     let mut contour = Vec::new();
-    let mut vertical_contour = Vec::new();
 
     for line in input.lines() {
         let split = line.split_ascii_whitespace();
@@ -153,100 +110,20 @@ fn part2(input: &str) -> usize {
             _ => unreachable!(),
         };
 
-        let end = pos + dir * n;
-        if dir.y == 0 {
-            // contour only has the horizontal line segments
-            contour.push(HorizontalSegment {
-                from: pos.x,
-                to: end.x,
-                y: pos.y,
-                sign: dir.x,
-            });
-        } else {
-            vertical_contour.push(VerticalSegment {
-                from: pos.y,
-                to: end.y,
-                x: pos.x,
-            });
-        }
-        pos = end;
+        pos = pos + dir * n;
+        contour.push(pos);
     }
 
-    contour.iter_mut().for_each(|s| {
-        if s.from > s.to {
-            std::mem::swap(&mut s.from, &mut s.to);
-        }
-    });
-    // sort contour from bottom to top (pop removes the topmost segment)
-    contour.sort_by_key(|s| -s.y);
-
-    let mut total = 0;
-    'main: while let Some(top_segment) = contour.pop() {
-        // search for intersection
-        //
-        // remove the intersection
-        // push the remaining segments back, in the appropriate positions so the vec remains sorted
-        //
-        // ???
-        // profit
-        if contour.is_empty() {
-            total += (top_segment.to - top_segment.from) as usize + 1;
-            break;
-        }
-        let mut i = contour.len() - 1;
-        // segments are sorted by Y so the first match is the best one
-        let inter = loop {
-            let candidate = &contour[i];
-            let inter = segment_intersect(
-                top_segment.from,
-                top_segment.to,
-                candidate.from,
-                candidate.to,
-            );
-            if inter.is_some() {
-                break inter;
-            }
-            if i == 0 {
-                // no segments intersecting to the bottom
-                total += (top_segment.to - top_segment.from) as usize + 1;
-                continue 'main;
-            }
-            i -= 1;
-        };
-        let inter = inter.unwrap();
-        let bottom_segment = contour.remove(i);
-
-        debug_assert_ne!(top_segment.y, bottom_segment.y);
-
-        // width is inclusive, height excludes the bottom
-        let width = inter[1] - inter[0] + 1;
-        debug_assert!(width >= 1);
-        let mut height = bottom_segment.y - top_segment.y;
-        debug_assert!(height >= 1);
-        // the common area will be added, push the remaining segment parts back into the contour
-        if top_segment.sign != bottom_segment.sign {
-            height += 1; // account for the removed segment's height
-            split_segment_by_intersection(bottom_segment, inter, i, &mut contour);
-        } else {
-            // if going in the same direction, then put the bottom segment back
-            // this happens in a "Z shape"
-            debug_assert_eq!(width, 1);
-            contour.insert(i, bottom_segment);
-        }
-        split_segment_by_intersection(top_segment, inter, contour.len(), &mut contour);
-
-        total += (width as usize) * (height as usize);
-    }
-
-    // remove duplicate points (the corners)
-    total -= vertical_contour.len() * 2;
-    // add the vertical contour. account for stragglers in "U shapes"
-    total += vertical_contour
-        .into_iter()
-        .map(|c| c.to.abs_diff(c.from) as usize + 1)
-        .sum::<usize>();
-
-    total
+    // Shoelace formula
+    contour
+        .iter()
+        .enumerate()
+        .map(|(i, p)| {
+            let q = contour[(i + 1) % contour.len()];
+            (p.x as i64 * q.y as i64) - (p.y as i64 * q.x as i64)
+        })
+        .sum::<i64>()
+        / 2
 }
 
 #[cfg(test)]
