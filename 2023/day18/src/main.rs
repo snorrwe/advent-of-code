@@ -94,19 +94,29 @@ fn segment_intersect(from0: i32, to0: i32, from1: i32, to1: i32) -> Option<[i32;
 }
 
 fn split_segment_by_intersection(
-    segment: (IVec2, IVec2),
+    segment: HorizontalSegment,
     inter: [i32; 2],
     i: usize,
-    contour: &mut Vec<(IVec2, IVec2)>,
+    contour: &mut Vec<HorizontalSegment>,
 ) {
-    if segment.1.x != inter[1] {
-        let segment = (IVec2::new(inter[1] + 1, segment.1.y), segment.1);
+    if segment.to != inter[1] {
+        let mut segment = segment;
+        segment.from = inter[1] + 1;
         contour.insert(i, segment);
     }
-    if segment.0.x != inter[0] {
-        let segment = (segment.0, IVec2::new(inter[0] - 1, segment.0.y));
+    if segment.from != inter[0] {
+        let mut segment = segment;
+        segment.to = inter[0] - 1;
         contour.insert(i, segment);
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct HorizontalSegment {
+    from: i32,
+    to: i32,
+    y: i32,
+    sign: i32,
 }
 
 /// add the areas of recrangles building the shape
@@ -114,7 +124,6 @@ fn part2(input: &str) -> usize {
     let mut pos = IVec2::ZERO;
 
     let mut contour = Vec::new();
-    let mut contour_size = 0;
 
     for line in input.lines() {
         let split = line.split_ascii_whitespace();
@@ -139,19 +148,23 @@ fn part2(input: &str) -> usize {
         let end = pos + dir * n;
         if dir.y == 0 {
             // contour only has the horizontal line segments
-            contour.push((pos, end));
+            contour.push(HorizontalSegment {
+                from: pos.x,
+                to: end.x,
+                y: pos.y,
+                sign: dir.x,
+            });
         }
-        contour_size += n as usize;
         pos = end;
     }
 
-    contour.iter_mut().for_each(|(a, b)| {
-        if a.x > b.x {
-            std::mem::swap(a, b);
+    contour.iter_mut().for_each(|s| {
+        if s.from > s.to {
+            std::mem::swap(&mut s.from, &mut s.to);
         }
     });
     // sort contour from bottom to top (pop removes the topmost segment)
-    contour.sort_by_key(|(from, _to)| -from.y);
+    contour.sort_by_key(|s| -s.y);
 
     let mut total = 0;
     'main: while let Some(top_segment) = contour.pop() {
@@ -163,7 +176,7 @@ fn part2(input: &str) -> usize {
         // ???
         // profit
         if contour.is_empty() {
-            total += (top_segment.1.x - top_segment.0.x) as usize + 1;
+            total += (top_segment.to - top_segment.from) as usize + 1;
             break;
         }
         let mut i = contour.len() - 1;
@@ -171,17 +184,17 @@ fn part2(input: &str) -> usize {
         let inter = loop {
             let candidate = &contour[i];
             let inter = segment_intersect(
-                top_segment.0.x,
-                top_segment.1.x,
-                candidate.0.x,
-                candidate.1.x,
+                top_segment.from,
+                top_segment.to,
+                candidate.from,
+                candidate.to,
             );
             if inter.is_some() {
                 break inter;
             }
             if i == 0 {
                 // no segments intersecting to the bottom
-                total += (top_segment.1.x - top_segment.0.x) as usize + 1;
+                total += (top_segment.to - top_segment.from) as usize + 1;
                 continue 'main;
             }
             i -= 1;
@@ -189,15 +202,15 @@ fn part2(input: &str) -> usize {
         let inter = inter.unwrap();
         let bottom_segment = contour[i];
 
-        debug_assert_ne!(top_segment.0.y, bottom_segment.0.y);
+        debug_assert_ne!(top_segment.y, bottom_segment.y);
 
         // width is inclusive, height excludes the bottom
         let width = inter[1] - inter[0] + 1;
         debug_assert!(width >= 1);
-        let height = bottom_segment.0.y - top_segment.0.y;
+        let height = bottom_segment.y - top_segment.y;
         debug_assert!(height >= 1);
         // the common area will be added, push the remaining segment parts back into the contour
-        // split_segment_by_intersection(bottom_segment, inter, i, &mut contour);
+        split_segment_by_intersection(bottom_segment, inter, i, &mut contour);
         split_segment_by_intersection(top_segment, inter, contour.len(), &mut contour);
 
         total += (width as usize) * (height as usize);
