@@ -109,6 +109,54 @@ fn part1(input: &str) -> i32 {
 }
 
 fn part2(input: &str) -> usize {
+    let mut lines = input.lines();
+    let workflowre = regex::Regex::new(r"(\w+)\{(.*,?)+\}").unwrap();
+    let rulere = regex::Regex::new(r"(\w+)([<>])(\d+):(\w+)").unwrap();
+    let mut workflows = Workflows::new();
+    for line in &mut lines {
+        let Some(caps) = workflowre.captures(line) else {
+            break;
+        };
+
+        let (_, [name, rules]) = caps.extract();
+
+        for rule in rules.split(',') {
+            match rulere.captures(rule) {
+                Some(cap) => {
+                    let (_, [entry, op, n, next]) = cap.extract();
+                    let n = n.parse().unwrap();
+                    let next = parse_next(next);
+                    workflows
+                        .entry(name)
+                        .or_default()
+                        .push(Box::new(move |x| match op {
+                            "<" => {
+                                if x[entry] < n {
+                                    next
+                                } else {
+                                    Next::Continue
+                                }
+                            }
+                            ">" => {
+                                if x[entry] > n {
+                                    next
+                                } else {
+                                    Next::Continue
+                                }
+                            }
+                            _ => unreachable!(),
+                        }));
+                }
+                None => {
+                    let next = parse_next(rule);
+                    workflows
+                        .entry(name)
+                        .or_default()
+                        .push(Box::new(move |_x| next));
+                }
+            }
+        }
+    }
     todo!()
 }
 
