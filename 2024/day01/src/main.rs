@@ -33,10 +33,10 @@ fn solve([a, b]: &Input) -> (u32, i32) {
             total_2 += part;
         } else {
             part = 0;
-            while b[hb] < a[ha] {
+            while hb < b.len() && b[hb] < a[ha] {
                 hb += 1;
             }
-            while a[ha] == b[hb] && hb < b.len() {
+            while hb < b.len() && a[ha] == b[hb] {
                 part += a[ha];
                 hb += 1;
             }
