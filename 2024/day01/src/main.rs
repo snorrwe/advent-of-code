@@ -10,15 +10,23 @@ fn parse(inp: &str) -> Input {
         a.push(l.parse().unwrap());
         b.push(r.trim().parse().unwrap());
     }
-    a.sort_unstable();
-    b.sort_unstable();
     [a, b]
 }
 
-fn p1(inp: &Input) -> u32 {
+fn p1([mut a, mut b]: Input) -> u32 {
+    a.sort_unstable();
+    b.sort_unstable();
     let mut total = 0;
-    for (a, b) in inp[0].iter().zip(inp[1].iter()) {
+    for (a, b) in a.iter().zip(b.iter()) {
         total += a.abs_diff(*b);
+    }
+    total
+}
+
+fn p2([a, b]: &Input) -> usize {
+    let mut total = 0;
+    for i in a {
+        total += *i as usize * b.iter().filter(|x| *x == i).count();
     }
     total
 }
@@ -28,16 +36,15 @@ fn main() {
 
     let input = parse(&input);
 
-    println!("p1: {}", p1(&input));
+    println!("p1: {}", p1(input.clone()));
+    println!("p2: {}", p2(&input));
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_p1() {
-        const INPUT: &str = r#"
+    const INPUT: &str = r#"
 3   4
 4   3
 2   5
@@ -46,8 +53,15 @@ mod tests {
 3   3
 "#;
 
+    #[test]
+    fn test_p1() {
         let input = parse(INPUT);
+        assert_eq!(p1(input), 11);
+    }
 
-        assert_eq!(p1(&input), 11);
+    #[test]
+    fn test_p2() {
+        let input = parse(INPUT);
+        assert_eq!(p2(&input), 31);
     }
 }
