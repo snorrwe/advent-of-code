@@ -23,10 +23,29 @@ fn p1([a, b]: &Input) -> u32 {
     total
 }
 
-fn p2([a, b]: &Input) -> usize {
+fn p2([a, b]: &Input) -> i32 {
     let mut total = 0;
-    for i in a {
-        total += *i as usize * b.iter().filter(|x| *x == i).count();
+    let mut ha = 0;
+    let mut hb = 0;
+    let mut part = 0;
+    while a[ha] == b[hb] {
+        hb += 1;
+        part += a[ha];
+    }
+    total += part;
+    ha = 1;
+    while ha < a.len() {
+        if a[ha - 1] == a[ha] {
+            total += part;
+        } else {
+            part = 0;
+            while a[ha] == b[hb] && hb < b.len() {
+                part += a[ha];
+                hb += 1;
+            }
+            total += part;
+        }
+        ha += 1;
     }
     total
 }
