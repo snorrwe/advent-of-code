@@ -13,3 +13,12 @@
 2023/day01/part2.o
 2023/day18/grid_contour.png
 2023/day18/grid_filled.png
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
