@@ -10,12 +10,12 @@ fn parse(inp: &str) -> Input {
         a.push(l.parse().unwrap());
         b.push(r.trim().parse().unwrap());
     }
+    a.sort_unstable();
+    b.sort_unstable();
     [a, b]
 }
 
-fn p1([mut a, mut b]: Input) -> u32 {
-    a.sort_unstable();
-    b.sort_unstable();
+fn p1([a, b]: &Input) -> u32 {
     let mut total = 0;
     for (a, b) in a.iter().zip(b.iter()) {
         total += a.abs_diff(*b);
@@ -36,7 +36,7 @@ fn main() {
 
     let input = parse(&input);
 
-    println!("p1: {}", p1(input.clone()));
+    println!("p1: {}", p1(&input));
     println!("p2: {}", p2(&input));
 }
 
@@ -56,7 +56,7 @@ mod tests {
     #[test]
     fn test_p1() {
         let input = parse(INPUT);
-        assert_eq!(p1(input), 11);
+        assert_eq!(p1(&input), 11);
     }
 
     #[test]
