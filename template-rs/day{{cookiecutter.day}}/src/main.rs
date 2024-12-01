@@ -1,4 +1,6 @@
-fn parse(input: String) -> String {
+type Input = String;
+
+fn parse(input: String) -> Input {
     input
 }
 
@@ -10,11 +12,11 @@ fn main() {
     println!("{}", part2(&input));
 }
 
-fn part1(input: &str) -> i32 {
+fn part1(input: &Input) -> i32 {
     todo!()
 }
 
-fn part2(input: &str) -> i32 {
+fn part2(input: &Input) -> i32 {
     todo!()
 }
 
@@ -26,14 +28,16 @@ mod tests {
 
     #[test]
     fn test_p1() {
-        let res = part1(INPUT);
+        let inp = parse(INPUT.to_string());
+        let res = part1(&inp);
 
         assert_eq!(res, 42);
     }
 
     #[test]
     fn test_p2() {
-        let res = part2(INPUT);
+        let inp = parse(INPUT.to_string());
+        let res = part2(&inp);
 
         assert_eq!(res, 42);
     }
