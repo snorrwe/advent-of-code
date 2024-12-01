@@ -19,17 +19,15 @@ fn parse(inp: &str) -> Input {
 fn solve([a, b]: &Input) -> (u32, i32) {
     let mut total_1 = 0;
     let mut total_2 = 0;
-    let mut ha = 0;
     let mut hb = 0;
     let mut part = 0;
-    while a[ha] == b[hb] {
+    while a[0] == b[hb] {
         hb += 1;
-        part += a[ha];
+        part += a[0];
     }
     total_1 += a[0].abs_diff(b[0]);
     total_2 += part;
-    ha = 1;
-    while ha < a.len() {
+    for ha in 1..a.len() {
         total_1 += a[ha].abs_diff(b[ha]);
         if a[ha - 1] == a[ha] {
             total_2 += part;
@@ -44,7 +42,6 @@ fn solve([a, b]: &Input) -> (u32, i32) {
             }
             total_2 += part;
         }
-        ha += 1;
     }
     (total_1, total_2)
 }
