@@ -16,47 +16,51 @@ fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
     let mut input = parse(input);
 
-    println!("{}", part1(&input));
-    println!("{}", part2(&mut input));
-}
-
-fn part1(input: &Input) -> usize {
-    input.iter().filter(|x| is_safe(x)).count()
+    let (p1, p2) = solve(&mut input);
+    println!("{p1} {p2}");
 }
 
 fn is_safe(nums: &[i32]) -> bool {
-    let Some((last, n)) = nums.iter().zip(&nums[1..]).next() else {
+    let Some((lhs, rhs)) = nums.iter().zip(&nums[1..]).next() else {
         return false;
     };
-    let increasing = last < n;
-    let d = last.abs_diff(*n);
+    let d = rhs - lhs;
+    let sign = d.signum();
+    let d = d.abs();
     if d < 1 || 3 < d {
         return false;
     }
 
-    for (last, n) in nums[1..].iter().zip(&nums[2..]) {
-        let d = last.abs_diff(*n);
-        if d < 1 || 3 < d || (increasing && n < last) || (!increasing && last < n) {
+    for (lhs, rhs) in nums[1..].iter().zip(&nums[2..]) {
+        let d = rhs - lhs;
+        let delta = d.abs();
+        if delta < 1 || 3 < delta || d.signum() != sign {
             return false;
         }
     }
     true
 }
 
-fn part2(input: &mut Input) -> i32 {
-    let mut n_safe = 0;
+fn solve(input: &mut Input) -> (i32, i32) {
+    let mut n_safe1 = 0;
+    let mut n_safe2 = 0;
     'a: for nums in input {
+        if is_safe(nums) {
+            n_safe1 += 1;
+            n_safe2 += 1;
+            continue;
+        }
         for i in 0..nums.len() {
             let x = nums.remove(i);
             if is_safe(&nums) {
-                n_safe += 1;
+                n_safe2 += 1;
                 continue 'a;
             } else {
                 nums.insert(i, x);
             }
         }
     }
-    n_safe
+    (n_safe1, n_safe2)
 }
 
 #[cfg(test)]
@@ -71,18 +75,11 @@ mod tests {
 1 3 6 7 9"#;
 
     #[test]
-    fn test_p1() {
-        let inp = parse(INPUT.to_string());
-        let res = part1(&inp);
-
-        assert_eq!(res, 2);
-    }
-
-    #[test]
-    fn test_p2() {
+    fn test() {
         let mut inp = parse(INPUT.to_string());
-        let res = part2(&mut inp);
+        let (p1, p2) = solve(&mut inp);
 
-        assert_eq!(res, 4);
+        assert_eq!(p1, 2);
+        assert_eq!(p2, 4);
     }
 }
