@@ -1,51 +1,62 @@
-type Input = String;
+type Input = Vec<Vec<i32>>;
 
 fn parse(input: String) -> Input {
-    input
+    let mut res = Vec::new();
+    for line in input.lines() {
+        let nums = line
+            .split(|c: char| c.is_whitespace())
+            .filter_map(|c| c.parse().ok())
+            .collect::<Vec<i32>>();
+        res.push(nums);
+    }
+    res
 }
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
-    let input = parse(input);
+    let mut input = parse(input);
 
     println!("{}", part1(&input));
-    println!("{}", part2(&input));
+    println!("{}", part2(&mut input));
 }
 
-fn part1(input: &Input) -> i32 {
-    let mut n_safe = 0;
-    'a: for line in input.lines() {
-        let mut it = line.split(|c: char| c.is_whitespace());
-        let Some(n) = it.next() else {
-            continue;
-        };
-        let mut last: i32 = n.parse().unwrap();
-        let Some(n) = it.next() else {
-            continue;
-        };
-        let n = n.parse().unwrap();
-        let d = last.abs_diff(n);
-        if d < 1 || 3 < d {
-            continue 'a;
-        }
-        let increasing = last < n;
-        last = n;
+fn part1(input: &Input) -> usize {
+    input.iter().filter(|x| is_safe(x)).count()
+}
 
-        for n in it {
-            let n = n.parse().unwrap();
-            let d = last.abs_diff(n);
-            if d < 1 || 3 < d || (increasing && n < last) || (!increasing && last < n) {
-                continue 'a;
-            }
-            last = n;
+fn is_safe(nums: &[i32]) -> bool {
+    let Some((last, n)) = nums.iter().zip(&nums[1..]).next() else {
+        return false;
+    };
+    let increasing = last < n;
+    let d = last.abs_diff(*n);
+    if d < 1 || 3 < d {
+        return false;
+    }
+
+    for (last, n) in nums[1..].iter().zip(&nums[2..]) {
+        let d = last.abs_diff(*n);
+        if d < 1 || 3 < d || (increasing && n < last) || (!increasing && last < n) {
+            return false;
         }
-        n_safe += 1;
+    }
+    true
+}
+
+fn part2(input: &mut Input) -> i32 {
+    let mut n_safe = 0;
+    'a: for nums in input {
+        for i in 0..nums.len() {
+            let x = nums.remove(i);
+            if is_safe(&nums) {
+                n_safe += 1;
+                continue 'a;
+            } else {
+                nums.insert(i, x);
+            }
+        }
     }
     n_safe
-}
-
-fn part2(input: &Input) -> i32 {
-    todo!()
 }
 
 #[cfg(test)]
@@ -69,9 +80,9 @@ mod tests {
 
     #[test]
     fn test_p2() {
-        let inp = parse(INPUT.to_string());
-        let res = part2(&inp);
+        let mut inp = parse(INPUT.to_string());
+        let res = part2(&mut inp);
 
-        assert_eq!(res, 42);
+        assert_eq!(res, 4);
     }
 }
