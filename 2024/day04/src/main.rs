@@ -3,17 +3,7 @@ use utils::Grid;
 type Input = Grid<u8>;
 
 fn parse(input: String) -> Input {
-    let w = input
-        .lines()
-        .next()
-        .map(|l| l.as_bytes().len())
-        .unwrap_or(0);
-    let d = input
-        .lines()
-        .filter(|l| !l.is_empty())
-        .flat_map(|l| l.bytes())
-        .collect();
-    Grid::from_data(d, w)
+    Grid::from_ascii_lines(&input).unwrap()
 }
 
 fn main() {
