@@ -89,18 +89,16 @@ fn part2(input: &Input) -> i32 {
     let mut count = 0;
     for y in 0..=input.height - 4 {
         for x in 0..=input.width - 4 {
-            if input[y + 1][x + 1] != b'A' {
-                continue;
-            }
             let edges = [
-                input[y][x],
-                input[y + 2][x + 2],
-                input[y][x + 2],
-                input[y + 2][x],
+                input[y][x],         // TL
+                input[y + 2][x + 2], // BR
+                input[y + 1][x + 1], // center
+                input[y][x + 2],     // TR
+                input[y + 2][x],     // BL
             ];
 
             match &edges {
-                b"MSMS" | b"SMSM" | b"SMMS" | b"MSSM" => {
+                b"MSAMS" | b"SMASM" | b"SMAMS" | b"MSASM" => {
                     count += 1;
                 }
                 _ => {}
