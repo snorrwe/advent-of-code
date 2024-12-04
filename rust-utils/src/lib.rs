@@ -335,6 +335,26 @@ impl<T> Grid<T> {
     }
 }
 
+impl<T, I> Index<I> for Grid<T>
+where
+    I: Into<usize>,
+{
+    type Output = [T];
+
+    fn index(&self, index: I) -> &Self::Output {
+        self.row(index.into())
+    }
+}
+
+impl<T, I> IndexMut<I> for Grid<T>
+where
+    I: Into<usize>,
+{
+    fn index_mut(&mut self, index: I) -> &mut Self::Output {
+        self.row_mut(index.into())
+    }
+}
+
 impl<T> Index<IVec2> for Grid<T> {
     type Output = T;
     fn index(&self, index: IVec2) -> &Self::Output {

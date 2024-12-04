@@ -29,7 +29,7 @@ fn part1(input: &Input) -> i32 {
 
     if input.width >= 4 {
         // not true in tests
-        for (_y, row) in input.rows().enumerate() {
+        for row in input.rows() {
             for x in 0..=row.len() - 4 {
                 let c = &row[x..x + 4];
                 if c == b"XMAS" || c == b"SAMX" {
@@ -44,10 +44,10 @@ fn part1(input: &Input) -> i32 {
         for x in 0..input.width {
             for y in 0..=input.height - 4 {
                 let c = [
-                    *input.get(x, y),
-                    *input.get(x, y + 1),
-                    *input.get(x, y + 2),
-                    *input.get(x, y + 3),
+                    input[y][x],
+                    input[y + 1][x],
+                    input[y + 2][x],
+                    input[y + 3][x],
                 ];
                 if &c == b"XMAS" || &c == b"SAMX" {
                     total += 1;
@@ -61,19 +61,19 @@ fn part1(input: &Input) -> i32 {
         for y in 0..=input.height - 4 {
             for x in 0..=input.width - 4 {
                 let c = [
-                    *input.get(x, y),
-                    *input.get(x + 1, y + 1),
-                    *input.get(x + 2, y + 2),
-                    *input.get(x + 3, y + 3),
+                    input[y][x],
+                    input[y + 1][x + 1],
+                    input[y + 2][x + 2],
+                    input[y + 3][x + 3],
                 ];
                 if &c == b"XMAS" || &c == b"SAMX" {
                     total += 1;
                 }
                 let c = [
-                    *input.get(x, y + 3),
-                    *input.get(x + 1, y + 2),
-                    *input.get(x + 2, y + 1),
-                    *input.get(x + 3, y),
+                    input[y + 3][x],
+                    input[y + 2][x + 1],
+                    input[y + 1][x + 2],
+                    input[y][x + 3],
                 ];
                 if &c == b"XMAS" || &c == b"SAMX" {
                     total += 1;
@@ -89,14 +89,14 @@ fn part2(input: &Input) -> i32 {
     let mut count = 0;
     for y in 0..=input.height - 3 {
         for x in 0..=input.width - 3 {
-            if *input.get(x + 1, y + 1) != b'A' {
+            if input[y + 1][x + 1] != b'A' {
                 continue;
             }
             let edges = [
-                *input.get(x, y),
-                *input.get(x + 2, y + 2),
-                *input.get(x + 2, y),
-                *input.get(x, y + 2),
+                input[y][x],
+                input[y + 2][x + 2],
+                input[y][x + 2],
+                input[y + 2][x],
             ];
 
             match &edges {
