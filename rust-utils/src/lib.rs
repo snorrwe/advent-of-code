@@ -3,6 +3,8 @@ use std::{
     ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Neg, Sub, SubAssign},
 };
 
+use anyhow::Context;
+
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash)]
 pub struct IVec2 {
     pub x: i32,
@@ -254,12 +256,14 @@ where
 
 impl Grid<u8> {
     pub fn from_ascii_lines(lines: &str) -> anyhow::Result<Self> {
-        let Some(width) = lines.lines().next().map(|l| l.len()) else {
-            anyhow::bail!("No lines found");
-        };
+        let width = lines
+            .lines()
+            .next()
+            .map(|l| l.len())
+            .context("No lines found")?;
         let data = lines
             .lines()
-            .take_while(|l| l.len() == width)
+            .filter(|l| l.len() == width)
             .flat_map(|l| l.bytes())
             .collect();
         Ok(Grid::from_data(data, width))
