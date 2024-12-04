@@ -87,8 +87,8 @@ fn part1(input: &Input) -> i32 {
 
 fn part2(input: &Input) -> i32 {
     let mut count = 0;
-    for y in 0..=input.height - 3 {
-        for x in 0..=input.width - 3 {
+    for y in 0..=input.height - 4 {
+        for x in 0..=input.width - 4 {
             if input[y + 1][x + 1] != b'A' {
                 continue;
             }
