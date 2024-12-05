@@ -28,6 +28,9 @@ fn parse(input: String) -> Input {
         res.precedence.insert((a, b));
     }
     while let Some(l) = lines.next() {
+        if l.is_empty() {
+            continue;
+        }
         let mut r: Vec<_> = Default::default();
         for n in l.split(',') {
             r.push(n.parse().unwrap());
