@@ -1,9 +1,6 @@
-use std::{
-    cmp::Ordering,
-    collections::{HashMap, HashSet},
-};
+use std::{cmp::Ordering, collections::HashSet};
 
-type Precedence = HashMap<i32, HashSet<i32>>;
+type Precedence = HashSet<(i32, i32)>;
 
 struct Input {
     /// values come before the key
@@ -28,7 +25,7 @@ fn parse(input: String) -> Input {
         let a = a.parse().unwrap();
         let b = b.parse().unwrap();
 
-        res.precedence.entry(b).or_default().insert(a);
+        res.precedence.insert((a, b));
     }
     while let Some(l) = lines.next() {
         let mut r: Vec<_> = Default::default();
@@ -54,11 +51,9 @@ fn part1(input: &Input) -> i32 {
 
     'line: for line in input.pages.iter() {
         for i in 0..line.len() {
-            if let Some(p) = input.precedence.get(&line[i]) {
-                for j in i..line.len() {
-                    if p.contains(&line[j]) {
-                        continue 'line;
-                    }
+            for j in i + 1..line.len() {
+                if input.precedence.contains(&(line[j], line[i])) {
+                    continue 'line;
                 }
             }
         }
@@ -71,10 +66,10 @@ fn part1(input: &Input) -> i32 {
 
 fn sort_line(line: &mut [i32], precedence: &Precedence) {
     line.sort_by(|a, b| {
-        if precedence.get(b).map(|p| p.contains(a)).unwrap_or(false) {
+        if precedence.contains(&(*a, *b)) {
             return Ordering::Less;
         }
-        if precedence.get(a).map(|p| p.contains(b)).unwrap_or(false) {
+        if precedence.contains(&(*b, *a)) {
             return Ordering::Greater;
         }
         return Ordering::Equal;
@@ -86,14 +81,12 @@ fn part2(input: &mut Input) -> i32 {
 
     for line in input.pages.iter_mut() {
         'check: for i in 0..line.len() {
-            if let Some(p) = input.precedence.get(&line[i]) {
-                for j in i..line.len() {
-                    if p.contains(&line[j]) {
-                        sort_line(line, &input.precedence);
-                        let mid = line[line.len() / 2];
-                        total += mid;
-                        break 'check;
-                    }
+            for j in i..line.len() {
+                if input.precedence.contains(&(line[j], line[i])) {
+                    sort_line(line, &input.precedence);
+                    let mid = line[line.len() / 2];
+                    total += mid;
+                    break 'check;
                 }
             }
         }
