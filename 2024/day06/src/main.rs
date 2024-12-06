@@ -9,7 +9,6 @@ struct Input {
 }
 
 const GUARD: u8 = b'^';
-const EMPTY: u8 = b'.';
 const OBS: u8 = b'#';
 
 fn parse(input: String) -> Input {
@@ -41,45 +40,93 @@ fn parse(input: String) -> Input {
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
-    let input = parse(input);
+    let mut input = parse(input);
 
-    println!("{}", part1(&input));
-    println!("{}", part2(&input));
+    let (p1, p2) = solve(&mut input);
+    println!("{}", p1);
+    println!("{}", p2);
 }
 
-fn part1(input: &Input) -> usize {
-    let grid = &input.grid;
+fn solve(input: &mut Input) -> (usize, usize) {
+    let grid = &mut input.grid;
+
     let x = input.x as i32;
     let y = input.y as i32;
-    let mut pos = IVec2::new(x, y);
+    let starting_pos = IVec2::new(x, y);
+    let mut pos = starting_pos;
     let mut vel = -IVec2::Y;
     let mut visited = HashSet::new();
     visited.insert(pos);
+    let mut path = Vec::new();
     loop {
-        let peak = pos + vel;
-        if peak.x < 0
-            || peak.y < 0
-            || grid.width <= peak.x as usize
-            || grid.height <= peak.y as usize
-        {
+        let peek = pos + vel;
+        if !grid.contains_point(peek) {
             break;
         }
-        if grid[peak] == OBS {
+        if grid[peek] == OBS {
             vel = vel.rotate_cw();
         } else {
-            pos = pos + vel;
+            pos = peek;
             visited.insert(pos);
+            path.push(pos);
         }
     }
-    visited.len()
+    // p2
+    let mut obs = HashSet::new();
+    let mut last = starting_pos;
+    for pos in path.iter().copied().take(path.len() - 1) {
+        let v = pos - last;
+        last = pos;
+        assert_eq!(v.len_sq(), 1);
+
+        let candidate = pos + v;
+
+        assert!(grid.contains_point(candidate));
+
+        if grid[candidate] != OBS {
+            let tile = std::mem::replace(&mut grid[candidate], OBS);
+            if check_loop(starting_pos, -IVec2::Y, grid) {
+                obs.insert(candidate);
+            }
+            grid[candidate] = tile;
+        }
+    }
+
+    obs.remove(&starting_pos);
+
+    if false {
+        let mut debug = grid.as_char();
+
+        for p in obs.iter() {
+            debug[*p] = 'O';
+        }
+        println!("{debug}");
+    }
+
+    (visited.len(), obs.len())
 }
 
-fn part2(input: &Input) -> i32 {
-    todo!()
+fn check_loop(mut pos: IVec2, mut vel: IVec2, grid: &Grid<u8>) -> bool {
+    let mut visited = HashSet::new();
+    loop {
+        let peek = pos + vel;
+        if !grid.contains_point(peek) {
+            return false;
+        }
+        if grid[peek] == OBS {
+            vel = vel.rotate_cw();
+        } else {
+            pos = peek;
+            if !visited.insert((pos, vel)) {
+                return true;
+            }
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     const INPUT: &str = r#"....#.....
@@ -95,18 +142,11 @@ mod tests {
 "#;
 
     #[test]
-    fn test_p1() {
-        let inp = parse(INPUT.to_string());
-        let res = part1(&inp);
+    fn test() {
+        let mut inp = parse(INPUT.to_string());
+        let (p1, p2) = solve(&mut inp);
 
-        assert_eq!(res, 41);
-    }
-
-    #[test]
-    fn test_p2() {
-        let inp = parse(INPUT.to_string());
-        let res = part2(&inp);
-
-        assert_eq!(res, 42);
+        assert_eq!(p1, 41);
+        assert_eq!(p2, 6);
     }
 }
