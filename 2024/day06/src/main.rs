@@ -71,20 +71,16 @@ fn solve(input: &mut Input) -> (usize, usize) {
     }
     // p2
     let mut obs = HashSet::new();
-    for y in 0..grid.height {
-        for x in 0..grid.width {
-            let candidate = IVec2::new(x as i32, y as i32);
-            if grid[candidate] != OBS {
-                let tile = std::mem::replace(&mut grid[candidate], OBS);
-                if check_loop(starting_pos, -IVec2::Y, grid) {
-                    obs.insert(candidate);
-                }
-                grid[candidate] = tile;
+    for p in visited.iter() {
+        let candidate = *p;
+        if grid[candidate] != OBS {
+            let tile = std::mem::replace(&mut grid[candidate], OBS);
+            if check_loop(starting_pos, -IVec2::Y, grid) {
+                obs.insert(candidate);
             }
+            grid[candidate] = tile;
         }
     }
-
-    obs.remove(&starting_pos);
 
     (visited.len(), obs.len())
 }
