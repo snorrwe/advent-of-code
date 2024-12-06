@@ -337,6 +337,22 @@ impl<T> Grid<T> {
     pub fn like<G: Default + Clone>(&self) -> Grid<G> {
         Grid::new(self.width, self.height)
     }
+
+    pub fn cast<'a, G>(&'a self) -> Grid<G>
+    where
+        &'a T: Into<G>,
+    {
+        let data = self.data.iter().map(|x| x.into()).collect();
+        Grid::from_data(data, self.width)
+    }
+
+    pub fn cast_into<G>(self) -> Grid<G>
+    where
+        T: Into<G>,
+    {
+        let data = self.data.into_iter().map(|x| x.into()).collect();
+        Grid::from_data(data, self.width)
+    }
 }
 
 impl<T, I> Index<I> for Grid<T>
