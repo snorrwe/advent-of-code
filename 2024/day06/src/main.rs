@@ -1,5 +1,5 @@
+use rayon::prelude::*;
 use std::collections::HashSet;
-
 use utils::{Grid, IVec2};
 
 struct Input {
@@ -69,30 +69,26 @@ fn solve(input: &mut Input) -> (usize, usize) {
             visited.insert(pos);
         }
     }
-    // p2
-    let mut obs = HashSet::new();
-    for p in visited.iter() {
-        let candidate = *p;
-        if grid[candidate] != OBS {
-            let tile = std::mem::replace(&mut grid[candidate], OBS);
-            if check_loop(starting_pos, -IVec2::Y, grid) {
-                obs.insert(candidate);
-            }
-            grid[candidate] = tile;
-        }
-    }
 
-    (visited.len(), obs.len())
+    let p1 = visited.len();
+    let p2 = visited
+        .par_drain()
+        .map(|candidate| {
+            return check_loop(starting_pos, -IVec2::Y, &grid, candidate) as usize;
+        })
+        .reduce(|| 0, |a, b| a + b);
+
+    (p1, p2)
 }
 
-fn check_loop(mut pos: IVec2, mut vel: IVec2, grid: &Grid<u8>) -> bool {
+fn check_loop(mut pos: IVec2, mut vel: IVec2, grid: &Grid<u8>, extra: IVec2) -> bool {
     let mut visited = HashSet::new();
     loop {
         let peek = pos + vel;
         if !grid.contains_point(peek) {
             return false;
         }
-        if grid[peek] == OBS {
+        if grid[peek] == OBS || peek == extra {
             vel = vel.rotate_cw();
         } else {
             pos = peek;
