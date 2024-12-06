@@ -397,6 +397,23 @@ impl<T> IndexMut<IVec2> for Grid<T> {
     }
 }
 
+impl<'a, T> Index<&'a IVec2> for Grid<T> {
+    type Output = T;
+    fn index(&self, index: &'a IVec2) -> &Self::Output {
+        assert!(index.x >= 0);
+        assert!(index.y >= 0);
+        &self.row(index.y as usize)[index.x as usize]
+    }
+}
+
+impl<'a, T> IndexMut<&'a IVec2> for Grid<T> {
+    fn index_mut(&mut self, index: &'a IVec2) -> &mut Self::Output {
+        assert!(index.x >= 0);
+        assert!(index.y >= 0);
+        &mut self.row_mut(index.y as usize)[index.x as usize]
+    }
+}
+
 #[cfg(feature = "image")]
 impl Grid<u8> {
     pub fn save_as_image(&self, path: impl AsRef<Path>) {
