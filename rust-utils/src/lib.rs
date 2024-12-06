@@ -268,6 +268,11 @@ impl Grid<u8> {
             .collect();
         Ok(Grid::from_data(data, width))
     }
+
+    pub fn as_char(&self) -> Grid<char> {
+        let data = self.data.iter().map(|x| *x as char).collect();
+        Grid::from_data(data, self.width)
+    }
 }
 
 impl<T> Grid<T> {
