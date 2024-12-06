@@ -57,8 +57,6 @@ fn solve(input: &mut Input) -> (usize, usize) {
     let mut vel = -IVec2::Y;
     let mut visited = HashSet::new();
     visited.insert(pos);
-    let mut path = Vec::new();
-    path.push(starting_pos);
     loop {
         let peek = pos + vel;
         if !grid.contains_point(peek) {
@@ -69,13 +67,10 @@ fn solve(input: &mut Input) -> (usize, usize) {
         } else {
             pos = peek;
             visited.insert(pos);
-            path.push(pos);
         }
     }
     // p2
     let mut obs = HashSet::new();
-    let mut last = starting_pos;
-    let mut v = -IVec2::Y;
     for y in 0..grid.height {
         for x in 0..grid.width {
             let candidate = IVec2::new(x as i32, y as i32);
@@ -88,37 +83,8 @@ fn solve(input: &mut Input) -> (usize, usize) {
             }
         }
     }
-    // for pos in path.iter().copied().take(path.len() - 1) {
-    //     let candidate = pos + v;
-    //     v = pos - last;
-    //     last = pos;
-    //
-    //     assert!(grid.contains_point(candidate));
-    //
-    //     if grid[candidate] != OBS {
-    //         let tile = std::mem::replace(&mut grid[candidate], OBS);
-    //         if check_loop(starting_pos, -IVec2::Y, grid) {
-    //             obs.insert(candidate);
-    //         }
-    //         grid[candidate] = tile;
-    //     }
-    // }
 
     obs.remove(&starting_pos);
-
-    if false {
-        let mut debug = grid.as_char();
-
-        for p in obs.iter() {
-            debug[*p] = 'O';
-        }
-        println!("{debug}");
-    }
-    if false {
-        for p in obs.iter() {
-            println!("asd {} {} {}", p.x, p.y, grid[p] as char);
-        }
-    }
 
     (visited.len(), obs.len())
 }
