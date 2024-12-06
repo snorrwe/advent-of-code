@@ -246,7 +246,7 @@ where
         writeln!(f, "{} {}", self.width, self.height)?;
         for row in self.rows() {
             for i in row {
-                write!(f, "{i}\t")?;
+                write!(f, "{i}")?;
             }
             writeln!(f, "")?;
         }
