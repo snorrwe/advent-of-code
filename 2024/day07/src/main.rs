@@ -30,27 +30,35 @@ fn part1(input: &Input) -> i64 {
                 .map(|x| x.trim().parse().unwrap())
                 .collect();
 
-            's: for ops in vec![[b'+', b'*']; nums.len() - 1]
+            let n = nums.len();
+            assert!(n > 0);
+
+            's: for ops in vec![[b'+', b'*']; n - 1]
                 .into_iter()
                 .flatten()
-                .combinations(nums.len() - 1)
+                .combinations(n - 1)
             {
-                let mut tmp = nums[0];
-                for (op, x) in ops.into_iter().zip(nums[1..].iter().copied()) {
+                let mut tmp = result;
+                for (op, x) in ops.into_iter().zip(nums.iter().copied().rev()) {
                     match op {
                         b'*' => {
-                            tmp *= x;
+                            let t = tmp / x;
+                            if t * x != tmp {
+                                continue 's;
+                            }
+                            tmp = t;
                         }
                         b'+' => {
-                            tmp += x;
+                            tmp -= x;
+                            if tmp < 0 {
+                                continue 's;
+                            }
                         }
                         _ => {}
                     }
-                    if tmp > result {
-                        continue 's;
-                    }
                 }
-                if result == tmp {
+                let f = tmp / nums[0];
+                if (f * nums[0] == tmp && f == result) || tmp - nums[0] == 0 {
                     return result;
                 }
             }
