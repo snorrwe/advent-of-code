@@ -1,4 +1,4 @@
-use itertools::Itertools as _;
+use itertools::{repeat_n, Itertools as _};
 use rayon::iter::{ParallelBridge as _, ParallelIterator};
 
 type Input = String;
@@ -33,11 +33,7 @@ fn part1(input: &Input) -> i64 {
             let n = nums.len();
             assert!(n > 0);
 
-            's: for ops in vec![[b'+', b'*']; n - 1]
-                .into_iter()
-                .flatten()
-                .combinations(n - 1)
-            {
+            's: for ops in repeat_n([b'+', b'*'], n - 1).flatten().combinations(n - 1) {
                 let mut tmp = result;
                 for (op, x) in ops.into_iter().zip(nums.iter().copied().rev()) {
                     match op {
@@ -81,10 +77,11 @@ fn part2(input: &Input) -> i64 {
                 .filter(|x| !x.trim().is_empty())
                 .map(|x| x.trim().parse().unwrap())
                 .collect();
-            's: for ops in vec![[b'+', b'*', b'|']; nums.len() - 1]
-                .into_iter()
+            let n = nums.len();
+            assert!(n > 0);
+            's: for ops in repeat_n([b'+', b'*', b'|'], n - 1)
                 .flatten()
-                .combinations(nums.len() - 1)
+                .combinations(n - 1)
             {
                 let mut tmp = nums[0];
                 for (op, x) in ops.into_iter().zip(nums[1..].iter().copied()) {
