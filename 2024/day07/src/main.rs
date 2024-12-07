@@ -1,4 +1,3 @@
-use itertools::{repeat_n, Itertools as _};
 use rayon::iter::{ParallelBridge as _, ParallelIterator};
 
 type Input = String;
@@ -13,6 +12,15 @@ fn main() {
 
     println!("{}", part1(&input));
     println!("{}", part2(&input));
+}
+
+fn check_nums_v1(expected: i64, result: i64, nums: &[i64]) -> bool {
+    assert!(!nums.is_empty());
+    if nums.len() == 1 {
+        return nums[0] * result == expected || nums[0] + result == expected;
+    }
+    return check_nums_v1(expected, result * nums[0], &nums[1..])
+        || check_nums_v1(expected, result + nums[0], &nums[1..]);
 }
 
 fn part1(input: &Input) -> i64 {
@@ -33,34 +41,33 @@ fn part1(input: &Input) -> i64 {
             let n = nums.len();
             assert!(n > 0);
 
-            's: for ops in repeat_n([b'+', b'*'], n - 1).flatten().combinations(n - 1) {
-                let mut tmp = result;
-                for (op, x) in ops.into_iter().zip(nums.iter().copied().rev()) {
-                    match op {
-                        b'*' => {
-                            let t = tmp / x;
-                            if t * x != tmp {
-                                continue 's;
-                            }
-                            tmp = t;
-                        }
-                        b'+' => {
-                            tmp -= x;
-                            if tmp < 0 {
-                                continue 's;
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-                let f = tmp / nums[0];
-                if (f * nums[0] == tmp && f == result) || tmp - nums[0] == 0 {
-                    return result;
-                }
+            if check_nums_v1(result, nums[0], &nums[1..]) {
+                return result;
             }
+
             0
         })
         .sum()
+}
+
+fn concat(mut a: i64, b: i64) -> i64 {
+    let mut c = b;
+    while c != 0 {
+        c /= 10;
+        a *= 10;
+    }
+    a + b
+}
+
+fn check_nums_v2(expected: i64, result: i64, nums: &[i64]) -> bool {
+    assert!(!nums.is_empty());
+    let con: i64 = concat(result, nums[0]);
+    if nums.len() == 1 {
+        return nums[0] * result == expected || nums[0] + result == expected || expected == con;
+    }
+    return check_nums_v2(expected, result * nums[0], &nums[1..])
+        || check_nums_v2(expected, result + nums[0], &nums[1..])
+        || check_nums_v2(expected, con, &nums[1..]);
 }
 
 fn part2(input: &Input) -> i64 {
@@ -79,31 +86,8 @@ fn part2(input: &Input) -> i64 {
                 .collect();
             let n = nums.len();
             assert!(n > 0);
-            's: for ops in repeat_n([b'+', b'*', b'|'], n - 1)
-                .flatten()
-                .combinations(n - 1)
-            {
-                let mut tmp = nums[0];
-                for (op, x) in ops.into_iter().zip(nums[1..].iter().copied()) {
-                    match op {
-                        b'*' => {
-                            tmp *= x;
-                        }
-                        b'+' => {
-                            tmp += x;
-                        }
-                        b'|' => {
-                            tmp = format!("{tmp}{x}").parse().unwrap();
-                        }
-                        _ => {}
-                    }
-                    if tmp > result {
-                        continue 's;
-                    }
-                }
-                if result == tmp {
-                    return result;
-                }
+            if check_nums_v2(result, nums[0], &nums[1..]) {
+                return result;
             }
             0
         })
