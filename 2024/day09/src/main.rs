@@ -1,12 +1,15 @@
+/// id, start, size
+type File = (usize, usize, usize);
+/// start, size
+type Empty = (usize, usize);
+
 #[derive(Debug)]
 struct Input {
     blocks: Vec<Option<u32>>,
-    first_empty: u32,
-    last_full: u32,
-    /// id, start, size
-    files: Vec<(usize, usize, usize)>,
-    /// start, size
-    empty: Vec<(usize, usize)>,
+    first_empty: usize,
+    last_full: usize,
+    files: Vec<File>,
+    empty: Vec<Empty>,
 }
 
 fn parse(input: String) -> Input {
@@ -15,33 +18,33 @@ fn parse(input: String) -> Input {
     let mut cur = 0;
     let mut files = Vec::new();
     let mut empty = Vec::new();
-    let blocks = input
+    let mut blocks = Vec::new();
+    for (id, n) in input
         .bytes()
         .enumerate()
         .filter(|(_id, n)| n.is_ascii_digit())
-        .flat_map(|(id, n)| {
-            let size = n - b'0';
-            let id = if id % 2 == 0 {
-                if size != 0 {
-                    last_full = (cur + size as u32).saturating_sub(1);
-                    files.push((id / 2, cur as usize, size as usize));
-                }
-                Some((id / 2) as u32)
-            } else {
-                if size != 0 {
-                    first_empty = first_empty.min(cur);
-                    empty.push((cur as usize, size as usize));
-                }
-                None
-            };
-            cur += size as u32;
-            std::iter::repeat(id).take(size as usize)
-        })
-        .collect();
+    {
+        let size = n - b'0';
+        let id = if id % 2 == 0 {
+            if size != 0 {
+                last_full = (cur + size as u32).saturating_sub(1);
+                files.push((id / 2, cur as usize, size as usize));
+            }
+            Some((id / 2) as u32)
+        } else {
+            if size != 0 {
+                first_empty = first_empty.min(cur);
+                empty.push((cur as usize, size as usize));
+            }
+            None
+        };
+        cur += size as u32;
+        blocks.extend(std::iter::repeat(id).take(size as usize));
+    }
     Input {
         blocks,
-        first_empty,
-        last_full,
+        first_empty: first_empty as usize,
+        last_full: last_full as usize,
         files,
         empty,
     }
@@ -49,16 +52,20 @@ fn parse(input: String) -> Input {
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
-    let mut input = parse(input);
+    let input = parse(input);
 
-    println!("{}", part1(&mut input));
-    println!("{}", part2(input));
+    println!(
+        "{}",
+        part1(
+            input.blocks,
+            input.first_empty as usize,
+            input.last_full as usize
+        )
+    );
+    println!("{}", part2(input.files, input.empty));
 }
 
-fn part1(input: &mut Input) -> usize {
-    let mut first_empty = input.first_empty as usize;
-    let mut last_full = input.last_full as usize;
-    let mut blocks = std::mem::take(&mut input.blocks);
+fn part1(mut blocks: Vec<Option<u32>>, mut first_empty: usize, mut last_full: usize) -> usize {
     while first_empty < last_full {
         assert!(blocks[first_empty].is_none());
         assert!(blocks[last_full].is_some());
@@ -82,9 +89,7 @@ fn part1(input: &mut Input) -> usize {
     checksum
 }
 
-fn part2(input: Input) -> usize {
-    let mut files = input.files;
-    let mut empty = input.empty;
+fn part2(mut files: Vec<File>, mut empty: Vec<Empty>) -> usize {
     for (_fid, fstart, fsize) in files.iter_mut().rev() {
         if let Some((i, x)) = empty
             .iter()
@@ -92,8 +97,7 @@ fn part2(input: Input) -> usize {
             .take_while(|(_, (start, _esize))| start < fstart)
             .find(|(_, (_start, esize))| *fsize <= *esize)
         {
-            let (start, _size) = *x;
-            *fstart = start;
+            *fstart = x.0;
             empty[i].0 += *fsize;
             empty[i].1 -= *fsize;
             if empty[i].1 == 0 {
@@ -120,8 +124,8 @@ mod tests {
 
     #[test]
     fn test_p1() {
-        let mut inp = parse(INPUT.to_string());
-        let res = part1(&mut inp);
+        let inp = parse(INPUT.to_string());
+        let res = part1(inp.blocks, inp.first_empty, inp.last_full);
 
         assert_eq!(res, 1928);
     }
@@ -129,7 +133,7 @@ mod tests {
     #[test]
     fn test_p2() {
         let inp = parse(INPUT.to_string());
-        let res = part2(inp);
+        let res = part2(inp.files, inp.empty);
 
         assert_eq!(res, 2858);
     }
