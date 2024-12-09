@@ -49,16 +49,16 @@ fn parse(input: String) -> Input {
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
-    let input = parse(input);
+    let mut input = parse(input);
 
-    println!("{}", part1(&input));
-    println!("{}", part2(&input));
+    println!("{}", part1(&mut input));
+    println!("{}", part2(input));
 }
 
-fn part1(input: &Input) -> usize {
+fn part1(input: &mut Input) -> usize {
     let mut first_empty = input.first_empty as usize;
     let mut last_full = input.last_full as usize;
-    let mut blocks = input.blocks.clone();
+    let mut blocks = std::mem::take(&mut input.blocks);
     while first_empty < last_full {
         assert!(blocks[first_empty].is_none());
         assert!(blocks[last_full].is_some());
@@ -82,9 +82,9 @@ fn part1(input: &Input) -> usize {
     checksum
 }
 
-fn part2(input: &Input) -> usize {
-    let mut files = input.files.clone();
-    let mut empty = input.empty.clone();
+fn part2(input: Input) -> usize {
+    let mut files = input.files;
+    let mut empty = input.empty;
     for (_fid, fstart, fsize) in files.iter_mut().rev() {
         if let Some((i, x)) = empty
             .iter()
@@ -120,8 +120,8 @@ mod tests {
 
     #[test]
     fn test_p1() {
-        let inp = parse(INPUT.to_string());
-        let res = part1(&inp);
+        let mut inp = parse(INPUT.to_string());
+        let res = part1(&mut inp);
 
         assert_eq!(res, 1928);
     }
@@ -129,7 +129,7 @@ mod tests {
     #[test]
     fn test_p2() {
         let inp = parse(INPUT.to_string());
-        let res = part2(&inp);
+        let res = part2(inp);
 
         assert_eq!(res, 2858);
     }
