@@ -89,7 +89,8 @@ fn part2(input: &Input) -> usize {
         if let Some((i, x)) = empty
             .iter()
             .enumerate()
-            .find(|(_, (start, esize))| start < fstart && *fsize <= *esize)
+            .take_while(|(_, (start, _esize))| start < fstart)
+            .find(|(_, (_start, esize))| *fsize <= *esize)
         {
             let (start, _size) = *x;
             *fstart = start;
