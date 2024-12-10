@@ -12,68 +12,45 @@ fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
     let input = parse(input);
 
-    println!("{}", part1(&input));
-    println!("{}", part2(&input));
+    let [p1, p2] = solve(&input);
+
+    println!("{}\n{}", p1, p2);
 }
 
-fn trail_v1(pos: IVec2, visited: &mut HashSet<IVec2>, grid: &Input) -> usize {
+fn trail_dfs(pos: IVec2, peaks: &mut HashSet<IVec2>, grid: &Input) -> usize {
+    debug_assert!(b'0' <= grid[pos]);
+    debug_assert!(grid[pos] < b'9');
+    let needle = grid[pos] + 1;
     let mut total = 0;
     for d in [IVec2::X, IVec2::Y, -IVec2::X, -IVec2::Y] {
         let c = pos + d;
-        if grid.contains_point(c) && !visited.contains(&c) && grid[c] == 1 + grid[pos] {
-            visited.insert(c);
-            if grid[c] == b'9' {
-                total += 1
+        if grid.contains_point(c) && grid[c] == needle {
+            if needle == b'9' {
+                peaks.insert(c);
+                total += 1;
             } else {
-                total += trail_v1(c, visited, grid)
+                total += trail_dfs(c, peaks, grid);
             }
         }
     }
     total
 }
 
-fn part1(input: &Input) -> usize {
-    let mut count = 0;
-    let mut visited = HashSet::new();
+fn solve(input: &Input) -> [usize; 2] {
+    let mut peaks = HashSet::new();
+    let mut part1 = 0;
+    let mut part2 = 0;
     for start in input.rows().enumerate().flat_map(|(y, row)| {
         row.iter()
             .enumerate()
             .filter(|(_x, h)| h == &&b'0')
             .map(move |(x, _)| IVec2::new(x as i32, y as i32))
     }) {
-        visited.clear();
-        visited.insert(start);
-        count += trail_v1(start, &mut visited, input);
+        peaks.clear();
+        part2 += trail_dfs(start, &mut peaks, input);
+        part1 += peaks.len()
     }
-    count
-}
-
-fn trail_v2(pos: IVec2, grid: &Input) -> usize {
-    let mut total = 0;
-    for d in [IVec2::X, IVec2::Y, -IVec2::X, -IVec2::Y] {
-        let c = pos + d;
-        if grid.contains_point(c) && grid[c] == 1 + grid[pos] {
-            if grid[c] == b'9' {
-                total += 1
-            } else {
-                total += trail_v2(c, grid)
-            }
-        }
-    }
-    total
-}
-
-fn part2(input: &Input) -> usize {
-    let mut count = 0;
-    for start in input.rows().enumerate().flat_map(|(y, row)| {
-        row.iter()
-            .enumerate()
-            .filter(|(_x, h)| h == &&b'0')
-            .map(move |(x, _)| IVec2::new(x as i32, y as i32))
-    }) {
-        count += trail_v2(start, input);
-    }
-    count
+    [part1, part2]
 }
 
 #[cfg(test)]
@@ -91,18 +68,11 @@ mod tests {
 "#;
 
     #[test]
-    fn test_p1() {
+    fn test() {
         let inp = parse(INPUT.to_string());
-        let res = part1(&inp);
+        let [p1, p2] = solve(&inp);
 
-        assert_eq!(res, 36);
-    }
-
-    #[test]
-    fn test_p2() {
-        let inp = parse(INPUT.to_string());
-        let res = part2(&inp);
-
-        assert_eq!(res, 81);
+        assert_eq!(p1, 36);
+        assert_eq!(p2, 81);
     }
 }
