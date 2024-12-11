@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+type Cache = rustc_hash::FxHashMap<(u32, u64), usize>;
 
 type Input = Vec<u64>;
 
@@ -29,7 +29,7 @@ fn count_digits(mut a: u64) -> u32 {
     c
 }
 
-fn reduce(depth: u32, n: u64, cache: &mut HashMap<(u32, u64), usize>) -> usize {
+fn reduce(depth: u32, n: u64, cache: &mut Cache) -> usize {
     if depth == 0 {
         return 1;
     }
