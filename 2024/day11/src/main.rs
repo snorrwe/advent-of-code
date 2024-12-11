@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 type Input = Vec<u64>;
 
 fn parse(input: String) -> Input {
@@ -27,43 +29,45 @@ fn count_digits(mut a: u64) -> u32 {
     c
 }
 
-fn run(n: i32, a: &mut Vec<u64>, b: &mut Vec<u64>) {
-    for _ in 0..n {
-        b.clear();
-        for x in &a[..] {
-            let dig = count_digits(*x);
-            match x {
-                0 => {
-                    b.push(1);
-                }
-                _ if dig % 2 == 0 => {
-                    let d = 10u64.pow(dig / 2);
-                    b.push(x / d);
-                    b.push(x % d);
-                }
-                _ => {
-                    b.push(x * 2024);
-                }
-            }
-        }
-        std::mem::swap(a, b);
+fn reduce(depth: u32, n: u64, cache: &mut HashMap<(u32, u64), usize>) -> usize {
+    if depth == 0 {
+        return 1;
     }
+
+    if let Some(x) = cache.get(&(depth, n)) {
+        return *x;
+    }
+
+    let dig = count_digits(n);
+    let y = match n {
+        0 => reduce(depth - 1, 1, cache),
+        _ if dig % 2 == 0 => {
+            let d = 10u64.pow(dig / 2);
+
+            reduce(depth - 1, n / d, cache) + reduce(depth - 1, n % d, cache)
+        }
+        _ => reduce(depth - 1, n * 2024, cache),
+    };
+
+    cache.insert((depth, n), y);
+    y
+}
+
+fn run(n: u32, a: &[u64]) -> usize {
+    let mut total = 0;
+    let mut cache = Default::default();
+    for x in &a[..] {
+        total += reduce(n, *x, &mut cache);
+    }
+    total
 }
 
 fn part1(input: &Input) -> usize {
-    let mut a = input.clone();
-    let mut b = Vec::with_capacity(input.len());
-
-    run(25, &mut a, &mut b);
-    a.len().max(b.len())
+    run(25, &input)
 }
 
 fn part2(input: &Input) -> usize {
-    let mut a = input.clone();
-    let mut b = Vec::with_capacity(input.len());
-
-    run(75, &mut a, &mut b);
-    a.len().max(b.len())
+    run(75, &input)
 }
 
 #[cfg(test)]
@@ -78,14 +82,6 @@ mod tests {
         let res = part1(&inp);
 
         assert_eq!(res, 55312);
-    }
-
-    #[test]
-    fn test_p2() {
-        let inp = parse(INPUT.to_string());
-        let res = part2(&inp);
-
-        assert_eq!(res, 42);
     }
 
     #[test]
