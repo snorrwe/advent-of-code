@@ -27,23 +27,26 @@ fn count_digits(mut a: u64) -> u32 {
     c
 }
 
-fn tick_v1(a: &[u64], b: &mut Vec<u64>) {
-    b.clear();
-    for x in a {
-        let dig = count_digits(*x);
-        match x {
-            0 => {
-                b.push(1);
-            }
-            _ if dig % 2 == 0 => {
-                let d = 10u64.pow(dig / 2);
-                b.push(x / d);
-                b.push(x % d);
-            }
-            _ => {
-                b.push(x * 2024);
+fn run(n: i32, a: &mut Vec<u64>, b: &mut Vec<u64>) {
+    for _ in 0..n {
+        b.clear();
+        for x in &a[..] {
+            let dig = count_digits(*x);
+            match x {
+                0 => {
+                    b.push(1);
+                }
+                _ if dig % 2 == 0 => {
+                    let d = 10u64.pow(dig / 2);
+                    b.push(x / d);
+                    b.push(x % d);
+                }
+                _ => {
+                    b.push(x * 2024);
+                }
             }
         }
+        std::mem::swap(a, b);
     }
 }
 
@@ -51,15 +54,16 @@ fn part1(input: &Input) -> usize {
     let mut a = input.clone();
     let mut b = Vec::with_capacity(input.len());
 
-    for _ in 0..25 {
-        tick_v1(&a, &mut b);
-        std::mem::swap(&mut a, &mut b);
-    }
-    a.len()
+    run(25, &mut a, &mut b);
+    a.len().max(b.len())
 }
 
-fn part2(input: &Input) -> i32 {
-    todo!()
+fn part2(input: &Input) -> usize {
+    let mut a = input.clone();
+    let mut b = Vec::with_capacity(input.len());
+
+    run(75, &mut a, &mut b);
+    a.len().max(b.len())
 }
 
 #[cfg(test)]
