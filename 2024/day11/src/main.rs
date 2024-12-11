@@ -1,4 +1,4 @@
-type Cache = rustc_hash::FxHashMap<(u32, u64), usize>;
+type Cache = rustc_hash::FxHashMap<u64, usize>;
 
 type Input = Vec<u64>;
 
@@ -34,7 +34,8 @@ fn reduce(depth: u32, n: u64, cache: &mut Cache) -> usize {
         return 1;
     }
 
-    if let Some(x) = cache.get(&(depth, n)) {
+    let k = n << 8 | depth as u64;
+    if let Some(x) = cache.get(&k) {
         return *x;
     }
 
@@ -49,7 +50,7 @@ fn reduce(depth: u32, n: u64, cache: &mut Cache) -> usize {
         _ => reduce(depth - 1, n * 2024, cache),
     };
 
-    cache.insert((depth, n), y);
+    cache.insert(k, y);
     y
 }
 
