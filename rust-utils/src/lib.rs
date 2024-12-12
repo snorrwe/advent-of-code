@@ -42,8 +42,12 @@ impl IVec2 {
         Self::new(x, y)
     }
 
+    pub fn dot(self, other: Self) -> i32 {
+        self.x * other.x + self.y * other.y
+    }
+
     pub fn len_sq(self) -> i32 {
-        self.x * self.x + self.y * self.y
+        self.dot(self)
     }
 
     /// Chebyshev distance from self to the other
