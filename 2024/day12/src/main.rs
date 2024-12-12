@@ -4,6 +4,7 @@ use utils::{Grid, IVec2};
 
 struct Input {
     grid: Grid<u8>,
+    /// bits: visited,NWSE connection (=fence)
     connections: Grid<u8>,
 }
 
@@ -15,31 +16,30 @@ fn parse(input: String) -> Input {
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
-    let input = parse(input);
+    let mut input = parse(input);
 
-    println!("{}", part1(&input));
+    println!("{}", part1(&mut input));
     println!("{}", part2(&input));
 }
 
 /// return (perimeter, area)
-fn flood(
+fn flood_v1(
     pos: IVec2,
     grid: &Grid<u8>,
-    connections: &Grid<u8>,
-    visited: &mut HashSet<IVec2>,
+    connections: &mut Grid<u8>,
     todo: &mut HashSet<IVec2>,
 ) -> (u32, u32) {
-    visited.insert(pos);
+    connections[pos] |= 1 << 5;
     todo.remove(&pos);
-    let mut perimeter = connections[pos].count_ones();
+    let mut perimeter = connections[pos].count_ones() - 1;
     let mut area = 1;
     for n in [-IVec2::Y, -IVec2::X, IVec2::Y, IVec2::X]
         .into_iter()
         .map(|x| x + pos)
     {
-        if grid.contains_point(n) && !visited.contains(&n) {
+        if grid.contains_point(n) && connections[n] & (1 << 5) == 0 {
             if grid[n] == grid[pos] {
-                let (p, a) = flood(n, grid, connections, visited, todo);
+                let (p, a) = flood_v1(n, grid, connections, todo);
                 perimeter += p;
                 area += a;
             } else {
@@ -74,8 +74,7 @@ fn connections(input: &Grid<u8>) -> Grid<u8> {
     connections
 }
 
-fn part1(input: &Input) -> u32 {
-    let mut visited = HashSet::new();
+fn part1(input: &mut Input) -> u32 {
     let mut todo = HashSet::new();
 
     todo.insert(IVec2::ZERO);
@@ -84,13 +83,7 @@ fn part1(input: &Input) -> u32 {
     while let Some(pos) = todo.iter().next().copied() {
         todo.remove(&pos);
 
-        let (p, a) = flood(
-            pos,
-            &input.grid,
-            &input.connections,
-            &mut visited,
-            &mut todo,
-        );
+        let (p, a) = flood_v1(pos, &input.grid, &mut input.connections, &mut todo);
 
         total += p * a;
     }
@@ -114,8 +107,8 @@ EEEC
 
     #[test]
     fn test_p1() {
-        let inp = parse(INPUT.to_string());
-        let res = part1(&inp);
+        let mut inp = parse(INPUT.to_string());
+        let res = part1(&mut inp);
 
         assert_eq!(res, 140);
     }
