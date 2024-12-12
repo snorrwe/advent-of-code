@@ -19,7 +19,7 @@ fn main() {
     let mut input = parse(input);
 
     println!("{}", part1(&mut input));
-    println!("{}", part2(&input));
+    println!("{}", part2(&mut input));
 }
 
 /// return (perimeter, area)
@@ -91,8 +91,83 @@ fn part1(input: &mut Input) -> u32 {
     total
 }
 
-fn part2(input: &Input) -> i32 {
-    todo!()
+fn part2(input: &mut Input) -> u32 {
+    // reset visited
+    for y in 0..input.connections.height {
+        let row = input.connections.row_mut(y);
+        for c in row.iter_mut() {
+            *c &= 0xF;
+        }
+    }
+
+    dbg!(&input.connections);
+    let mut todo = HashSet::new();
+
+    todo.insert(IVec2::ZERO);
+
+    let mut total = 0;
+    let mut corners = HashSet::new();
+    while let Some(pos) = todo.iter().next().copied() {
+        todo.remove(&pos);
+        corners.clear();
+
+        let (sides, area) = flood_v2(
+            pos,
+            &input.grid,
+            &mut input.connections,
+            &mut todo,
+            &mut corners,
+        );
+
+        dbg!(input.grid[pos] as char, sides, area, &corners);
+
+        total += sides.max(4) * area;
+    }
+
+    total
+}
+
+/// return (sides, area)
+fn flood_v2(
+    pos: IVec2,
+    grid: &Grid<u8>,
+    connections: &mut Grid<u8>,
+    todo: &mut HashSet<IVec2>,
+    corners: &mut HashSet<IVec2>,
+) -> (u32, u32) {
+    connections[pos] |= 1 << 5;
+    todo.remove(&pos);
+
+    let mut sides = 0;
+    match connections[pos] & 0xF {
+        3 | 9 | 6 | 12 => {
+            corners.insert(pos);
+        }
+        7 | 13 | 11 | 14 => {
+            sides = 2;
+        }
+        0xf => {
+            return (4, 1);
+        }
+        _ => {}
+    }
+
+    let mut area = 1;
+    for n in [-IVec2::Y, -IVec2::X, IVec2::Y, IVec2::X]
+        .into_iter()
+        .map(|x| x + pos)
+    {
+        if grid.contains_point(n) && connections[n] & (1 << 5) == 0 {
+            if grid[n] == grid[pos] {
+                let (p, a) = flood_v2(n, grid, connections, todo, corners);
+                sides += p;
+                area += a;
+            } else {
+                todo.insert(n);
+            }
+        }
+    }
+    (sides, area)
 }
 
 #[cfg(test)]
@@ -115,9 +190,41 @@ EEEC
 
     #[test]
     fn test_p2() {
-        let inp = parse(INPUT.to_string());
-        let res = part2(&inp);
+        let mut inp = parse(INPUT.to_string());
+        let res = part2(&mut inp);
 
-        assert_eq!(res, 42);
+        assert_eq!(res, 80);
+    }
+
+    #[test]
+    fn test_p2_eshape() {
+        let mut inp = parse(
+            r#"EEEEE
+EXXXX
+EEEEE
+EXXXX
+EEEEE
+"#
+            .to_string(),
+        );
+        let res = part2(&mut inp);
+
+        assert_eq!(res, 236);
+    }
+
+    #[test]
+    fn test_p2_squares() {
+        let mut inp = parse(
+            r#"AAAAAA
+AAABBA
+AAABBA
+ABBAAA
+ABBAAA
+AAAAAA"#
+                .to_string(),
+        );
+        let res = part2(&mut inp);
+
+        assert_eq!(res, 368);
     }
 }
