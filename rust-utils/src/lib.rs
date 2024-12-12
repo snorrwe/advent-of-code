@@ -420,7 +420,7 @@ impl<'a, T> IndexMut<&'a IVec2> for Grid<T> {
 
 #[cfg(feature = "image")]
 impl Grid<u8> {
-    pub fn save_as_image(&self, path: impl AsRef<Path>) {
+    pub fn save_as_image(&self, path: impl AsRef<std::path::Path>) {
         let img: image::GrayImage =
             image::ImageBuffer::from_vec(self.width as u32, self.height as u32, self.data.clone())
                 .unwrap();
