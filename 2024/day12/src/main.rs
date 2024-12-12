@@ -106,20 +106,10 @@ fn part2(input: &mut Input) -> u32 {
     todo.insert(IVec2::ZERO);
 
     let mut total = 0;
-    let mut corners = HashSet::new();
     while let Some(pos) = todo.iter().next().copied() {
         todo.remove(&pos);
-        corners.clear();
 
-        let (sides, area) = flood_v2(
-            pos,
-            &input.grid,
-            &mut input.connections,
-            &mut todo,
-            &mut corners,
-        );
-
-        dbg!(input.grid[pos] as char, sides, area, &corners);
+        let (sides, area) = flood_v2(pos, &input.grid, &mut input.connections, &mut todo);
 
         total += sides.max(4) * area;
     }
@@ -133,7 +123,6 @@ fn flood_v2(
     grid: &Grid<u8>,
     connections: &mut Grid<u8>,
     todo: &mut HashSet<IVec2>,
-    corners: &mut HashSet<IVec2>,
 ) -> (u32, u32) {
     connections[pos] |= 1 << 5;
     todo.remove(&pos);
@@ -141,7 +130,7 @@ fn flood_v2(
     let mut sides = 0;
     match connections[pos] & 0xF {
         3 | 9 | 6 | 12 => {
-            corners.insert(pos);
+            sides = 1;
         }
         7 | 13 | 11 | 14 => {
             sides = 2;
@@ -159,7 +148,7 @@ fn flood_v2(
     {
         if grid.contains_point(n) && connections[n] & (1 << 5) == 0 {
             if grid[n] == grid[pos] {
-                let (p, a) = flood_v2(n, grid, connections, todo, corners);
+                let (p, a) = flood_v2(n, grid, connections, todo);
                 sides += p;
                 area += a;
             } else {
