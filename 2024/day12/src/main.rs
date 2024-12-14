@@ -154,6 +154,7 @@ fn flood_v2(
     }
     match local_area {
         0b000010000 => sides = 4,
+        // convex edges
         0b000110110 | 0b000011011 | 0b011011000 | 0b110110000 => sides = 1,
         _ => {}
     }
