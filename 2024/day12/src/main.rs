@@ -339,4 +339,23 @@ EEEEE
 
         assert_eq!(ecorners, 12);
     }
+
+    #[test]
+    fn test_p2_large() {
+        const INPUT: &str = r#"RRRRIICCFF
+RRRRIICCCF
+VVRRRCCFFF
+VVRCCCJFFF
+VVVVCJJCFE
+VVIVCCJJEE
+VVIIICJJEE
+MIIIIIJJEE
+MIIISIJEEE
+MMMISSJEEE"#;
+
+        let mut inp = parse(INPUT.to_string());
+        println!("{INPUT}");
+        let res = part2(&mut inp);
+        assert_eq!(res, 1206);
+    }
 }
