@@ -104,6 +104,68 @@ fn part1(input: &mut Input) -> u32 {
     total
 }
 
+fn corner_map(input: &Input) -> Grid<u8> {
+    let mut corners = input.grid.like();
+
+    for y in 0..input.grid.height {
+        for x in 0..input.grid.width {
+            let mut area = [None; 9];
+
+            for dy in -1..=1i32 {
+                for dx in -1..=1i32 {
+                    area[(dy + 1) as usize * 3 + (dx + 1) as usize] =
+                        get_label(IVec2::new(x as i32 + dx, y as i32 + dy), &input.grid);
+                }
+            }
+
+            let label = area[4];
+            debug_assert_eq!(label, Some(*input.grid.get(x, y)));
+
+            let mut c = 0;
+
+            // convex corners
+            //
+            // TL
+            if area[0] != label && area[1] != label && area[3] != label {
+                c += 1;
+            }
+            // TR
+            if area[2] != label && area[1] != label && area[5] != label {
+                c += 1;
+            }
+            // BL
+            if area[6] != label && area[7] != label && area[3] != label {
+                c += 1;
+            }
+            // BR
+            if area[8] != label && area[7] != label && area[5] != label {
+                c += 1;
+            }
+            // concave corners
+            // TL
+            if area[0] == label && area[1] != label && area[3] == label {
+                c += 1;
+            }
+            // TR
+            if area[2] == label && area[1] != label && area[5] == label {
+                c += 1;
+            }
+            // BL
+            if area[6] == label && area[7] != label && area[3] == label {
+                c += 1;
+            }
+            // BR
+            if area[8] == label && area[7] != label && area[5] == label {
+                c += 1;
+            }
+
+            corners.insert(x, y, c);
+        }
+    }
+
+    corners
+}
+
 fn part2(input: &mut Input) -> u32 {
     // reset visited
     for y in 0..input.connections.height {
@@ -392,5 +454,32 @@ EEEEE
 
         assert_eq!(sides, 12);
         assert_eq!(area, 17);
+    }
+
+    #[test]
+    fn test_corner_map() {
+        const INPUT: &str = r#"EEEEE
+EXXXX
+EEEEE
+EXXXX
+EEEEE
+"#;
+        let inp = parse(INPUT.to_string());
+
+        let corners = corner_map(&inp);
+
+        println!("{INPUT}\n{corners}");
+
+        let mut ecorners = 0;
+
+        for y in 0..inp.grid.height {
+            for x in 0..inp.grid.width {
+                if inp.grid.get(x, y) == &b'E' {
+                    ecorners += corners.get(x, y);
+                }
+            }
+        }
+
+        assert_eq!(ecorners, 12);
     }
 }
