@@ -22,3 +22,5 @@ devenv.local.nix
 
 # pre-commit
 .pre-commit-config.yaml
+2024/day14/log.txt
+2024/day14/positions.csv
