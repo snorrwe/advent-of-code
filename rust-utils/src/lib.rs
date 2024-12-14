@@ -5,6 +5,9 @@ use std::{
 
 use anyhow::Context;
 
+#[cfg(feature = "image")]
+pub use image;
+
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash)]
 pub struct IVec2 {
     pub x: i32,
