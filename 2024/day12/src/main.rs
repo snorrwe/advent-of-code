@@ -123,7 +123,7 @@ fn part2(input: &mut Input) -> u32 {
 
         let (sides, area) = flood_v2(pos, &input.grid, &mut input.connections, &mut todo);
 
-        total += sides.max(4) * area;
+        total += sides * area;
     }
 
     total
@@ -140,55 +140,37 @@ fn flood_v2(
     todo.remove(&pos);
 
     let mut sides = 0;
+    let mut area = 1;
 
-    let con = connections[pos] & 0xF;
+    let label = grid[pos];
 
-    match (con.count_ones(), con) {
-        // convex edges
-        (3, _) => {
-            sides = 2;
+    let mut local_area = 0u16;
+    for dy in -1..=1 {
+        for dx in -1..=1 {
+            let neighbour = pos + IVec2::new(dx, dy);
+            local_area |= ((grid.contains_point(neighbour) && grid[neighbour] == label) as u16)
+                << ((dy + 1) * 3 + (dx + 1));
         }
-        (4, _) => {
-            return (4, 1);
-        }
-        (2, NW | SW | NE | SE) => {
-            sides = 1;
-        }
-        // concave edges
-        (2, NS) => {
-            dbg!("horizontal", pos, con);
-        }
-        (2, WE) => {
-            dbg!("vertical", pos, con);
-        }
-        (1, E) => {
-            dbg!(E, pos);
-        }
-        (1, W) => {
-            dbg!(W, pos);
-        }
-        (1, N) => {
-            dbg!(N, pos);
-        }
-        (1, S) => {
-            dbg!(S, pos);
-        }
+    }
+    match local_area {
+        0b000010000 => sides = 4,
+        0b000110110 | 0b000011011 | 0b011011000 | 0b110110000 => sides = 1,
         _ => {}
     }
 
-    let mut area = 1;
-    for neighbor in [-IVec2::Y, -IVec2::X, IVec2::Y, IVec2::X]
+    // flood
+    for neighbour in [-IVec2::Y, -IVec2::X, IVec2::Y, IVec2::X]
         .into_iter()
         .map(|x| x + pos)
     {
-        if grid.contains_point(neighbor) {
-            if connections[neighbor] & (1 << 5) == 0 {
-                if grid[neighbor] == grid[pos] {
-                    let (p, a) = flood_v2(neighbor, grid, connections, todo);
+        if grid.contains_point(neighbour) {
+            if connections[neighbour] & (1 << 5) == 0 {
+                if grid[neighbour] == grid[pos] {
+                    let (p, a) = flood_v2(neighbour, grid, connections, todo);
                     sides += p;
                     area += a;
                 } else {
-                    todo.insert(neighbor);
+                    todo.insert(neighbour);
                 }
             }
         }
