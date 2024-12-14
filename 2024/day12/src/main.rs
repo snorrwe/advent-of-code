@@ -2,19 +2,6 @@ use std::collections::HashSet;
 
 use utils::{Grid, IVec2};
 
-const N: u8 = 1 << 0;
-const W: u8 = 1 << 1;
-const S: u8 = 1 << 2;
-const E: u8 = 1 << 3;
-
-const NW: u8 = N | W;
-const SW: u8 = S | W;
-const NE: u8 = N | E;
-const SE: u8 = S | E;
-
-const WE: u8 = W | E;
-const NS: u8 = N | S;
-
 struct Input {
     grid: Grid<u8>,
     /// bits: visited,NWSE connection (=fence)
@@ -175,6 +162,8 @@ fn part2(input: &mut Input) -> u32 {
         }
     }
 
+    let corners = corner_map(input);
+
     let mut todo = HashSet::new();
 
     todo.insert(IVec2::ZERO);
@@ -183,7 +172,13 @@ fn part2(input: &mut Input) -> u32 {
     while let Some(pos) = todo.iter().next().copied() {
         todo.remove(&pos);
 
-        let (sides, area) = flood_v2(pos, &input.grid, &mut input.connections, &mut todo);
+        let (sides, area) = flood_v2(
+            pos,
+            &input.grid,
+            &mut input.connections,
+            &mut todo,
+            &corners,
+        );
 
         total += sides * area;
     }
@@ -195,101 +190,18 @@ fn get_label(pos: IVec2, grid: &Grid<u8>) -> Option<u8> {
     grid.contains_point(pos).then(|| grid[pos])
 }
 
-fn check_concave(
-    con: u8,
-    mask: u8,
-    pos: IVec2,
-    grid: &Grid<u8>,
-    label: u8,
-    lhs: IVec2,
-    rhs: IVec2,
-) -> u32 {
-    if con & mask != 0 {
-        let a = get_label(pos + lhs, grid);
-        let b = get_label(pos + rhs, grid);
-
-        if a == Some(label) && b == Some(label) {
-            return 2;
-        } else if a == Some(label) {
-            return 1;
-        } else if b == Some(label) {
-            return 1;
-        }
-    }
-    0
-}
-
 /// return (sides, area)
 fn flood_v2(
     pos: IVec2,
     grid: &Grid<u8>,
     connections: &mut Grid<u8>,
     todo: &mut HashSet<IVec2>,
+    corners: &Grid<u8>,
 ) -> (u32, u32) {
     connections[pos] |= 1 << 5;
     todo.remove(&pos);
 
-    let mut sides = 0;
-
-    let label = grid[pos];
-    let con = connections[pos] & 0xF;
-
-    match (con.count_ones(), con) {
-        (0, _) => {}
-        // convex edges
-        (3, _) => {
-            sides = 2;
-        }
-        (4, _) => {
-            sides = 4;
-        }
-        (2, NW | SW | NE | SE) => {
-            sides = 1;
-        }
-        _ => {}
-    }
-    match con.count_ones() {
-        1 | 2 => {
-            // check concave edges
-            sides += check_concave(
-                con,
-                E,
-                pos,
-                grid,
-                label,
-                IVec2::new(1, -1),
-                IVec2::new(1, 1),
-            );
-            sides += check_concave(
-                con,
-                W,
-                pos,
-                grid,
-                label,
-                IVec2::new(-1, -1),
-                IVec2::new(-1, 1),
-            );
-            sides += check_concave(
-                con,
-                N,
-                pos,
-                grid,
-                label,
-                IVec2::new(-1, -1),
-                IVec2::new(1, -1),
-            );
-            sides += check_concave(
-                con,
-                S,
-                pos,
-                grid,
-                label,
-                IVec2::new(-1, 1),
-                IVec2::new(1, 1),
-            );
-        }
-        _ => {}
-    }
+    let mut sides = corners[pos] as u32;
 
     let mut area = 1;
     for neighbor in [-IVec2::Y, -IVec2::X, IVec2::Y, IVec2::X]
@@ -299,7 +211,7 @@ fn flood_v2(
         if grid.contains_point(neighbor) {
             if connections[neighbor] & (1 << 5) == 0 {
                 if grid[neighbor] == grid[pos] {
-                    let (p, a) = flood_v2(neighbor, grid, connections, todo);
+                    let (p, a) = flood_v2(neighbor, grid, connections, todo, corners);
                     sides += p;
                     area += a;
                 } else {
@@ -399,61 +311,6 @@ AAAAAA"#
         let mut inp = parse(r#"A"#.to_string());
         let res = part2(&mut inp);
         assert_eq!(res, 1 * 4);
-    }
-
-    #[test]
-    fn test_flood_v2_s_shape() {
-        let mut inp = parse(INPUT.to_string());
-        let pos = IVec2::new(2, 1);
-        println!("{INPUT}\n{pos:?}\n");
-        let mut todo = Default::default();
-        let (sides, area) = flood_v2(pos, &inp.grid, &mut inp.connections, &mut todo);
-
-        let mut visited = inp.connections.like();
-
-        for y in 0..inp.connections.height {
-            for x in 0..inp.connections.width {
-                if inp.connections.get(x, y) & (1 << 5) != 0 {
-                    visited.insert(x, y, 1u8);
-                }
-            }
-        }
-
-        dbg!(visited);
-
-        assert_eq!(sides, 8);
-        assert_eq!(area, 4);
-    }
-
-    #[test]
-    fn test_flood_v2_e_shape() {
-        const INPUT: &str = r#"EEEEE
-EXXXX
-EEEEE
-EXXXX
-EEEEE
-"#;
-        let mut inp = parse(INPUT.to_string());
-        let pos = IVec2::new(0, 0);
-        println!("{INPUT}\n{pos:?}\n");
-        let mut todo = Default::default();
-        let (sides, area) = flood_v2(pos, &inp.grid, &mut inp.connections, &mut todo);
-
-        let mut visited = inp.connections.like();
-
-        for y in 0..inp.connections.height {
-            for x in 0..inp.connections.width {
-                if inp.connections.get(x, y) & (1 << 5) != 0 {
-                    visited.insert(x, y, 1u8);
-                }
-            }
-        }
-
-        dbg!(visited);
-        dbg!(sides, area);
-
-        assert_eq!(sides, 12);
-        assert_eq!(area, 17);
     }
 
     #[test]
