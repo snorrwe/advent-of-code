@@ -129,6 +129,34 @@ fn part2(input: &mut Input) -> u32 {
     total
 }
 
+fn get_label(pos: IVec2, grid: &Grid<u8>) -> Option<u8> {
+    grid.contains_point(pos).then(|| grid[pos])
+}
+
+fn check_concave(
+    con: u8,
+    mask: u8,
+    pos: IVec2,
+    grid: &Grid<u8>,
+    label: u8,
+    lhs: IVec2,
+    rhs: IVec2,
+) -> u32 {
+    if con & mask != 0 {
+        let a = get_label(pos + lhs, grid);
+        let b = get_label(pos + rhs, grid);
+
+        if a == Some(label) && b == Some(label) {
+            return 2;
+        } else if a == Some(label) {
+            return 1;
+        } else if b == Some(label) {
+            return 1;
+        }
+    }
+    0
+}
+
 /// return (sides, area)
 fn flood_v2(
     pos: IVec2,
@@ -140,38 +168,80 @@ fn flood_v2(
     todo.remove(&pos);
 
     let mut sides = 0;
-    let mut area = 1;
 
     let label = grid[pos];
+    let con = connections[pos] & 0xF;
 
-    let mut local_area = 0u16;
-    for dy in -1..=1 {
-        for dx in -1..=1 {
-            let neighbour = pos + IVec2::new(dx, dy);
-            local_area |= ((grid.contains_point(neighbour) && grid[neighbour] == label) as u16)
-                << ((dy + 1) * 3 + (dx + 1));
-        }
-    }
-    match local_area {
-        0b000010000 => sides = 4,
+    match (con.count_ones(), con) {
+        (0, _) => {}
         // convex edges
-        0b000110110 | 0b000011011 | 0b011011000 | 0b110110000 => sides = 1,
+        (3, _) => {
+            sides = 2;
+        }
+        (4, _) => {
+            sides = 4;
+        }
+        (2, NW | SW | NE | SE) => {
+            sides = 1;
+        }
+        _ => {}
+    }
+    match con.count_ones() {
+        1 | 2 => {
+            // check concave edges
+            sides += check_concave(
+                con,
+                E,
+                pos,
+                grid,
+                label,
+                IVec2::new(1, -1),
+                IVec2::new(1, 1),
+            );
+            sides += check_concave(
+                con,
+                W,
+                pos,
+                grid,
+                label,
+                IVec2::new(-1, -1),
+                IVec2::new(-1, 1),
+            );
+            sides += check_concave(
+                con,
+                N,
+                pos,
+                grid,
+                label,
+                IVec2::new(-1, -1),
+                IVec2::new(1, -1),
+            );
+            sides += check_concave(
+                con,
+                S,
+                pos,
+                grid,
+                label,
+                IVec2::new(-1, 1),
+                IVec2::new(1, 1),
+            );
+        }
         _ => {}
     }
 
-    // flood
-    for neighbour in [-IVec2::Y, -IVec2::X, IVec2::Y, IVec2::X]
+    let mut area = 1;
+    for neighbor in [-IVec2::Y, -IVec2::X, IVec2::Y, IVec2::X]
         .into_iter()
         .map(|x| x + pos)
     {
-        if grid.contains_point(neighbour) {
-            if connections[neighbour] & (1 << 5) == 0 {
-                if grid[neighbour] == grid[pos] {
-                    let (p, a) = flood_v2(neighbour, grid, connections, todo);
+        if grid.contains_point(neighbor) {
+            if connections[neighbor] & (1 << 5) == 0 {
+                if grid[neighbor] == grid[pos] {
+                    let (p, a) = flood_v2(neighbor, grid, connections, todo);
                     sides += p;
                     area += a;
                 } else {
-                    todo.insert(neighbour);
+                    todo.insert(neighbor);
                 }
             }
         }
@@ -267,5 +337,29 @@ AAAAAA"#
         let mut inp = parse(r#"A"#.to_string());
         let res = part2(&mut inp);
         assert_eq!(res, 1 * 4);
+    }
+
+    #[test]
+    fn test_flood_v2_s_shape() {
+        let mut inp = parse(INPUT.to_string());
+        let pos = IVec2::new(2, 1);
+        println!("{INPUT}\n{pos:?}\n");
+        let mut todo = Default::default();
+        let (sides, area) = flood_v2(pos, &inp.grid, &mut inp.connections, &mut todo);
+
+        let mut visited = inp.connections.like();
+
+        for y in 0..inp.connections.height {
+            for x in 0..inp.connections.width {
+                if inp.connections.get(x, y) & (1 << 5) != 0 {
+                    visited.insert(x, y, 1u8);
+                }
+            }
+        }
+
+        dbg!(visited);
+
+        assert_eq!(sides, 8);
+        assert_eq!(area, 4);
     }
 }
