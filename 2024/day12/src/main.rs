@@ -130,19 +130,19 @@ fn corner_map(input: &Input) -> Grid<u8> {
             }
             // concave corners
             // TL
-            if area[0] == label && area[1] != label && area[3] == label {
+            if area[0] == label && area[1] != label {
                 c += 1;
             }
             // TR
-            if area[2] == label && area[1] != label && area[5] == label {
+            if area[2] == label && area[1] != label {
                 c += 1;
             }
             // BL
-            if area[6] == label && area[7] != label && area[3] == label {
+            if area[6] == label && area[7] != label {
                 c += 1;
             }
             // BR
-            if area[8] == label && area[7] != label && area[5] == label {
+            if area[8] == label && area[7] != label {
                 c += 1;
             }
 
@@ -314,7 +314,7 @@ AAAAAA"#
     }
 
     #[test]
-    fn test_corner_map() {
+    fn test_corner_map_eshape() {
         const INPUT: &str = r#"EEEEE
 EXXXX
 EEEEE
@@ -338,6 +338,34 @@ EEEEE
         }
 
         assert_eq!(ecorners, 12);
+    }
+
+    #[test]
+    fn test_corner_map_squares() {
+        const INPUT: &str = r#"AAAAAA
+AAABBA
+AAABBA
+ABBAAA
+ABBAAA
+AAAAAA"#;
+
+        let inp = parse(INPUT.to_string());
+
+        let corners = corner_map(&inp);
+
+        println!("{INPUT}\n{corners}");
+
+        let mut bcorners = 0;
+
+        for y in 0..inp.grid.height {
+            for x in 0..inp.grid.width {
+                if inp.grid.get(x, y) == &b'B' {
+                    bcorners += corners.get(x, y);
+                }
+            }
+        }
+
+        assert_eq!(bcorners, 8);
     }
 
     #[test]
