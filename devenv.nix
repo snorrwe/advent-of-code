@@ -5,7 +5,7 @@
   env.GREET = "AoC";
 
   # https://devenv.sh/packages/
-  packages = with pkgs; [ git just cookiecutter hyperfine ];
+  packages = with pkgs; [ git just cookiecutter hyperfine lldb ];
 
   # https://devenv.sh/languages/
   languages.rust.enable = true;
