@@ -362,4 +362,35 @@ AAAAAA"#
         assert_eq!(sides, 8);
         assert_eq!(area, 4);
     }
+
+    #[test]
+    fn test_flood_v2_e_shape() {
+        const INPUT: &str = r#"EEEEE
+EXXXX
+EEEEE
+EXXXX
+EEEEE
+"#;
+        let mut inp = parse(INPUT.to_string());
+        let pos = IVec2::new(0, 0);
+        println!("{INPUT}\n{pos:?}\n");
+        let mut todo = Default::default();
+        let (sides, area) = flood_v2(pos, &inp.grid, &mut inp.connections, &mut todo);
+
+        let mut visited = inp.connections.like();
+
+        for y in 0..inp.connections.height {
+            for x in 0..inp.connections.width {
+                if inp.connections.get(x, y) & (1 << 5) != 0 {
+                    visited.insert(x, y, 1u8);
+                }
+            }
+        }
+
+        dbg!(visited);
+        dbg!(sides, area);
+
+        assert_eq!(sides, 12);
+        assert_eq!(area, 17);
+    }
 }
