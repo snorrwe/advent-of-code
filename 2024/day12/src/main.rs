@@ -2,6 +2,19 @@ use std::collections::HashSet;
 
 use utils::{Grid, IVec2};
 
+const N: u8 = 1 << 0;
+const W: u8 = 1 << 1;
+const S: u8 = 1 << 2;
+const E: u8 = 1 << 3;
+
+const NW: u8 = N | W;
+const SW: u8 = S | W;
+const NE: u8 = N | E;
+const SE: u8 = S | E;
+
+const WE: u8 = W | E;
+const NS: u8 = N | S;
+
 struct Input {
     grid: Grid<u8>,
     /// bits: visited,NWSE connection (=fence)
