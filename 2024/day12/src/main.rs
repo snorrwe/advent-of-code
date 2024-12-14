@@ -113,7 +113,6 @@ fn part2(input: &mut Input) -> u32 {
         }
     }
 
-    dbg!(&input.connections);
     let mut todo = HashSet::new();
 
     todo.insert(IVec2::ZERO);
@@ -141,31 +140,56 @@ fn flood_v2(
     todo.remove(&pos);
 
     let mut sides = 0;
-    match connections[pos] & 0xF {
-        3 | 9 | 6 | 12 => {
-            sides = 1;
-        }
-        7 | 13 | 11 | 14 => {
+
+    let con = connections[pos] & 0xF;
+
+    match (con.count_ones(), con) {
+        // convex edges
+        (3, _) => {
             sides = 2;
         }
-        0xf => {
+        (4, _) => {
             return (4, 1);
+        }
+        (2, NW | SW | NE | SE) => {
+            sides = 1;
+        }
+        // concave edges
+        (2, NS) => {
+            dbg!("horizontal", pos, con);
+        }
+        (2, WE) => {
+            dbg!("vertical", pos, con);
+        }
+        (1, E) => {
+            dbg!(E, pos);
+        }
+        (1, W) => {
+            dbg!(W, pos);
+        }
+        (1, N) => {
+            dbg!(N, pos);
+        }
+        (1, S) => {
+            dbg!(S, pos);
         }
         _ => {}
     }
 
     let mut area = 1;
-    for n in [-IVec2::Y, -IVec2::X, IVec2::Y, IVec2::X]
+    for neighbor in [-IVec2::Y, -IVec2::X, IVec2::Y, IVec2::X]
         .into_iter()
         .map(|x| x + pos)
     {
-        if grid.contains_point(n) && connections[n] & (1 << 5) == 0 {
-            if grid[n] == grid[pos] {
-                let (p, a) = flood_v2(n, grid, connections, todo);
-                sides += p;
-                area += a;
-            } else {
-                todo.insert(n);
+        if grid.contains_point(neighbor) {
+            if connections[neighbor] & (1 << 5) == 0 {
+                if grid[neighbor] == grid[pos] {
+                    let (p, a) = flood_v2(neighbor, grid, connections, todo);
+                    sides += p;
+                    area += a;
+                } else {
+                    todo.insert(neighbor);
+                }
             }
         }
     }
@@ -191,7 +215,8 @@ EEEC
     }
 
     #[test]
-    fn test_p2() {
+    fn test_p2_basic() {
+        println!("{INPUT}");
         let mut inp = parse(INPUT.to_string());
         let res = part2(&mut inp);
 
@@ -200,15 +225,15 @@ EEEC
 
     #[test]
     fn test_p2_eshape() {
-        let mut inp = parse(
-            r#"EEEEE
+        const INPUT: &str = r#"EEEEE
 EXXXX
 EEEEE
 EXXXX
 EEEEE
-"#
-            .to_string(),
-        );
+"#;
+
+        println!("{INPUT}");
+        let mut inp = parse(INPUT.to_string());
         let res = part2(&mut inp);
 
         assert_eq!(res, 236);
@@ -216,17 +241,48 @@ EEEEE
 
     #[test]
     fn test_p2_squares() {
+        const INPUT: &str = r#"AAAAAA
+AAABBA
+AAABBA
+ABBAAA
+ABBAAA
+AAAAAA"#;
+
+        println!("{INPUT}");
+
+        let mut inp = parse(INPUT.to_string());
+        let res = part2(&mut inp);
+
+        assert_eq!(res, 368);
+    }
+
+    #[test]
+    fn test_p2_single_square() {
         let mut inp = parse(
             r#"AAAAAA
-AAABBA
-AAABBA
-ABBAAA
-ABBAAA
+AAAAAA
+AAAAAA
+AAAAAA
+AAAAAA
 AAAAAA"#
                 .to_string(),
         );
         let res = part2(&mut inp);
 
-        assert_eq!(res, 368);
+        assert_eq!(res, 36 * 4);
+    }
+
+    #[test]
+    fn test_p2_single_rect() {
+        let mut inp = parse(r#"AAAAAA"#.to_string());
+        let res = part2(&mut inp);
+        assert_eq!(res, 6 * 4);
+    }
+
+    #[test]
+    fn test_p2_single_tile() {
+        let mut inp = parse(r#"A"#.to_string());
+        let res = part2(&mut inp);
+        assert_eq!(res, 1 * 4);
     }
 }
