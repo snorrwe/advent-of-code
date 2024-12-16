@@ -365,6 +365,21 @@ impl<T> Grid<T> {
         let data = self.data.into_iter().map(|x| x.into()).collect();
         Grid::from_data(data, self.width)
     }
+
+    pub fn find<'a>(&'a self, needle: &'a T) -> Option<IVec2>
+    where
+        &'a T: PartialEq,
+    {
+        for y in 0..self.height {
+            for x in 0..self.width {
+                if self.get(x, y) == needle {
+                    return Some(IVec2::new(x as i32, y as i32));
+                }
+            }
+        }
+
+        None
+    }
 }
 
 impl<T, I> Index<I> for Grid<T>
