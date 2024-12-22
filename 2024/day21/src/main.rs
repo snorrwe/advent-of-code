@@ -190,7 +190,7 @@ mod tests {
         dbg!(plan);
         assert_eq!(
             plan.len(),
-            " <vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A".len(),
+            "<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A".len(),
         );
         assert_eq!(
             shortest_path("980A").len(),
