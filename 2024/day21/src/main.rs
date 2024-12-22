@@ -46,7 +46,6 @@ fn resolve_directional(c: u8) -> IVec2 {
     }
 }
 
-/// plan is reversed
 fn plan_button_press(from: IVec2, to: IVec2, gap: IVec2, plan: &mut Vec<u8>) -> bool {
     if from == to {
         plan.push(b'A');
@@ -57,15 +56,23 @@ fn plan_button_press(from: IVec2, to: IVec2, gap: IVec2, plan: &mut Vec<u8>) -> 
     }
     let d = to - from;
 
-    if d.x != 0 && plan_button_press(from + IVec2::new(d.x / d.x.abs(), 0), to, gap, plan) {
+    if d.x != 0 {
         let horizontal = if d.x < 0 { b'<' } else { b'>' };
         plan.push(horizontal);
-        return true;
+        if plan_button_press(from + IVec2::new(d.x / d.x.abs(), 0), to, gap, plan) {
+            return true;
+        } else {
+            plan.pop();
+        }
     }
-    if d.y != 0 && plan_button_press(from + IVec2::new(0, d.y / d.y.abs()), to, gap, plan) {
+    if d.y != 0 {
         let vertical = if d.y < 0 { b'^' } else { b'v' };
         plan.push(vertical);
-        return true;
+        if plan_button_press(from + IVec2::new(0, d.y / d.y.abs()), to, gap, plan) {
+            return true;
+        } else {
+            plan.pop();
+        }
     }
     false
 }
@@ -75,14 +82,12 @@ fn numeric_path(seq: &[u8]) -> Vec<u8> {
 
     let mut current = resolve_numeric(b'A');
 
-    for to in seq.iter().copied() {
-        let to = resolve_numeric(to);
-
-        plan_button_press(current, to, IVec2::new(0, 3), &mut res);
+    for to in seq.iter().copied().map(resolve_numeric) {
+        let found = plan_button_press(current, to, IVec2::new(0, 3), &mut res);
+        assert!(found);
         current = to;
     }
 
-    res.reverse();
     res
 }
 
@@ -93,10 +98,10 @@ fn path_plan(path: &[u8]) -> Vec<u8> {
     let mut current = resolve_directional(b'A');
     for t in path {
         let to = resolve_directional(*t);
-        plan_button_press(current, to, IVec2::ZERO, &mut plan);
+        let res = plan_button_press(current, to, IVec2::ZERO, &mut plan);
+        assert!(res);
         current = to;
     }
-    plan.reverse();
 
     plan
 }
@@ -105,7 +110,6 @@ fn shortest_path(line: &str) -> Vec<u8> {
     let mut plan = numeric_path(line.trim().as_bytes());
     for _ in 0..2 {
         plan = path_plan(&plan);
-        plan.reverse();
     }
     plan
 }
