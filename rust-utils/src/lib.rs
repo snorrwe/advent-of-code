@@ -25,6 +25,8 @@ impl IVec2 {
     pub const ONE: IVec2 = IVec2 { x: 1, y: 1 };
     pub const X: IVec2 = IVec2 { x: 1, y: 0 };
     pub const Y: IVec2 = IVec2 { x: 0, y: 1 };
+    pub const NEG_X: IVec2 = IVec2 { x: -1, y: 0 };
+    pub const NEG_Y: IVec2 = IVec2 { x: 0, y: -1 };
 
     pub const fn new(x: i32, y: i32) -> Self {
         Self { x, y }

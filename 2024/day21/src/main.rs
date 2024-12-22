@@ -51,37 +51,6 @@ fn resolve_directional(c: u8) -> IVec2 {
     }
 }
 
-fn plan_button_press(from: IVec2, to: IVec2, gap: IVec2, plan: &mut Vec<u8>) -> bool {
-    debug_assert_ne!(from, gap);
-    let d = to - from;
-
-    let dx = IVec2::new(d.x, 0);
-    let dy = IVec2::new(0, d.y);
-
-    let mut delta = [dx, dy];
-    if from.y == gap.y {
-        // if we're on the same row, start by going vertically first to avoid the gap
-        delta.swap(0, 1);
-    }
-
-    for d in delta {
-        if d.x != 0 {
-            let horizontal = if d.x < 0 { b'<' } else { b'>' };
-            for _ in 0..d.x.abs() {
-                plan.push(horizontal);
-            }
-        } else if d.y != 0 {
-            let vertical = if d.y < 0 { b'^' } else { b'v' };
-            for _ in 0..d.y.abs() {
-                plan.push(vertical);
-            }
-        }
-    }
-    plan.push(b'A');
-
-    true
-}
-
 fn plan_cost(plan: &[u8], depth: usize) -> usize {
     let mut cost = button_press_cost(b'A', plan[0], depth, NUMERIC_GAP, resolve_numeric).unwrap();
     let mut from = plan[0];
@@ -92,45 +61,60 @@ fn plan_cost(plan: &[u8], depth: usize) -> usize {
     cost
 }
 
+fn dir_to_label(dir: IVec2) -> u8 {
+    match dir {
+        IVec2::NEG_X => b'<',
+        IVec2::X => b'>',
+        IVec2::NEG_Y => b'^',
+        IVec2::Y => b'v',
+        _ => unreachable!(),
+    }
+}
+
 fn button_press_cost(
     from: u8,
     to: u8,
     depth: usize,
+    // identify the keyboard by the position of the gap + the resolve function
     gap: IVec2,
     resolve: impl Fn(u8) -> IVec2,
 ) -> Option<usize> {
     if from == to {
-        return Some(0);
+        return Some(1);
     }
     let from = resolve(from);
-    if from == gap {
-        return None;
-    }
     let to = resolve(to);
     if depth == 0 {
-        return Some(from.manhatten(to) as usize);
+        return Some(from.manhatten(to) as usize + 1);
     }
     let d = to - from;
 
     let mut min_cost = usize::MAX;
 
-    let horizontal = if d.x < 0 { b'<' } else { b'>' };
-    let vertical = if d.y < 0 { b'^' } else { b'v' };
+    let horizontal = if d.x < 0 { -IVec2::X } else { IVec2::X };
+    let vertical = if d.y < 0 { -IVec2::Y } else { IVec2::Y };
     // for each possible plan
     'outer: for mut test in itertools::repeat_n(horizontal, d.x.abs() as usize)
         .chain(itertools::repeat_n(vertical, d.y.abs() as usize))
         .permutations((d.x.abs() + d.y.abs()) as usize)
     {
-        // TODO: also gotta check where current lands if the commands are applied, mustn't be the
-        // gap
         let mut current = from;
+        current += test[0];
+        if current == gap {
+            continue;
+        }
+        let mut from = dir_to_label(test[0]);
         let Some(mut cost) =
-            button_press_cost(b'A', test[0], depth - 1, IVec2::ZERO, resolve_directional)
+            button_press_cost(b'A', from, depth - 1, IVec2::ZERO, resolve_directional)
         else {
             continue 'outer;
         };
-        let mut from = test[0];
         for to in test.drain(1..) {
+            current += to;
+            if current == gap {
+                continue 'outer;
+            }
+            let to = dir_to_label(to);
             let Some(c) = button_press_cost(from, to, depth - 1, IVec2::ZERO, resolve_directional)
             else {
                 continue 'outer;
@@ -138,62 +122,25 @@ fn button_press_cost(
             from = to;
             cost += c;
         }
+        // all paths end with a press
         let Some(c) = button_press_cost(from, b'A', depth - 1, IVec2::ZERO, resolve_directional)
         else {
             continue 'outer;
         };
         cost += c;
-
         min_cost = min_cost.min(cost);
     }
 
-    Some(min_cost)
-}
-
-fn numeric_path(seq: &[u8]) -> Vec<u8> {
-    let mut res = Vec::new();
-
-    let mut current = resolve_numeric(b'A');
-
-    for to in seq.iter().copied().map(resolve_numeric) {
-        let found = plan_button_press(current, to, IVec2::new(0, 3), &mut res);
-        assert!(found);
-        current = to;
-    }
-
-    res
-}
-
-/// take a plan and produce a plan on a directional keyboard
-fn path_plan(path: &[u8]) -> Vec<u8> {
-    let mut plan = Vec::new();
-
-    let mut current = resolve_directional(b'A');
-    for t in path {
-        let to = resolve_directional(*t);
-        let res = plan_button_press(current, to, IVec2::ZERO, &mut plan);
-        assert!(res);
-        current = to;
-    }
-
-    plan
-}
-
-fn shortest_path(line: &str) -> Vec<u8> {
-    let mut plan = numeric_path(line.trim().as_bytes());
-    for _ in 0..2 {
-        plan = path_plan(&plan);
-    }
-    plan
+    (min_cost != usize::MAX).then_some(min_cost)
 }
 
 fn part1(input: &Input) -> usize {
     let mut solution = 0;
     for line in input.lines().filter(|l| !l.is_empty()) {
-        let plan = shortest_path(line);
+        let cost = plan_cost(line.trim().as_bytes(), 2);
         let code = line.trim_end_matches('A');
         let code: usize = code.parse().unwrap();
-        solution += plan.len() * code;
+        solution += cost * code;
     }
     solution
 }
@@ -231,35 +178,13 @@ mod tests {
         assert_eq!(res, 42);
     }
 
-    #[test]
-    fn test_numeric_path() {
-        let plan = numeric_path(b"029A");
-        let plan = std::str::from_utf8(&plan).unwrap();
-        dbg!(plan);
-        let valid: HashSet<_> = ["<A^A>^^AvvvA", "<A^A^>^AvvvA", "<A^A^^>AvvvA"]
-            .into_iter()
-            .collect();
-
-        assert!(valid.contains(plan));
-    }
-
-    #[test]
-    fn test_path_plan() {
-        let path = numeric_path(b"029A");
-        let plan = path_plan(&path);
-        let plan = std::str::from_utf8(&plan).unwrap();
-        dbg!(plan);
-
-        assert_eq!(plan.len(), "v<<A>>^A<A>AvA<^AA>A<vAAA>^A".len());
-    }
-
     macro_rules! shortest_path_test {
         ($name: ident, $inp: expr, $exp: expr) => {
             #[test]
             fn $name() {
                 let input = $inp;
                 let expected = $exp;
-                let plan = plan_cost(input.as_bytes(), 3);
+                let plan = plan_cost(input.as_bytes(), 2);
                 assert_eq!(plan, expected.len());
             }
         };
