@@ -117,12 +117,8 @@ fn part1(input: &Input) -> usize {
     let mut solution = 0;
     for line in input.lines().filter(|l| !l.is_empty()) {
         let plan = shortest_path(line);
-        let code: usize = line
-            .chars()
-            .filter(|c| c.is_numeric())
-            .collect::<String>()
-            .parse()
-            .unwrap();
+        let code = line.trim_end_matches('A');
+        let code: usize = code.parse().unwrap();
         solution += plan.len() * code;
     }
     solution
