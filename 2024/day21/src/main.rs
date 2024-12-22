@@ -77,6 +77,37 @@ fn plan_button_press(from: IVec2, to: IVec2, gap: IVec2, plan: &mut Vec<u8>) -> 
     true
 }
 
+fn plan_button_press_recursive(from: IVec2, to: IVec2, gap: IVec2, plan: &mut Vec<u8>) -> bool {
+    if from == to {
+        plan.push(b'A');
+        return true;
+    }
+    if from == gap {
+        return false;
+    }
+    let d = to - from;
+
+    if d.x != 0 {
+        let horizontal = if d.x < 0 { b'<' } else { b'>' };
+        plan.push(horizontal);
+        if plan_button_press_recursive(from + IVec2::new(d.x / d.x.abs(), 0), to, gap, plan) {
+            return true;
+        } else {
+            plan.pop();
+        }
+    }
+    if d.y != 0 {
+        let vertical = if d.y < 0 { b'^' } else { b'v' };
+        plan.push(vertical);
+        if plan_button_press_recursive(from + IVec2::new(0, d.y / d.y.abs()), to, gap, plan) {
+            return true;
+        } else {
+            plan.pop();
+        }
+    }
+    false
+}
+
 fn numeric_path(seq: &[u8]) -> Vec<u8> {
     let mut res = Vec::new();
 
