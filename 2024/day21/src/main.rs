@@ -47,6 +47,7 @@ fn resolve_directional(c: u8) -> IVec2 {
 }
 
 fn plan_button_press(from: IVec2, to: IVec2, gap: IVec2, plan: &mut Vec<u8>) -> bool {
+    debug_assert_ne!(from, gap);
     let d = to - from;
 
     let dx = IVec2::new(d.x, 0);
