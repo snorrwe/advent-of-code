@@ -54,6 +54,7 @@ fn plan_button_press(from: IVec2, to: IVec2, gap: IVec2, plan: &mut Vec<u8>) -> 
 
     let mut delta = [dx, dy];
     if from.y == gap.y {
+        // if we're on the same row, start by going vertically first to avoid the gap
         delta.swap(0, 1);
     }
 
