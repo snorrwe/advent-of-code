@@ -1,4 +1,4 @@
-use std::usize;
+use std::{collections::HashMap, usize};
 
 use itertools::Itertools;
 use utils::IVec2;
@@ -51,11 +51,21 @@ fn resolve_directional(c: u8) -> IVec2 {
     }
 }
 
-fn plan_cost(plan: &[u8], depth: usize) -> usize {
-    let mut cost = button_press_cost(b'A', plan[0], depth, NUMERIC_GAP, resolve_numeric).unwrap();
+fn plan_cost(plan: &[u8], depth: u8) -> usize {
+    let mut cache = HashMap::new();
+    let mut cost = button_press_cost(
+        b'A',
+        plan[0],
+        depth,
+        &mut cache,
+        NUMERIC_GAP,
+        resolve_numeric,
+    )
+    .unwrap();
     let mut from = plan[0];
     for to in &plan[1..] {
-        cost += button_press_cost(from, *to, depth, NUMERIC_GAP, resolve_numeric).unwrap();
+        cost +=
+            button_press_cost(from, *to, depth, &mut cache, NUMERIC_GAP, resolve_numeric).unwrap();
         from = *to;
     }
     cost
@@ -74,20 +84,25 @@ fn dir_to_label(dir: IVec2) -> u8 {
 fn button_press_cost(
     from: u8,
     to: u8,
-    depth: usize,
+    depth: u8,
+    cache: &mut HashMap<(u8, u8, u8), usize>,
     // identify the keyboard by the position of the gap + the resolve function
     gap: IVec2,
     resolve: impl Fn(u8) -> IVec2,
 ) -> Option<usize> {
+    if let Some(c) = cache.get(&(from, to, depth)) {
+        return Some(*c);
+    }
+
     if from == to {
         return Some(1);
     }
-    let from = resolve(from);
-    let to = resolve(to);
+    let from_pos = resolve(from);
+    let to_pos = resolve(to);
     if depth == 0 {
-        return Some(from.manhatten(to) as usize + 1);
+        return Some(from_pos.manhatten(to_pos) as usize + 1);
     }
-    let d = to - from;
+    let d = to_pos - from_pos;
 
     let mut min_cost = usize::MAX;
 
@@ -98,15 +113,20 @@ fn button_press_cost(
         .chain(itertools::repeat_n(vertical, d.y.abs() as usize))
         .permutations((d.x.abs() + d.y.abs()) as usize)
     {
-        let mut current = from;
+        let mut current = from_pos;
         current += test[0];
         if current == gap {
             continue;
         }
         let mut from = dir_to_label(test[0]);
-        let Some(mut cost) =
-            button_press_cost(b'A', from, depth - 1, IVec2::ZERO, resolve_directional)
-        else {
+        let Some(mut cost) = button_press_cost(
+            b'A',
+            from,
+            depth - 1,
+            cache,
+            IVec2::ZERO,
+            resolve_directional,
+        ) else {
             continue 'outer;
         };
         for to in test.drain(1..) {
@@ -115,7 +135,8 @@ fn button_press_cost(
                 continue 'outer;
             }
             let to = dir_to_label(to);
-            let Some(c) = button_press_cost(from, to, depth - 1, IVec2::ZERO, resolve_directional)
+            let Some(c) =
+                button_press_cost(from, to, depth - 1, cache, IVec2::ZERO, resolve_directional)
             else {
                 continue 'outer;
             };
@@ -123,14 +144,21 @@ fn button_press_cost(
             cost += c;
         }
         // all paths end with a press
-        let Some(c) = button_press_cost(from, b'A', depth - 1, IVec2::ZERO, resolve_directional)
-        else {
+        let Some(c) = button_press_cost(
+            from,
+            b'A',
+            depth - 1,
+            cache,
+            IVec2::ZERO,
+            resolve_directional,
+        ) else {
             continue 'outer;
         };
         cost += c;
         min_cost = min_cost.min(cost);
     }
 
+    cache.insert((from, to, depth), min_cost);
     (min_cost != usize::MAX).then_some(min_cost)
 }
 
@@ -146,12 +174,18 @@ fn part1(input: &Input) -> usize {
 }
 
 fn part2(input: &Input) -> usize {
-    todo!()
+    let mut solution = 0;
+    for line in input.lines().filter(|l| !l.is_empty()) {
+        let cost = plan_cost(line.trim().as_bytes(), 25);
+        let code = line.trim_end_matches('A');
+        let code: usize = code.parse().unwrap();
+        solution += cost * code;
+    }
+    solution
 }
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
 
     use super::*;
 
@@ -168,14 +202,6 @@ mod tests {
         let res = part1(&inp);
 
         assert_eq!(res, 126384);
-    }
-
-    #[test]
-    fn test_p2() {
-        let inp = parse(INPUT.to_string());
-        let res = part2(&inp);
-
-        assert_eq!(res, 42);
     }
 
     macro_rules! shortest_path_test {
