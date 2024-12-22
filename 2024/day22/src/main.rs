@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 type Input = Vec<i64>;
 
@@ -42,8 +42,8 @@ fn part1(input: &Input) -> i64 {
 
 fn part2(input: &Input) -> i64 {
     let mut sequence_wins: HashMap<[i64; 4], i64> = HashMap::new();
+    let mut tmp_costs = HashMap::new();
     for num in input {
-        let mut sequence_costs = HashMap::new();
         let mut sequence = [0; 4];
         let mut num = *num;
         let mut last = 0;
@@ -55,7 +55,7 @@ fn part2(input: &Input) -> i64 {
             last = p;
         }
         let p = num % 10;
-        sequence_costs.insert(sequence, p);
+        tmp_costs.insert(sequence, p);
 
         for _ in 4..2000 {
             num = next(num);
@@ -63,13 +63,13 @@ fn part2(input: &Input) -> i64 {
             let delta = p - last;
             sequence.rotate_left(1);
             sequence[3] = delta;
-            if !sequence_costs.contains_key(&sequence) {
-                sequence_costs.insert(sequence, p);
+            if !tmp_costs.contains_key(&sequence) {
+                tmp_costs.insert(sequence, p);
             }
             last = p;
         }
 
-        for (k, v) in sequence_costs.drain() {
+        for (k, v) in tmp_costs.drain() {
             *sequence_wins.entry(k).or_default() += v;
         }
     }
