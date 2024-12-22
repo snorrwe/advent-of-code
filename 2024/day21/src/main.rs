@@ -121,6 +121,9 @@ fn button_press_cost(
         .chain(itertools::repeat_n(vertical, d.y.abs() as usize))
         .permutations((d.x.abs() + d.y.abs()) as usize)
     {
+        // TODO: also gotta check where current lands if the commands are applied, mustn't be the
+        // gap
+        let mut current = from;
         let Some(mut cost) =
             button_press_cost(b'A', test[0], depth - 1, IVec2::ZERO, resolve_directional)
         else {
