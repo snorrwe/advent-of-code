@@ -1,6 +1,11 @@
+use std::usize;
+
+use itertools::Itertools;
 use utils::IVec2;
 
 type Input = String;
+
+const NUMERIC_GAP: IVec2 = IVec2::new(0, 3);
 
 fn parse(input: String) -> Input {
     input
@@ -77,35 +82,69 @@ fn plan_button_press(from: IVec2, to: IVec2, gap: IVec2, plan: &mut Vec<u8>) -> 
     true
 }
 
-fn plan_button_press_recursive(from: IVec2, to: IVec2, gap: IVec2, plan: &mut Vec<u8>) -> bool {
-    if from == to {
-        plan.push(b'A');
-        return true;
+fn plan_cost(plan: &[u8], depth: usize) -> usize {
+    let mut cost = button_press_cost(b'A', plan[0], depth, NUMERIC_GAP, resolve_numeric).unwrap();
+    let mut from = plan[0];
+    for to in &plan[1..] {
+        cost += button_press_cost(from, *to, depth, NUMERIC_GAP, resolve_numeric).unwrap();
+        from = *to;
     }
+    cost
+}
+
+fn button_press_cost(
+    from: u8,
+    to: u8,
+    depth: usize,
+    gap: IVec2,
+    resolve: impl Fn(u8) -> IVec2,
+) -> Option<usize> {
+    if from == to {
+        return Some(0);
+    }
+    let from = resolve(from);
     if from == gap {
-        return false;
+        return None;
+    }
+    let to = resolve(to);
+    if depth == 0 {
+        return Some(from.manhatten(to) as usize);
     }
     let d = to - from;
 
-    if d.x != 0 {
-        let horizontal = if d.x < 0 { b'<' } else { b'>' };
-        plan.push(horizontal);
-        if plan_button_press_recursive(from + IVec2::new(d.x / d.x.abs(), 0), to, gap, plan) {
-            return true;
-        } else {
-            plan.pop();
+    let mut min_cost = usize::MAX;
+
+    let horizontal = if d.x < 0 { b'<' } else { b'>' };
+    let vertical = if d.y < 0 { b'^' } else { b'v' };
+    // for each possible plan
+    'outer: for mut test in itertools::repeat_n(horizontal, d.x.abs() as usize)
+        .chain(itertools::repeat_n(vertical, d.y.abs() as usize))
+        .permutations((d.x.abs() + d.y.abs()) as usize)
+    {
+        let Some(mut cost) =
+            button_press_cost(b'A', test[0], depth - 1, IVec2::ZERO, resolve_directional)
+        else {
+            continue 'outer;
+        };
+        let mut from = test[0];
+        for to in test.drain(1..) {
+            let Some(c) = button_press_cost(from, to, depth - 1, IVec2::ZERO, resolve_directional)
+            else {
+                continue 'outer;
+            };
+            from = to;
+            cost += c;
         }
+        let Some(c) = button_press_cost(from, b'A', depth - 1, IVec2::ZERO, resolve_directional)
+        else {
+            continue 'outer;
+        };
+        cost += c;
+
+        min_cost = min_cost.min(cost);
     }
-    if d.y != 0 {
-        let vertical = if d.y < 0 { b'^' } else { b'v' };
-        plan.push(vertical);
-        if plan_button_press_recursive(from + IVec2::new(0, d.y / d.y.abs()), to, gap, plan) {
-            return true;
-        } else {
-            plan.pop();
-        }
-    }
-    false
+
+    Some(min_cost)
 }
 
 fn numeric_path(seq: &[u8]) -> Vec<u8> {
@@ -217,10 +256,8 @@ mod tests {
             fn $name() {
                 let input = $inp;
                 let expected = $exp;
-                let plan = shortest_path(input);
-                let plan = std::str::from_utf8(&plan).unwrap();
-                dbg!(input, plan, expected);
-                assert_eq!(plan.len(), expected.len(),);
+                let plan = plan_cost(input.as_bytes(), 3);
+                assert_eq!(plan, expected.len());
             }
         };
     }
