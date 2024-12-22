@@ -183,18 +183,43 @@ mod tests {
         assert_eq!(plan.len(), "v<<A>>^A<A>AvA<^AA>A<vAAA>^A".len());
     }
 
-    #[test]
-    fn test_shortest_paths() {
-        let plan = shortest_path("029A");
-        let plan = std::str::from_utf8(&plan).unwrap();
-        dbg!(plan);
-        assert_eq!(
-            plan.len(),
-            "<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A".len(),
-        );
-        assert_eq!(
-            shortest_path("980A").len(),
-            "<v<A>>^AAAvA^A<vA<AA>>^AvAA<^A>A<v<A>A>^AAAvA<^A>A<vA>^A<A>A".len()
-        );
+    macro_rules! shortest_path_test {
+        ($name: ident, $inp: expr, $exp: expr) => {
+            #[test]
+            fn $name() {
+                let input = $inp;
+                let expected = $exp;
+                let plan = shortest_path(input);
+                let plan = std::str::from_utf8(&plan).unwrap();
+                dbg!(input, plan, expected);
+                assert_eq!(plan.len(), expected.len(),);
+            }
+        };
     }
+
+    shortest_path_test!(
+        test_029a,
+        "029A",
+        "<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A"
+    );
+    shortest_path_test!(
+        test_980a,
+        "980A",
+        "<v<A>>^AAAvA^A<vA<AA>>^AvAA<^A>A<v<A>A>^AAAvA<^A>A<vA>^A<A>A"
+    );
+    shortest_path_test!(
+        test_179a,
+        "179A",
+        "<v<A>>^A<vA<A>>^AAvAA<^A>A<v<A>>^AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A"
+    );
+    shortest_path_test!(
+        test_456a,
+        "456A",
+        "<v<A>>^AA<vA<A>>^AAvAA<^A>A<vA>^A<A>A<vA>^A<A>A<v<A>A>^AAvA<^A>A"
+    );
+    shortest_path_test!(
+        test_379a,
+        "379A",
+        "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A"
+    );
 }
