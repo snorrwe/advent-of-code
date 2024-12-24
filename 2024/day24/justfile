@@ -1,0 +1,8 @@
+default:
+    @just --list
+
+run:
+    -cargo r
+
+graph: run
+    ./vizualise_graph.sh

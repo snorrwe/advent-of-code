@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Write as _};
 
 use regex::Regex;
 
@@ -114,21 +114,29 @@ fn remove_deps(k: &str, input: &mut Input) {
     }
 }
 
-fn emit_connections(k: &str, input: &Input, color: &str) -> u8 {
+fn emit_connections(
+    k: &str,
+    input: &Input,
+    emitted: &mut HashMap<String, u8>,
+    writer: &mut impl std::io::Write,
+) -> u8 {
+    if let Some(v) = emitted.get(k) {
+        return *v;
+    }
     if let Some(v) = input.initial.get(k) {
-        println!("\t{k} [label=\"{k} = {v}\"]");
+        writeln!(writer, "\t{k} [label=\"{k} = {v}\"]").unwrap();
         return *v;
     }
     match input.dependencies.get(k) {
         Some((a, b, op)) => {
-            let lhs = emit_connections(a, input, color);
-            let rhs = emit_connections(b, input, color);
+            let lhs = emit_connections(a, input, emitted, writer);
+            let rhs = emit_connections(b, input, emitted, writer);
 
             let value = op.execute(lhs, rhs);
-            println!("\t{k} [label=\"{k} = {value}\"];");
-
-            println!("\t{k} -> {a} [label=\"{op:?} {b}\"];");
-            println!("\t{k} -> {b} [label=\"{op:?} {a}\"];");
+            writeln!(writer, "\t{k} [label=\"{k} = {value}\"];").unwrap();
+            writeln!(writer, "\t{a} -> {k} [label=\"{op:?} {b}\"];").unwrap();
+            writeln!(writer, "\t{b} -> {k} [label=\"{op:?} {a}\"];").unwrap();
+            emitted.insert(k.to_owned(), value);
             value
         }
         _ => 0,
@@ -144,13 +152,21 @@ fn part2(mut input: Input) -> u64 {
     // incorrect bits are 1, correct bits are 0
     println!("asd {} 1 bits are incorrect {s:0b}", s.count_ones());
 
-    println!("digraph {{");
+    let mut f = std::fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open("graph")
+        .unwrap();
+    writeln!(&mut f, "digraph {{").unwrap();
+    let mut cache = Default::default();
     for i in 0..64 {
         let k = format!("z{:02}", i);
+        emit_connections(&k, &input, &mut cache, &mut f);
         let color = if s & (1 << i) == 0 { "blue" } else { "red" };
-        emit_connections(&k, &input, color);
+        writeln!(f, "\t{k} [color=\"{color}\" shape=\"box\"];").unwrap();
     }
-    println!("}}");
+    writeln!(&mut f, "}}").unwrap();
 
     if x + y == z {
         todo!("win")
