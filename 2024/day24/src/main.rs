@@ -62,7 +62,14 @@ fn main() {
     let input = parse(&input);
 
     if std::env::args().find(|r| r == "--draw").is_some() {
-        draw(&input);
+        let mut input = input;
+
+        if std::env::args().find(|r| r == "--swaps").is_some() {
+            let swaps = std::fs::read_to_string("swaps").expect("produce a 'swaps' file for p2");
+            apply_swaps(&mut input, &swaps);
+        }
+
+        emit_graph(&input);
         return;
     }
     println!("{}", part1(&input));
@@ -139,7 +146,7 @@ fn emit_connections(
     }
 }
 
-fn draw(input: &Input) {
+fn emit_graph(input: &Input) {
     let x = number_with_prefix('x', input);
     let y = number_with_prefix('y', input);
     let z = number_with_prefix('z', input);
@@ -162,7 +169,7 @@ fn draw(input: &Input) {
     writeln!(&mut f, "}}").unwrap();
 }
 
-fn part2(mut input: Input, swaps: &str) -> String {
+fn apply_swaps<'a>(input: &mut Input, swaps: &'a str) -> Vec<&'a str> {
     let mut swapped = Vec::new();
     for line in swaps.lines() {
         let Some((a, b)) = line.trim().split_once(' ') else {
@@ -176,6 +183,12 @@ fn part2(mut input: Input, swaps: &str) -> String {
         input.dependencies.insert(b, va);
         input.dependencies.insert(a, vb);
     }
+    swapped.sort();
+    swapped
+}
+
+fn part2(mut input: Input, swaps: &str) -> String {
+    let swapped = apply_swaps(&mut input, swaps);
 
     let x = number_with_prefix('x', &input);
     let y = number_with_prefix('y', &input);

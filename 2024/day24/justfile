@@ -1,8 +1,8 @@
 default:
     @just --list
 
-_draw:
-    -cargo r -- --draw
+_draw *args:
+    -cargo r -- --draw {{ args }}
 
-graph: _draw
+graph *args: (_draw args)
     ./vizualise_graph.sh
