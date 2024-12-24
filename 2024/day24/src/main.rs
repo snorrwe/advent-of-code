@@ -181,10 +181,10 @@ fn part2(mut input: Input) -> u64 {
     let y = number_with_prefix('y', &input);
     let z = number_with_prefix('z', &input);
 
-    let s = (x + y) ^ z;
+    let diff = (x + y) ^ z;
     // incorrect bits are 1, correct bits are 0
-    println!("x={x:048b}\ny={y:048b}\nz={z:048b}");
-    println!("{}x 1 bits are incorrect\n{s:0b}", s.count_ones());
+    println!("x={x:048b}\ny={y:048b}\nz={z:048b}\ns={:048b}", x + y);
+    println!("{}x 1 bits are incorrect\n{diff:0b}", diff.count_ones());
 
     if x + y == z {
         todo!("win")
