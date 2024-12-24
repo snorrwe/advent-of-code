@@ -1,0 +1,132 @@
+use std::collections::{BTreeMap, HashMap};
+
+use regex::Regex;
+
+#[derive(Debug, Clone, Copy)]
+enum Op {
+    Xor,
+    And,
+    Or,
+}
+
+impl Op {
+    pub fn execute(self, lhs: u8, rhs: u8) -> u8 {
+        match self {
+            Op::Xor => (lhs ^ rhs) & 1,
+            Op::And => lhs & rhs,
+            Op::Or => lhs | rhs,
+        }
+    }
+}
+
+struct Input<'a> {
+    initial: HashMap<&'a str, u8>,
+    dependencies: HashMap<&'a str, (&'a str, &'a str, Op)>,
+}
+
+fn parse(input: &str) -> Input {
+    let mut initial: HashMap<_, _> = Default::default();
+    let mut lines = input.lines();
+    for line in &mut lines {
+        if line.trim().is_empty() {
+            break;
+        }
+        let (a, b) = line.split_once(": ").unwrap();
+        initial.insert(a, b.parse().unwrap());
+    }
+    let mut dependencies: HashMap<&str, (&str, &str, Op)> = Default::default();
+    let re = Regex::new(r"(\w+) ([A-Z]+) (\w+) -> (\w+)").unwrap();
+    for line in lines {
+        let Some(m) = re.captures(line) else {
+            break;
+        };
+
+        let (_, [lhs, op, rhs, res]) = m.extract();
+        let op = match op {
+            "AND" => Op::And,
+            "XOR" => Op::Xor,
+            "OR" => Op::Or,
+            _ => unreachable!(),
+        };
+
+        dependencies.insert(res, (lhs, rhs, op));
+    }
+    Input {
+        initial,
+        dependencies,
+    }
+}
+
+fn main() {
+    let input = std::fs::read_to_string("input.txt").unwrap();
+    let input = parse(&input);
+
+    println!("{}", part1(&input));
+    println!("{}", part2(&input));
+}
+
+fn resolve(k: &str, input: &Input) -> u8 {
+    if let Some(v) = input.initial.get(k) {
+        return *v;
+    }
+    let (lhs, rhs, op) = input.dependencies[k];
+    let lhs = resolve(lhs, input);
+    let rhs = resolve(rhs, input);
+
+    op.execute(lhs, rhs)
+}
+
+fn part1(input: &Input) -> u64 {
+    let mut values = BTreeMap::new();
+    for k in input
+        .dependencies
+        .keys()
+        .filter(|k| k.starts_with('z'))
+        .copied()
+    {
+        values.insert(k, resolve(k, input));
+    }
+    let mut res = 0;
+    for (k, v) in values {
+        let q: u64 = k.trim_start_matches('z').parse().unwrap();
+        res |= (v as u64) << q;
+    }
+    res
+}
+
+fn part2(input: &Input) -> u64 {
+    todo!()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const INPUT: &str = r#"x00: 1
+x01: 1
+x02: 1
+y00: 0
+y01: 1
+y02: 0
+
+x00 AND y00 -> z00
+x01 XOR y01 -> z01
+x02 OR y02 -> z02
+"#;
+
+    #[test]
+    fn test_p1() {
+        let inp = parse(INPUT);
+        let res = part1(&inp);
+
+        assert_eq!(res, 4);
+    }
+
+    #[test]
+    fn test_p2() {
+        let inp = parse(INPUT);
+        let res = part2(&inp);
+
+        assert_eq!(res, 42);
+    }
+}
