@@ -117,22 +117,6 @@ fn number_with_prefix(prefix: char, input: &Input) -> u64 {
     res
 }
 
-fn resolve_deps(k: &str, input: &Input, out: &mut HashMap<String, u64>) {
-    *out.entry(k.to_string()).or_default() += 1;
-
-    if let Some((a, b, _)) = input.dependencies.get(k) {
-        resolve_deps(*a, input, out);
-        resolve_deps(*b, input, out);
-    }
-}
-
-fn remove_deps(k: &str, input: &mut Input) {
-    if let Some((a, b, _)) = input.dependencies.remove(k) {
-        remove_deps(a, input);
-        remove_deps(b, input);
-    }
-}
-
 fn emit_connections(
     k: &str,
     input: &Input,
@@ -189,7 +173,7 @@ fn draw(input: &Input) {
     writeln!(&mut f, "}}").unwrap();
 }
 
-fn part2(mut input: Input) -> u64 {
+fn part2(input: &Input) -> u64 {
     let x = number_with_prefix('x', &input);
     let y = number_with_prefix('y', &input);
     let z = number_with_prefix('z', &input);
@@ -233,13 +217,5 @@ x02 OR y02 -> z02
         let res = part1(&inp);
 
         assert_eq!(res, 4);
-    }
-
-    #[test]
-    fn test_p2() {
-        let inp = parse(INPUT);
-        let res = part2(inp);
-
-        assert_eq!(res, 42);
     }
 }
