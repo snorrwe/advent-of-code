@@ -59,15 +59,28 @@ fn parse(input: &str) -> Input {
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
-    let input = parse(&input);
+    let mut input = parse(&input);
 
     if std::env::args().find(|r| r == "--draw").is_some() {
         draw(&input);
         return;
     }
 
+    if let Ok(f) = std::fs::read_to_string("swaps") {
+        for line in f.lines() {
+            let Some((a, b)) = line.trim().split_once(' ') else {
+                continue;
+            };
+            let (a, va) = input.dependencies.remove_entry(a).unwrap();
+            let (b, vb) = input.dependencies.remove_entry(b).unwrap();
+
+            input.dependencies.insert(b, va);
+            input.dependencies.insert(a, vb);
+        }
+    }
+
     println!("{}", part1(&input));
-    println!("{}", part2(input));
+    println!("{}", part2(&input));
 }
 
 fn resolve(k: &str, input: &Input) -> u8 {
