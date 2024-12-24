@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 
 use regex::Regex;
 
@@ -62,7 +62,7 @@ fn main() {
     let input = parse(&input);
 
     println!("{}", part1(&input));
-    println!("{}", part2(&input));
+    println!("{}", part2(input));
 }
 
 fn resolve(k: &str, input: &Input) -> u8 {
@@ -77,24 +77,40 @@ fn resolve(k: &str, input: &Input) -> u8 {
 }
 
 fn part1(input: &Input) -> u64 {
-    let mut values = BTreeMap::new();
+    number_with_prefix('z', input)
+}
+
+fn number_with_prefix(prefix: char, input: &Input) -> u64 {
+    let mut values = Vec::new();
     for k in input
         .dependencies
         .keys()
-        .filter(|k| k.starts_with('z'))
+        .filter(|k| k.starts_with(prefix))
         .copied()
     {
-        values.insert(k, resolve(k, input));
+        values.push((k, resolve(k, input)));
     }
     let mut res = 0;
     for (k, v) in values {
-        let q: u64 = k.trim_start_matches('z').parse().unwrap();
+        let q: u64 = k.trim_start_matches(prefix).parse().unwrap();
         res |= (v as u64) << q;
     }
     res
 }
 
-fn part2(input: &Input) -> u64 {
+fn part2(mut input: Input) -> u64 {
+    let x = number_with_prefix('x', &input);
+    let y = number_with_prefix('y', &input);
+    let z = number_with_prefix('z', &input);
+
+    let s = (x + y) ^ z;
+    // incorrect bits are 1, correct bits are 0
+    println!("{} wires: {}", s.count_ones(), input.dependencies.len());
+    println!("{s:0b}");
+
+    if x + y == z {
+        todo!("win")
+    }
     todo!()
 }
 
@@ -125,7 +141,7 @@ x02 OR y02 -> z02
     #[test]
     fn test_p2() {
         let inp = parse(INPUT);
-        let res = part2(&inp);
+        let res = part2(inp);
 
         assert_eq!(res, 42);
     }
