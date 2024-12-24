@@ -135,8 +135,11 @@ fn emit_connections(
 
             let value = op.execute(lhs, rhs);
             writeln!(writer, "\t{k} [label=\"{k} = {value}\"];").unwrap();
-            writeln!(writer, "\t{a} -> {k} [label=\"{op:?} {b}\"];").unwrap();
-            writeln!(writer, "\t{b} -> {k} [label=\"{op:?} {a}\"];").unwrap();
+            let op = format!("{op:?}_{a}_{b}");
+            writeln!(writer, "\t{op} [shape=\"invtrapezium\"];").unwrap();
+            writeln!(writer, "\t{a} -> {op};").unwrap();
+            writeln!(writer, "\t{b} -> {op};").unwrap();
+            writeln!(writer, "\t{op} -> {k};").unwrap();
             emitted.insert(k.to_owned(), value);
             value
         }
