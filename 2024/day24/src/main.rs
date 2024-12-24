@@ -140,11 +140,12 @@ fn emit_connections(
 
             let value = op.execute(lhs, rhs);
             writeln!(writer, "\t{k} [label=\"{k} = {value}\"];").unwrap();
-            let op = format!("{op:?}_{a}_{b}");
-            writeln!(writer, "\t{op} [shape=\"box\" style=\"rounded\"];").unwrap();
-            writeln!(writer, "\t{a} -> {op};").unwrap();
-            writeln!(writer, "\t{b} -> {op};").unwrap();
-            writeln!(writer, "\t{op} -> {k};").unwrap();
+            let opid = format!("{op:?}_{a}_{b}");
+            writeln!(writer, "\t{opid} [label=\"{op:?}\"]").unwrap();
+            writeln!(writer, "\t{opid} [shape=\"box\" style=\"rounded\"];").unwrap();
+            writeln!(writer, "\t{a} -> {opid};").unwrap();
+            writeln!(writer, "\t{b} -> {opid};").unwrap();
+            writeln!(writer, "\t{opid} -> {k};").unwrap();
             emitted.insert(k.to_owned(), value);
             value
         }
