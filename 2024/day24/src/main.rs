@@ -186,6 +186,12 @@ fn part2(mut input: Input) -> u64 {
     println!("x={x:048b}\ny={y:048b}\nz={z:048b}\ns={:048b}", x + y);
     println!("{}x 1 bits are incorrect\n{diff:0b}", diff.count_ones());
 
+    for i in 0..48 {
+        if diff & (1 << i) != 0 {
+            println!("invalid: z{:02}", i);
+        }
+    }
+
     if x + y == z {
         todo!("win")
     }
