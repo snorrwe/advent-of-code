@@ -59,28 +59,17 @@ fn parse(input: &str) -> Input {
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
-    let mut input = parse(&input);
+    let input = parse(&input);
 
     if std::env::args().find(|r| r == "--draw").is_some() {
         draw(&input);
         return;
     }
-
-    if let Ok(f) = std::fs::read_to_string("swaps") {
-        for line in f.lines() {
-            let Some((a, b)) = line.trim().split_once(' ') else {
-                continue;
-            };
-            let (a, va) = input.dependencies.remove_entry(a).unwrap();
-            let (b, vb) = input.dependencies.remove_entry(b).unwrap();
-
-            input.dependencies.insert(b, va);
-            input.dependencies.insert(a, vb);
-        }
-    }
-
     println!("{}", part1(&input));
-    println!("{}", part2(&input));
+
+    let swaps = std::fs::read_to_string("swaps").expect("produce a 'swaps' file for p2");
+
+    println!("{}", part2(input, &swaps));
 }
 
 fn resolve(k: &str, input: &Input) -> u8 {
@@ -173,7 +162,21 @@ fn draw(input: &Input) {
     writeln!(&mut f, "}}").unwrap();
 }
 
-fn part2(input: &Input) -> u64 {
+fn part2(mut input: Input, swaps: &str) -> String {
+    let mut swapped = Vec::new();
+    for line in swaps.lines() {
+        let Some((a, b)) = line.trim().split_once(' ') else {
+            continue;
+        };
+        swapped.push(a);
+        swapped.push(b);
+        let (a, va) = input.dependencies.remove_entry(a).unwrap();
+        let (b, vb) = input.dependencies.remove_entry(b).unwrap();
+
+        input.dependencies.insert(b, va);
+        input.dependencies.insert(a, vb);
+    }
+
     let x = number_with_prefix('x', &input);
     let y = number_with_prefix('y', &input);
     let z = number_with_prefix('z', &input);
@@ -189,10 +192,11 @@ fn part2(input: &Input) -> u64 {
         }
     }
 
-    if x + y == z {
-        todo!("win")
+    if x + y != z {
+        panic!("incorrect swaps")
     }
-    todo!()
+
+    swapped.join(",")
 }
 
 #[cfg(test)]
