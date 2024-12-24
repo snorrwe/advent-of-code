@@ -85,6 +85,7 @@ fn number_with_prefix(prefix: char, input: &Input) -> u64 {
     for k in input
         .dependencies
         .keys()
+        .chain(input.initial.keys())
         .filter(|k| k.starts_with(prefix))
         .copied()
     {
@@ -150,7 +151,8 @@ fn part2(mut input: Input) -> u64 {
 
     let s = (x + y) ^ z;
     // incorrect bits are 1, correct bits are 0
-    println!("asd {} 1 bits are incorrect {s:0b}", s.count_ones());
+    println!("x={x:0b}\ny={y:0b}\nz={z:0b}");
+    println!("{} 1 bits are incorrect {s:0b}", s.count_ones());
 
     let mut f = std::fs::OpenOptions::new()
         .write(true)
