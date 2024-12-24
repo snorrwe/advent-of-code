@@ -61,6 +61,11 @@ fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
     let input = parse(&input);
 
+    if std::env::args().find(|r| r == "--draw").is_some() {
+        draw(&input);
+        return;
+    }
+
     println!("{}", part1(&input));
     println!("{}", part2(input));
 }
@@ -136,7 +141,7 @@ fn emit_connections(
             let value = op.execute(lhs, rhs);
             writeln!(writer, "\t{k} [label=\"{k} = {value}\"];").unwrap();
             let op = format!("{op:?}_{a}_{b}");
-            writeln!(writer, "\t{op} [shape=\"invtrapezium\"];").unwrap();
+            writeln!(writer, "\t{op} [shape=\"box\" style=\"rounded\"];").unwrap();
             writeln!(writer, "\t{a} -> {op};").unwrap();
             writeln!(writer, "\t{b} -> {op};").unwrap();
             writeln!(writer, "\t{op} -> {k};").unwrap();
@@ -147,16 +152,12 @@ fn emit_connections(
     }
 }
 
-fn part2(mut input: Input) -> u64 {
-    let x = number_with_prefix('x', &input);
-    let y = number_with_prefix('y', &input);
-    let z = number_with_prefix('z', &input);
+fn draw(input: &Input) {
+    let x = number_with_prefix('x', input);
+    let y = number_with_prefix('y', input);
+    let z = number_with_prefix('z', input);
 
     let s = (x + y) ^ z;
-    // incorrect bits are 1, correct bits are 0
-    println!("x={x:048b}\ny={y:048b}\nz={z:048b}");
-    println!("{}x 1 bits are incorrect\n{s:0b}", s.count_ones());
-
     let mut f = std::fs::OpenOptions::new()
         .write(true)
         .create(true)
@@ -172,6 +173,17 @@ fn part2(mut input: Input) -> u64 {
         writeln!(f, "\t{k} [color=\"{color}\" shape=\"box\"];").unwrap();
     }
     writeln!(&mut f, "}}").unwrap();
+}
+
+fn part2(mut input: Input) -> u64 {
+    let x = number_with_prefix('x', &input);
+    let y = number_with_prefix('y', &input);
+    let z = number_with_prefix('z', &input);
+
+    let s = (x + y) ^ z;
+    // incorrect bits are 1, correct bits are 0
+    println!("x={x:048b}\ny={y:048b}\nz={z:048b}");
+    println!("{}x 1 bits are incorrect\n{s:0b}", s.count_ones());
 
     if x + y == z {
         todo!("win")
