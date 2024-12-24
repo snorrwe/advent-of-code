@@ -114,13 +114,24 @@ fn remove_deps(k: &str, input: &mut Input) {
     }
 }
 
-fn emit_connections(k: &str, input: &Input, color: &str) {
-    if let Some((a, b, op)) = input.dependencies.get(k) {
-        emit_connections(a, input, color);
-        emit_connections(b, input, color);
+fn emit_connections(k: &str, input: &Input, color: &str) -> u8 {
+    if let Some(v) = input.initial.get(k) {
+        println!("\t{k} [label=\"{k} = {v}\"]");
+        return *v;
+    }
+    match input.dependencies.get(k) {
+        Some((a, b, op)) => {
+            let lhs = emit_connections(a, input, color);
+            let rhs = emit_connections(b, input, color);
 
-        println!("{k} -> {a} [color={color}] [label=\"{op:?} {b}\"];");
-        println!("{k} -> {b} [color={color}] [label=\"{op:?} {a}\"];");
+            let value = op.execute(lhs, rhs);
+            println!("\t{k} [label=\"{k} = {value}\"];");
+
+            println!("\t{k} -> {a} [label=\"{op:?} {b}\"];");
+            println!("\t{k} -> {b} [label=\"{op:?} {a}\"];");
+            value
+        }
+        _ => 0,
     }
 }
 
@@ -131,7 +142,7 @@ fn part2(mut input: Input) -> u64 {
 
     let s = (x + y) ^ z;
     // incorrect bits are 1, correct bits are 0
-    println!("{} 1 bits are incorrect {s:0b}", s.count_ones());
+    println!("asd {} 1 bits are incorrect {s:0b}", s.count_ones());
 
     println!("digraph {{");
     for i in 0..64 {
