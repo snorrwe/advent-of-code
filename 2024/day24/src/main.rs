@@ -98,6 +98,22 @@ fn number_with_prefix(prefix: char, input: &Input) -> u64 {
     res
 }
 
+fn resolve_deps(k: &str, input: &Input, out: &mut HashMap<String, u64>) {
+    *out.entry(k.to_string()).or_default() += 1;
+
+    if let Some((a, b, _)) = input.dependencies.get(k) {
+        resolve_deps(*a, input, out);
+        resolve_deps(*b, input, out);
+    }
+}
+
+fn remove_deps(k: &str, input: &mut Input) {
+    if let Some((a, b, _)) = input.dependencies.remove(k) {
+        remove_deps(a, input);
+        remove_deps(b, input);
+    }
+}
+
 fn part2(mut input: Input) -> u64 {
     let x = number_with_prefix('x', &input);
     let y = number_with_prefix('y', &input);
@@ -107,6 +123,18 @@ fn part2(mut input: Input) -> u64 {
     // incorrect bits are 1, correct bits are 0
     println!("{} wires: {}", s.count_ones(), input.dependencies.len());
     println!("{s:0b}");
+
+    let mut counter = HashMap::new();
+
+    for i in 0..64 {
+        let k = format!("z{:02}", i);
+        resolve_deps(k.as_str(), &input, &mut counter);
+
+    }
+
+    let mut count: Vec<_> = counter.into_iter().collect();
+    count.sort_by_key(|(_, v)| *v);
+    dbg!(count);
 
     if x + y == z {
         todo!("win")
