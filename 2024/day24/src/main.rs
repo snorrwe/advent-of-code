@@ -114,6 +114,16 @@ fn remove_deps(k: &str, input: &mut Input) {
     }
 }
 
+fn emit_connections(k: &str, input: &Input, color: &str) {
+    if let Some((a, b, op)) = input.dependencies.get(k) {
+        emit_connections(a, input, color);
+        emit_connections(b, input, color);
+
+        println!("{k} -> {a} [color={color}] [label=\"{op:?} {b}\"];");
+        println!("{k} -> {b} [color={color}] [label=\"{op:?} {a}\"];");
+    }
+}
+
 fn part2(mut input: Input) -> u64 {
     let x = number_with_prefix('x', &input);
     let y = number_with_prefix('y', &input);
@@ -121,20 +131,15 @@ fn part2(mut input: Input) -> u64 {
 
     let s = (x + y) ^ z;
     // incorrect bits are 1, correct bits are 0
-    println!("{} wires: {}", s.count_ones(), input.dependencies.len());
-    println!("{s:0b}");
+    println!("{} 1 bits are incorrect {s:0b}", s.count_ones());
 
-    let mut counter = HashMap::new();
-
+    println!("digraph {{");
     for i in 0..64 {
         let k = format!("z{:02}", i);
-        resolve_deps(k.as_str(), &input, &mut counter);
-
+        let color = if s & (1 << i) == 0 { "blue" } else { "red" };
+        emit_connections(&k, &input, color);
     }
-
-    let mut count: Vec<_> = counter.into_iter().collect();
-    count.sort_by_key(|(_, v)| *v);
-    dbg!(count);
+    println!("}}");
 
     if x + y == z {
         todo!("win")
