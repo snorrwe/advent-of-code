@@ -154,8 +154,8 @@ fn part2(mut input: Input) -> u64 {
 
     let s = (x + y) ^ z;
     // incorrect bits are 1, correct bits are 0
-    println!("x={x:0b}\ny={y:0b}\nz={z:0b}");
-    println!("{} 1 bits are incorrect {s:0b}", s.count_ones());
+    println!("x={x:048b}\ny={y:048b}\nz={z:048b}");
+    println!("{}x 1 bits are incorrect\n{s:0b}", s.count_ones());
 
     let mut f = std::fs::OpenOptions::new()
         .write(true)
@@ -165,7 +165,7 @@ fn part2(mut input: Input) -> u64 {
         .unwrap();
     writeln!(&mut f, "digraph {{").unwrap();
     let mut cache = Default::default();
-    for i in 0..64 {
+    for i in 0..48 {
         let k = format!("z{:02}", i);
         emit_connections(&k, &input, &mut cache, &mut f);
         let color = if s & (1 << i) == 0 { "blue" } else { "red" };
