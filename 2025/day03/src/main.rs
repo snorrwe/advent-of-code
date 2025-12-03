@@ -17,41 +17,33 @@ fn main() {
 }
 
 fn max(line: &[u8]) -> (usize, i64) {
-    assert!(!line.is_empty());
-    let mut max_idx = 0;
-    for i in 1..line.len() {
-        if line[max_idx] < line[i] {
-            max_idx = i;
-        }
-    }
-    (max_idx, line[max_idx] as i64)
+    line.iter()
+        .enumerate()
+        .rev() // max_by_key returns the last position, I need the first
+        .max_by_key(|(_, a)| **a)
+        .map(|(i, a)| (i, *a as i64))
+        .expect("line was empty")
 }
 
-fn part1(input: &Input) -> i64 {
-    let mut total = 0;
-    for line in input {
-        // .iter().max() returns the last position, I need the first
-        let (i, a) = max(&line[..line.len() - 1]);
-        let b = line[i + 1..].iter().max().unwrap();
-
-        let c = (a * 10) + *b as i64;
-        total += c;
-    }
-    total
-}
-
-fn part2(input: &Input) -> i64 {
+fn solve(orders_of_magnitude: usize, input: &Input) -> i64 {
     let mut total = 0;
     for line in input {
         let mut i = 0;
-        for c in (0..12).rev() {
-            // .iter().max() returns the last position, I need the first
+        for c in (0..orders_of_magnitude).rev() {
             let (j, a) = max(&line[i..line.len() - c]);
             total += a * 10i64.pow(c as u32);
             i += j + 1;
         }
     }
     total
+}
+
+fn part1(input: &Input) -> i64 {
+    solve(2, input)
+}
+
+fn part2(input: &Input) -> i64 {
+    solve(12, input)
 }
 
 #[cfg(test)]
