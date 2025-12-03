@@ -1,6 +1,6 @@
-type Input = String;
+type Input<'a> = &'a str;
 
-fn parse(input: String) -> Input {
+fn parse(input: &'_ str) -> Input<'_> {
     input
 }
 
@@ -28,7 +28,7 @@ mod tests {
 
     #[test]
     fn test_p1() {
-        let inp = parse(INPUT.to_string());
+        let inp = parse(INPUT);
         let res = part1(&inp);
 
         assert_eq!(res, 42);
@@ -36,7 +36,7 @@ mod tests {
 
     #[test]
     fn test_p2() {
-        let inp = parse(INPUT.to_string());
+        let inp = parse(INPUT);
         let res = part2(&inp);
 
         assert_eq!(res, 42);
