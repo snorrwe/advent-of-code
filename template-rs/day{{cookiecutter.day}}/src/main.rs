@@ -6,7 +6,7 @@ fn parse(input: &'_ str) -> Input<'_> {
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
-    let input = parse(input);
+    let input = parse(&input);
 
     println!("{}", part1(&input));
     println!("{}", part2(&input));
