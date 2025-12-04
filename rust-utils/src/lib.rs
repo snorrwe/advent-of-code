@@ -32,6 +32,19 @@ impl IVec2 {
         Self { x, y }
     }
 
+    pub fn grid_neighbours(self) -> [IVec2; 8] {
+        [
+            self + IVec2::new(-1, -1),
+            self + IVec2::new(0, -1),
+            self + IVec2::new(1, -1),
+            self + IVec2::new(-1, 0),
+            self + IVec2::new(1, 0),
+            self + IVec2::new(-1, 1),
+            self + IVec2::new(0, 1),
+            self + IVec2::new(1, 1),
+        ]
+    }
+
     /// not really normalized, but reduces all dims to `[-1‥1]`
     pub fn as_direction(self) -> Self {
         let x = if self.x != 0 {
