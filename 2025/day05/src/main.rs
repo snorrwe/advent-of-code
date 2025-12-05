@@ -58,35 +58,21 @@ fn part1(input: &Input) -> usize {
         .count()
 }
 
-fn part2(input: Vec<[u64; 2]>) -> u64 {
-    let mut a = input;
-    let mut b = Vec::with_capacity(a.len());
-    a.sort_unstable();
+fn part2(mut input: Vec<[u64; 2]>) -> u64 {
+    input.sort_unstable();
 
     // merge overlapping ranges
-    loop {
-        let mut merged = false;
-        b.clear();
-        for (i, current) in a.iter().copied().enumerate() {
-            if let Some(next) = a.get(i + 1)
-                && next[0] <= current[1]
-            {
-                // merge 1 at a time to get around some edge cases
-                b.push([current[0], current[1].max(next[1])]);
-                merged = true;
-                b.extend_from_slice(&a[i + 2..]);
-                break;
-            } else {
-                b.push(current);
-            }
+    for i in (1..input.len()).rev() {
+        let cur = input[i];
+        let prev = input[i - 1];
+        if cur[0] <= prev[1] {
+            input[i - 1][1] = prev[1].max(cur[1]);
+            // order does not for items after i, they're already merged
+            input.swap_remove(i);
         }
-        if !merged {
-            break;
-        }
-        std::mem::swap(&mut a, &mut b);
     }
 
-    a.into_iter().map(|[a, b]| b - a + 1).sum()
+    input.into_iter().map(|[a, b]| b - a + 1).sum()
 }
 
 #[cfg(test)]
