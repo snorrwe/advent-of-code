@@ -35,7 +35,7 @@ fn main() {
     let input = parse(&input);
 
     println!("{}", part1(&input));
-    println!("{}", part2(&input));
+    println!("{}", part2(input.fresh));
 }
 
 fn part1(input: &Input) -> usize {
@@ -58,8 +58,35 @@ fn part1(input: &Input) -> usize {
         .count()
 }
 
-fn part2(input: &Input) -> i32 {
-    todo!()
+fn part2(input: Vec<[u64; 2]>) -> u64 {
+    let mut a = input;
+    let mut b = Vec::with_capacity(a.len());
+    a.sort_unstable();
+
+    // merge overlapping ranges
+    loop {
+        let mut merged = false;
+        b.clear();
+        for (i, current) in a.iter().copied().enumerate() {
+            if let Some(next) = a.get(i + 1)
+                && next[0] <= current[1]
+            {
+                // merge 1 at a time to get around some edge cases
+                b.push([current[0], current[1].max(next[1])]);
+                merged = true;
+                b.extend_from_slice(&a[i + 2..]);
+                break;
+            } else {
+                b.push(current);
+            }
+        }
+        if !merged {
+            break;
+        }
+        std::mem::swap(&mut a, &mut b);
+    }
+
+    a.into_iter().map(|[a, b]| b - a + 1).sum()
 }
 
 #[cfg(test)]
@@ -89,8 +116,8 @@ mod tests {
     #[test]
     fn test_p2() {
         let inp = parse(INPUT);
-        let res = part2(&inp);
+        let res = part2(inp.fresh);
 
-        assert_eq!(res, 42);
+        assert_eq!(res, 14);
     }
 }
