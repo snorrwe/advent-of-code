@@ -1,4 +1,4 @@
-use std::{collections::HashMap, num::ParseIntError, str::FromStr};
+use std::{collections::HashMap, fmt::Display, num::ParseIntError, str::FromStr};
 
 use itertools::Itertools;
 
@@ -7,6 +7,12 @@ pub struct Vec3 {
     pub x: i64,
     pub y: i64,
     pub z: i64,
+}
+
+impl Display for Vec3 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{},{},{}", self.x, self.y, self.z)
+    }
 }
 
 impl Vec3 {
