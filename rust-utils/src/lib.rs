@@ -460,3 +460,26 @@ impl Grid<u8> {
         img.save(path).unwrap();
     }
 }
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct AABB2 {
+    pub min: IVec2,
+    pub max: IVec2,
+}
+
+impl AABB2 {
+    pub fn grow_over(&mut self, p: IVec2) {
+        self.min.x = self.min.x.min(p.x);
+        self.min.y = self.min.x.min(p.y);
+        self.max.x = self.max.x.max(p.x);
+        self.max.y = self.max.x.max(p.y);
+    }
+
+    pub fn contains_point(&self, pos: IVec2) -> bool {
+        self.min.x <= pos.x && pos.x <= self.max.x && self.min.y <= pos.y && pos.y <= self.max.y
+    }
+
+    pub fn from_point(p: IVec2) -> Self {
+        AABB2 { min: p, max: p }
+    }
+}
