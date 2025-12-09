@@ -500,4 +500,39 @@ impl AABB2 {
 
         (max - min) as usize + 1
     }
+
+    pub fn from_points(mut p: impl Iterator<Item = IVec2>) -> Self {
+        let Some(base) = p.next() else {
+            return Default::default();
+        };
+        let mut b = Self::from_point(base);
+        for p in p {
+            b.grow_over(p);
+        }
+        b
+    }
+
+    pub fn iter_points(&self) -> impl Iterator<Item = IVec2> {
+        let minx = self.min.x;
+        let maxx = self.max.x;
+        (self.min.y..=self.max.y).flat_map(move |y| (minx..=maxx).map(move |x| IVec2::new(x, y)))
+    }
+
+    pub fn corners(&self) -> [IVec2; 4] {
+        [
+            self.min,
+            IVec2::new(self.max.x, self.min.y),
+            IVec2::new(self.min.x, self.max.y),
+            self.max,
+        ]
+    }
+
+    pub fn shrink(&mut self, f: IVec2) {
+        let min = self.min + f;
+        let max = self.max - f;
+
+        self.min = min;
+        self.max = min;
+        self.grow_over(max);
+    }
 }
