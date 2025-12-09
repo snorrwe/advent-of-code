@@ -470,9 +470,9 @@ pub struct AABB2 {
 impl AABB2 {
     pub fn grow_over(&mut self, p: IVec2) {
         self.min.x = self.min.x.min(p.x);
-        self.min.y = self.min.x.min(p.y);
+        self.min.y = self.min.y.min(p.y);
         self.max.x = self.max.x.max(p.x);
-        self.max.y = self.max.x.max(p.y);
+        self.max.y = self.max.y.max(p.y);
     }
 
     pub fn contains_point(&self, pos: IVec2) -> bool {
@@ -481,5 +481,23 @@ impl AABB2 {
 
     pub fn from_point(p: IVec2) -> Self {
         AABB2 { min: p, max: p }
+    }
+
+    pub fn width(&self) -> usize {
+        debug_assert!(self.min.x <= self.max.x);
+
+        let max = self.max.x as i64;
+        let min = self.min.x as i64;
+
+        (max - min) as usize + 1
+    }
+
+    pub fn height(&self) -> usize {
+        debug_assert!(self.min.y <= self.max.y);
+
+        let max = self.max.y as i64;
+        let min = self.min.y as i64;
+
+        (max - min) as usize + 1
     }
 }
