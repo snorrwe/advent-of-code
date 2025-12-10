@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use nalgebra::{DMatrix, DVector};
 
 type Input<'a> = Vec<Line<'a>>;
 
@@ -8,7 +9,7 @@ struct Line<'a> {
     pub wiring: Vec<usize>,
     /// wiring offset and size
     pub wiring_group: Vec<(usize, usize)>,
-    pub joltage: Vec<i64>,
+    pub joltage: Vec<i32>,
 }
 
 fn parse(input: &'_ str) -> Input<'_> {
@@ -70,6 +71,31 @@ fn press(l: &Line, button_idx: usize, state: &mut [u8]) {
     }
 }
 
+fn get_m(l: &Line) -> nalgebra::DMatrix<f32> {
+    let coeffs = l
+        .wiring_group
+        .iter()
+        .flat_map(|(offset, size)| {
+            let mut out = vec![0.0; l.pattern.len()];
+            for wiring_idx in (0..*size).map(|x| x + offset) {
+                let i = l.wiring[wiring_idx];
+                out[i] = 1.0;
+            }
+            out
+        })
+        .collect::<Vec<_>>();
+
+    nalgebra::DMatrix::from_column_slice(l.pattern.len(), l.wiring_group.len(), &coeffs)
+}
+
+fn joltage_vector(l: &Line) -> nalgebra::DVector<f32> {
+    let mut res = vec![0.0; l.pattern.len()];
+    for (i, p) in l.joltage.iter().enumerate() {
+        res[i] = *p as f32;
+    }
+    nalgebra::DVector::from_column_slice(&res)
+}
+
 /// return if equal
 ///
 /// state 0,1
@@ -110,8 +136,31 @@ fn part1(input: &Input) -> usize {
         .sum()
 }
 
-fn part2(input: &Input) -> i32 {
-    todo!()
+fn max_coeff(col: usize, m: &DMatrix<f32>, b: &DVector<f32>) -> i32 {
+    let col = m.column(col);
+
+    col.iter()
+        .enumerate()
+        .filter_map(|(i, x)| (*x != 0.0).then_some(b[i] as i32))
+        .min()
+        .unwrap()
+}
+
+fn part2(input: &Input) -> usize {
+    input
+        .into_iter()
+        .map(|l| -> usize {
+            let m = get_m(l);
+            println!("{m}");
+            let b = joltage_vector(l);
+            println!("{b}");
+
+            let m = m.pseudo_inverse(std::f32::EPSILON).unwrap();
+            let res = &m * &b;
+            println!("{res}");
+            dbg!(dbg!(res.sum()) as usize)
+        })
+        .sum()
 }
 
 #[cfg(test)]
@@ -136,7 +185,8 @@ mod tests {
         let inp = parse(INPUT);
         let res = part2(&inp);
 
-        assert_eq!(res, 42);
+        assert_eq!(res, 33);
+        todo!()
     }
 
     #[test]
