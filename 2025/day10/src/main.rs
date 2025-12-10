@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use nalgebra::{DMatrix, DVector};
 
 type Input<'a> = Vec<Line<'a>>;
 
@@ -135,43 +136,37 @@ fn part1(input: &Input) -> usize {
         .sum()
 }
 
+fn dfs(m: &DMatrix<i32>, b: &mut DVector<i32>, max_depth: usize, depth: usize) -> usize {
+    if depth > max_depth {
+        return 0;
+    }
+    (0..m.ncols())
+        .map(|c| {
+            let col = m.column(c);
+            *b -= col;
+            let n = dfs(m, b, max_depth, depth + 1);
+            *b += col;
+            n
+        })
+        .filter(|n| n != &0)
+        .min()
+        .unwrap_or(0)
+        + depth
+}
+
 fn part2(input: &Input) -> usize {
     input
         .into_iter()
         .map(|l| -> usize {
             let m = get_m(l);
             println!("{m}");
-            let b = joltage_vector(l);
+            let mut b = joltage_vector(l);
             println!("{b}");
 
             let min_presses = b.min();
             let max_presses = b.sum();
 
-            dbg!(
-                (0..l.wiring_group.len())
-                    .map(|col| {
-                        let max = m
-                            .column(col)
-                            .iter()
-                            .copied()
-                            .enumerate()
-                            .filter(|(_, x)| *x != 0)
-                            .map(|(i, _)| b[i])
-                            .min()
-                            .unwrap();
-                        0..max
-                    })
-                    .multi_cartesian_product()
-                    .filter(|r| {
-                        let s = r.iter().sum();
-                        min_presses <= s && s <= max_presses
-                    })
-                    .count()
-            );
-
-            dbg!(min_presses, max_presses);
-
-            0
+            dfs(&m, &mut b, max_presses as usize, 0)
         })
         .sum()
 }
