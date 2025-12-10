@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use nalgebra::{DMatrix, DVector};
 
 type Input<'a> = Vec<Line<'a>>;
 
@@ -71,15 +70,15 @@ fn press(l: &Line, button_idx: usize, state: &mut [u8]) {
     }
 }
 
-fn get_m(l: &Line) -> nalgebra::DMatrix<f32> {
+fn get_m(l: &Line) -> nalgebra::DMatrix<i32> {
     let coeffs = l
         .wiring_group
         .iter()
         .flat_map(|(offset, size)| {
-            let mut out = vec![0.0; l.pattern.len()];
+            let mut out = vec![0; l.pattern.len()];
             for wiring_idx in (0..*size).map(|x| x + offset) {
                 let i = l.wiring[wiring_idx];
-                out[i] = 1.0;
+                out[i] = 1;
             }
             out
         })
@@ -88,10 +87,10 @@ fn get_m(l: &Line) -> nalgebra::DMatrix<f32> {
     nalgebra::DMatrix::from_column_slice(l.pattern.len(), l.wiring_group.len(), &coeffs)
 }
 
-fn joltage_vector(l: &Line) -> nalgebra::DVector<f32> {
-    let mut res = vec![0.0; l.pattern.len()];
+fn joltage_vector(l: &Line) -> nalgebra::DVector<i32> {
+    let mut res = vec![0; l.pattern.len()];
     for (i, p) in l.joltage.iter().enumerate() {
-        res[i] = *p as f32;
+        res[i] = *p;
     }
     nalgebra::DVector::from_column_slice(&res)
 }
@@ -136,16 +135,6 @@ fn part1(input: &Input) -> usize {
         .sum()
 }
 
-fn max_coeff(col: usize, m: &DMatrix<f32>, b: &DVector<f32>) -> i32 {
-    let col = m.column(col);
-
-    col.iter()
-        .enumerate()
-        .filter_map(|(i, x)| (*x != 0.0).then_some(b[i] as i32))
-        .min()
-        .unwrap()
-}
-
 fn part2(input: &Input) -> usize {
     input
         .into_iter()
@@ -155,10 +144,14 @@ fn part2(input: &Input) -> usize {
             let b = joltage_vector(l);
             println!("{b}");
 
-            let m = m.pseudo_inverse(std::f32::EPSILON).unwrap();
-            let res = &m * &b;
-            println!("{res}");
-            dbg!(dbg!(res.sum()) as usize)
+            let min_presses = b.min();
+            let max_presses = b.sum();
+
+            for r in (0..l.wiring_group.len()) {}
+
+            dbg!(min_presses, max_presses);
+
+            0
         })
         .sum()
 }
