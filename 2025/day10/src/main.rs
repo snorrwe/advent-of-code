@@ -144,6 +144,10 @@ fn dfs(m: &DMatrix<i32>, b: &mut DVector<i32>, mut max_depth: usize, depth: usiz
         .map(|c| {
             let col = m.column(c);
             *b -= col;
+            if b.iter().any(|x| x < &0) {
+                *b += col;
+                return 0;
+            }
             let n = dfs(m, b, max_depth, depth + 1);
             max_depth = max_depth.min(n + depth);
             *b += col;
