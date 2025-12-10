@@ -136,29 +136,6 @@ fn part1(input: &Input) -> usize {
         .sum()
 }
 
-fn dfs(m: &DMatrix<i32>, b: &mut DVector<i32>, mut max_depth: usize, depth: usize) -> usize {
-    if depth > max_depth {
-        return 0;
-    }
-    (0..m.ncols())
-        .map(|c| {
-            let col = m.column(c);
-            *b -= col;
-            if b.iter().any(|x| x < &0) {
-                *b += col;
-                return 0;
-            }
-            let n = dfs(m, b, max_depth, depth + 1);
-            max_depth = max_depth.min(n + depth);
-            *b += col;
-            n
-        })
-        .filter(|n| n != &0)
-        .min()
-        .unwrap_or(0)
-        + depth
-}
-
 fn part2(input: &Input) -> usize {
     input
         .into_iter()
@@ -171,7 +148,11 @@ fn part2(input: &Input) -> usize {
             let min_presses = b.min();
             let max_presses = b.sum();
 
-            dfs(&m, &mut b, max_presses as usize, 0)
+            for ele in m.column_iter().powerset().skip(1) {
+                dbg!(ele.len());
+            }
+
+            0
         })
         .sum()
 }
