@@ -136,7 +136,7 @@ fn part1(input: &Input) -> usize {
         .sum()
 }
 
-fn dfs(m: &DMatrix<i32>, b: &mut DVector<i32>, max_depth: usize, depth: usize) -> usize {
+fn dfs(m: &DMatrix<i32>, b: &mut DVector<i32>, mut max_depth: usize, depth: usize) -> usize {
     if depth > max_depth {
         return 0;
     }
@@ -145,6 +145,7 @@ fn dfs(m: &DMatrix<i32>, b: &mut DVector<i32>, max_depth: usize, depth: usize) -
             let col = m.column(c);
             *b -= col;
             let n = dfs(m, b, max_depth, depth + 1);
+            max_depth = max_depth.min(n + depth);
             *b += col;
             n
         })
