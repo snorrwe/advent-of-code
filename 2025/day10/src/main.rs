@@ -147,7 +147,27 @@ fn part2(input: &Input) -> usize {
             let min_presses = b.min();
             let max_presses = b.sum();
 
-            for r in (0..l.wiring_group.len()) {}
+            dbg!(
+                (0..l.wiring_group.len())
+                    .map(|col| {
+                        let max = m
+                            .column(col)
+                            .iter()
+                            .copied()
+                            .enumerate()
+                            .filter(|(_, x)| *x != 0)
+                            .map(|(i, _)| b[i])
+                            .min()
+                            .unwrap();
+                        0..max
+                    })
+                    .multi_cartesian_product()
+                    .filter(|r| {
+                        let s = r.iter().sum();
+                        min_presses <= s && s <= max_presses
+                    })
+                    .count()
+            );
 
             dbg!(min_presses, max_presses);
 
