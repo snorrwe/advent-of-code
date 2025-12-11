@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use nalgebra::{DMatrix, DVector};
 
 type Input<'a> = Vec<Line<'a>>;
 
@@ -142,15 +141,11 @@ fn part2(input: &Input) -> usize {
         .map(|l| -> usize {
             let m = get_m(l);
             println!("{m}");
-            let mut b = joltage_vector(l);
+            let b = joltage_vector(l);
             println!("{b}");
 
             let min_presses = b.min();
             let max_presses = b.sum();
-
-            for ele in m.column_iter().powerset().skip(1) {
-                dbg!(ele.len());
-            }
 
             0
         })
