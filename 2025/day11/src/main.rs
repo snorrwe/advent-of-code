@@ -27,28 +27,60 @@ fn main() {
     println!("{}", part2(&input));
 }
 
-fn find_out_dfs<'a>(
-    connections: &HashMap<&'a str, Vec<&'a str>>,
-    current: &'a str,
-    visited: &mut HashSet<&'a str>,
-) -> usize {
+fn find_out_dfs<'a>(connections: &HashMap<&'a str, Vec<&'a str>>, current: &'a str) -> usize {
     let mut s = 0;
     for n in connections[current].iter().copied() {
         if n == "out" {
             // if any of the outputs is 'out', then short-circuit the recursion
             return 1;
         }
-        s += find_out_dfs(connections, n, visited);
+        s += find_out_dfs(connections, n);
     }
     s
 }
 
 fn part1(input: &Input) -> usize {
-    find_out_dfs(&input.connections, "you", &mut Default::default())
+    find_out_dfs(&input.connections, "you")
 }
 
-fn part2(input: &Input) -> i32 {
-    todo!()
+fn find_out_dfs_v2<'a>(
+    connections: &HashMap<&'a str, Vec<&'a str>>,
+    current: &'a str,
+    visited: &mut HashSet<&'a str>,
+) -> usize {
+    if !visited.insert(current) {
+        return 0;
+    }
+
+    macro_rules! visit_cleanup {
+        () => {{
+            visited.remove(current);
+        }};
+    }
+
+    let mut s = 0;
+    let Some(conn) = connections.get(current) else {
+        visit_cleanup!();
+        return 0;
+    };
+    for n in conn.iter().copied() {
+        // if any of the outputs is 'out', then short-circuit the recursion
+        if n == "out" {
+            let mut res = 0;
+            if visited.contains("dac") && visited.contains("fft") {
+                res = 1;
+            }
+            visit_cleanup!();
+            return res;
+        }
+        s += find_out_dfs_v2(connections, n, visited);
+    }
+    visit_cleanup!();
+    s
+}
+
+fn part2(input: &Input) -> usize {
+    find_out_dfs_v2(&input.connections, "svr", &mut Default::default())
 }
 
 #[cfg(test)]
@@ -66,6 +98,20 @@ ggg: out
 hhh: ccc fff iii
 iii: out
 "#;
+    const INPUT2: &str = r#"svr: aaa bbb
+aaa: fft
+fft: ccc
+bbb: tty
+tty: ccc
+ccc: ddd eee
+ddd: hub
+hub: fff
+eee: dac
+dac: fff
+fff: ggg hhh
+ggg: out
+hhh: out
+"#;
 
     #[test]
     fn test_p1() {
@@ -77,9 +123,9 @@ iii: out
 
     #[test]
     fn test_p2() {
-        let inp = parse(INPUT);
+        let inp = parse(INPUT2);
         let res = part2(&inp);
 
-        assert_eq!(res, 42);
+        assert_eq!(res, 2);
     }
 }
