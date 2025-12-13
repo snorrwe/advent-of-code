@@ -46,6 +46,7 @@ fn part1(input: &Input) -> usize {
 fn find_out_dfs_v2<'a>(
     connections: &HashMap<&'a str, Vec<&'a str>>,
     current: &'a str,
+    goal: &'a str,
     visited: &mut HashSet<&'a str>,
 ) -> usize {
     if !visited.insert(current) {
@@ -63,24 +64,42 @@ fn find_out_dfs_v2<'a>(
         visit_cleanup!();
         return 0;
     };
+    // if any of the outputs is 'out', then short-circuit the recursion, without polluting 'visited'
     for n in conn.iter().copied() {
-        // if any of the outputs is 'out', then short-circuit the recursion
-        if n == "out" {
-            let mut res = 0;
-            if visited.contains("dac") && visited.contains("fft") {
-                res = 1;
-            }
+        if n == goal {
             visit_cleanup!();
-            return res;
+            return 1;
         }
-        s += find_out_dfs_v2(connections, n, visited);
+    }
+    for n in conn.iter().copied() {
+        s += find_out_dfs_v2(connections, n, goal, visited);
     }
     visit_cleanup!();
     s
 }
 
 fn part2(input: &Input) -> usize {
-    find_out_dfs_v2(&input.connections, "svr", &mut Default::default())
+    let mut visited: HashSet<&str> = Default::default();
+    visited.insert("dac");
+    visited.insert("out");
+    let a1 = find_out_dfs_v2(&input.connections, "svr", "fft", &mut visited);
+    visited.remove("dac");
+    let a2 = find_out_dfs_v2(&input.connections, "fft", "dac", &mut visited);
+    visited.remove("out");
+    let a3 = find_out_dfs_v2(&input.connections, "dac", "out", &mut visited);
+
+    visited.clear();
+    visited.insert("fft");
+    visited.insert("out");
+    let b1 = find_out_dfs_v2(&input.connections, "svr", "dac", &mut visited);
+    visited.remove("fft");
+    let b2 = find_out_dfs_v2(&input.connections, "dac", "fft", &mut visited);
+    visited.remove("out");
+    let b3 = find_out_dfs_v2(&input.connections, "fft", "out", &mut visited);
+
+    dbg!(a1, a2, a3, b1, b2, b3);
+
+    a1 * a2 * a3 + b1 * b2 * b3
 }
 
 #[cfg(test)]
