@@ -59,7 +59,6 @@ fn find_out_dfs_v2<'a>(
         }};
     }
 
-    let mut s = 0;
     let Some(conn) = connections.get(current) else {
         visit_cleanup!();
         return 0;
@@ -71,6 +70,7 @@ fn find_out_dfs_v2<'a>(
             return 1;
         }
     }
+    let mut s = 0;
     for n in conn.iter().copied() {
         s += find_out_dfs_v2(connections, n, goal, visited);
     }
