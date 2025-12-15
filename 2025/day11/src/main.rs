@@ -54,20 +54,12 @@ fn find_dfs_v2<'a>(
     }
     visited.insert(current, 0);
 
-    macro_rules! visit_cleanup {
-        () => {{
-            // visited.remove(current);
-        }};
-    }
-
     let Some(conn) = connections.get(current) else {
-        visit_cleanup!();
         return 0;
     };
     // if any of the outputs is 'out', then short-circuit the recursion, without polluting 'visited'
     for n in conn.iter().copied() {
         if n == goal {
-            visit_cleanup!();
             return 1;
         }
     }
@@ -75,7 +67,6 @@ fn find_dfs_v2<'a>(
     for n in conn.iter().copied() {
         s += find_dfs_v2(connections, n, goal, visited);
     }
-    visit_cleanup!();
 
     visited.insert(current, s);
 
