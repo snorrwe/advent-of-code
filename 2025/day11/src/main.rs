@@ -47,15 +47,16 @@ fn find_out_dfs_v2<'a>(
     connections: &HashMap<&'a str, Vec<&'a str>>,
     current: &'a str,
     goal: &'a str,
-    visited: &mut HashSet<&'a str>,
+    visited: &mut HashMap<&'a str, usize>,
 ) -> usize {
-    if !visited.insert(current) {
-        return 0;
+    if let Some(p) = visited.get(current) {
+        return *p;
     }
+    visited.insert(current, 0);
 
     macro_rules! visit_cleanup {
         () => {{
-            visited.remove(current);
+            // visited.remove(current);
         }};
     }
 
@@ -75,26 +76,31 @@ fn find_out_dfs_v2<'a>(
         s += find_out_dfs_v2(connections, n, goal, visited);
     }
     visit_cleanup!();
+
+    visited.insert(current, s);
+
     s
 }
 
 fn part2(input: &Input) -> usize {
-    let mut visited: HashSet<&str> = Default::default();
-    visited.insert("dac");
-    visited.insert("out");
+    let mut visited: HashMap<&str, _> = Default::default();
+    visited.insert("dac", 0);
+    visited.insert("out", 0);
     let a1 = find_out_dfs_v2(&input.connections, "svr", "fft", &mut visited);
-    visited.remove("dac");
+    visited.clear();
+    visited.insert("out", 0);
     let a2 = find_out_dfs_v2(&input.connections, "fft", "dac", &mut visited);
-    visited.remove("out");
+    visited.clear();
     let a3 = find_out_dfs_v2(&input.connections, "dac", "out", &mut visited);
 
     visited.clear();
-    visited.insert("fft");
-    visited.insert("out");
+    visited.insert("fft", 0);
+    visited.insert("out", 0);
     let b1 = find_out_dfs_v2(&input.connections, "svr", "dac", &mut visited);
-    visited.remove("fft");
+    visited.clear();
+    visited.insert("out", 0);
     let b2 = find_out_dfs_v2(&input.connections, "dac", "fft", &mut visited);
-    visited.remove("out");
+    visited.clear();
     let b3 = find_out_dfs_v2(&input.connections, "fft", "out", &mut visited);
 
     dbg!(a1, a2, a3, b1, b2, b3);
