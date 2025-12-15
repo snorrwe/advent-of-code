@@ -43,7 +43,7 @@ fn part1(input: &Input) -> usize {
     find_out_dfs(&input.connections, "you")
 }
 
-fn find_out_dfs_v2<'a>(
+fn find_dfs_v2<'a>(
     connections: &HashMap<&'a str, Vec<&'a str>>,
     current: &'a str,
     goal: &'a str,
@@ -73,7 +73,7 @@ fn find_out_dfs_v2<'a>(
     }
     let mut s = 0;
     for n in conn.iter().copied() {
-        s += find_out_dfs_v2(connections, n, goal, visited);
+        s += find_dfs_v2(connections, n, goal, visited);
     }
     visit_cleanup!();
 
@@ -86,22 +86,22 @@ fn part2(input: &Input) -> usize {
     let mut visited: HashMap<&str, _> = Default::default();
     visited.insert("dac", 0);
     visited.insert("out", 0);
-    let a1 = find_out_dfs_v2(&input.connections, "svr", "fft", &mut visited);
+    let a1 = find_dfs_v2(&input.connections, "svr", "fft", &mut visited);
     visited.clear();
     visited.insert("out", 0);
-    let a2 = find_out_dfs_v2(&input.connections, "fft", "dac", &mut visited);
+    let a2 = find_dfs_v2(&input.connections, "fft", "dac", &mut visited);
     visited.clear();
-    let a3 = find_out_dfs_v2(&input.connections, "dac", "out", &mut visited);
+    let a3 = find_dfs_v2(&input.connections, "dac", "out", &mut visited);
 
     visited.clear();
     visited.insert("fft", 0);
     visited.insert("out", 0);
-    let b1 = find_out_dfs_v2(&input.connections, "svr", "dac", &mut visited);
+    let b1 = find_dfs_v2(&input.connections, "svr", "dac", &mut visited);
     visited.clear();
     visited.insert("out", 0);
-    let b2 = find_out_dfs_v2(&input.connections, "dac", "fft", &mut visited);
+    let b2 = find_dfs_v2(&input.connections, "dac", "fft", &mut visited);
     visited.clear();
-    let b3 = find_out_dfs_v2(&input.connections, "fft", "out", &mut visited);
+    let b3 = find_dfs_v2(&input.connections, "fft", "out", &mut visited);
 
     dbg!(a1, a2, a3, b1, b2, b3);
 
