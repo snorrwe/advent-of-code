@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 struct Input<'a> {
     connections: HashMap<&'a str, Vec<&'a str>>,
