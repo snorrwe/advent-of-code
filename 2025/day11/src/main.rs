@@ -1,7 +1,5 @@
 use std::collections::{HashMap, HashSet};
 
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-
 struct Input<'a> {
     connections: HashMap<&'a str, Vec<&'a str>>,
 }
@@ -72,22 +70,10 @@ fn find_out_dfs_v2<'a>(
             return 1;
         }
     }
-    let (s, v) = conn
-        .par_iter()
-        .map(|n| {
-            let mut visited = visited.clone();
-            let s = find_out_dfs_v2(connections, n, goal, &mut visited);
-            (s, visited)
-        })
-        .reduce(
-            || (0, Default::default()),
-            |a, b| {
-                let mut aa = a.1;
-                aa.extend(&b.1);
-                (a.0 + b.0, aa)
-            },
-        );
-    *visited = v;
+    let mut s = 0;
+    for n in conn.iter().copied() {
+        s += find_out_dfs_v2(connections, n, goal, visited);
+    }
     visit_cleanup!();
     s
 }
