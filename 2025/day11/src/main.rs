@@ -52,7 +52,6 @@ fn find_dfs_v2<'a>(
     if let Some(p) = visited.get(current) {
         return *p;
     }
-    visited.insert(current, 0);
 
     let Some(conn) = connections.get(current) else {
         return 0;
