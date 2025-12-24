@@ -1,16 +1,42 @@
-{ pkgs, lib, config, inputs, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  inputs,
+  ...
+}:
 
 {
   # https://devenv.sh/basics/
-  env.GREET = "AoC";
 
   # https://devenv.sh/packages/
-  packages = with pkgs; [ git just cookiecutter hyperfine lldb ];
+  packages = with pkgs; [
+    git
+    just
+    cookiecutter
+    hyperfine
+    lldb
+  ];
 
   # https://devenv.sh/languages/
   languages.rust.enable = true;
-  languages.python.enable = true;
+  languages.python = {
+    enable = true;
+    uv.enable = true;
+    venv.enable = true;
+    package = pkgs.python312;
+  };
   languages.cplusplus.enable = true;
+  env = {
+    LD_LIBRARY_PATH = "${
+      with pkgs;
+      lib.makeLibraryPath [
+        stdenv.cc.cc.lib
+        libz
+      ]
+    }:$LD_LIBRARY_PATH";
+
+  };
 
   # https://devenv.sh/processes/
   # processes.cargo-watch.exec = "cargo-watch";
