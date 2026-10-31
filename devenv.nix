@@ -28,14 +28,6 @@
   };
   languages.cplusplus.enable = true;
   env = {
-    LD_LIBRARY_PATH = "${
-      with pkgs;
-      lib.makeLibraryPath [
-        stdenv.cc.cc.lib
-        libz
-      ]
-    }:$LD_LIBRARY_PATH";
-
   };
 
   languages.ocaml = {
