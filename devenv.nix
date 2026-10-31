@@ -38,6 +38,10 @@
 
   };
 
+  languages.ocaml = {
+    enable = true;
+  };
+
   # https://devenv.sh/processes/
   # processes.cargo-watch.exec = "cargo-watch";
 
