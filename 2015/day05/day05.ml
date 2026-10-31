@@ -7,6 +7,27 @@ let contains s1 s2 =
     false
   with Exit -> true
 
+let part_2 (lines : string list) =
+  let rec is_dupe_impl line i =
+    if i + 2 >= String.length line then false
+    else
+      String.get line i == String.get line (i + 2) || is_dupe_impl line (i + 1)
+  in
+
+  let is_nice line =
+    let c = Counter.make in
+    let () = Counter.ingest c line in
+    let has_pair =
+      not (Seq.for_all (fun a -> a < 2) (Hashtbl.to_seq_values c.map))
+    in
+    let has_dupe = is_dupe_impl line 0 in
+    let result = has_pair && has_dupe in
+    let () = Counter.clear c in
+    result
+  in
+
+  List.fold_left (fun c l -> if is_nice l then 1 + c else c) 0 lines
+
 let part_1 (lines : string list) =
   let count_vowels line =
     String.fold_left
@@ -32,10 +53,6 @@ let part_1 (lines : string list) =
     let d = has_dupe line in
     let has_illegal = has_illegal line in
     let is_nice = vowels >= 3 && d && not has_illegal in
-    (* let () = *)
-    (*   Printf.printf "%s\tvowels=%d has_dupe=%b has_illegal=%b is_nice=%b\n" line *)
-    (*     vowels d has_illegal is_nice *)
-    (* in *)
     is_nice
   in
 
@@ -53,3 +70,4 @@ let lines =
 
 let () = close_in file
 let () = Printf.printf "part1: %d\n" (part_1 lines)
+let () = Printf.printf "part2: %d\n" (part_2 lines)
