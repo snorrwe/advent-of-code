@@ -10,13 +10,18 @@
   # https://devenv.sh/basics/
 
   # https://devenv.sh/packages/
-  packages = with pkgs; [
-    git
-    just
-    cookiecutter
-    hyperfine
-    lldb
-  ];
+  packages =
+    with pkgs;
+    [
+      git
+      just
+      cookiecutter
+      hyperfine
+      lldb
+    ]
+    ++ (with pkgs.ocamlPackages; [
+      re2
+    ]);
 
   # https://devenv.sh/languages/
   languages.rust.enable = true;
@@ -32,6 +37,10 @@
 
   languages.ocaml = {
     enable = true;
+    lsp = {
+      enable = true;
+      package = pkgs.ocamlPackages.ocaml-lsp;
+    };
   };
 
   # https://devenv.sh/processes/

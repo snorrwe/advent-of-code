@@ -28,3 +28,5 @@ devenv.local.nix
 2024/day24/graph.svg
 2024/day24/swaps
 **/_build
+/2015/day06/_opam/.opam-switch
+/2015/day06/_opam
