@@ -81,14 +81,23 @@ let fname =
     let () = Printf.eprintf "One argument (FILE) is required\n" in
     exit 1
 
-let file = open_in fname
-
 let lines =
-  let try_read () = try Some (input_line file) with End_of_file -> None in
-  let rec loop acc =
-    match try_read () with Some s -> loop (s :: acc) | None -> List.rev acc
+  let file = open_in fname in
+  let result =
+    try
+      let try_read () = try Some (input_line file) with End_of_file -> None in
+      let rec loop acc =
+        match try_read () with
+        | Some s -> loop (s :: acc)
+        | None -> List.rev acc
+      in
+      loop []
+    with e ->
+      close_in_noerr file;
+      raise e
   in
-  loop []
+  close_in file;
+  result
 
 let () = Printf.printf "part1: %d\n" (part_1 lines)
 let () = Printf.printf "part2: %d\n" (part_2 lines)
