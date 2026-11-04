@@ -36,12 +36,36 @@ let exec_fn cmd =
   | "toggle" -> fun (y, x) -> Grid.toggle grid x y
   | _ -> raise Not_found
 
+let exec_fn_v2 cmd =
+  match cmd.op with
+  | "turn on" -> fun (y, x) -> Grid.inc grid x y 1
+  | "turn off" -> fun (y, x) -> Grid.inc grid x y (-1)
+  | "toggle" -> fun (y, x) -> Grid.inc grid x y 2
+  | _ -> raise Not_found
+
 let part_1 (lines : string list) =
+  let () = Grid.zero grid in
   let () =
     List.iter
       (fun line ->
         let command = parse_command line in
         let apply = exec_fn command in
+        for y = command.start_y to command.end_y do
+          for x = command.start_x to command.end_x do
+            apply (x, y)
+          done
+        done)
+      lines
+  in
+  Grid.sum grid
+
+let part_2 (lines : string list) =
+  let () = Grid.zero grid in
+  let () =
+    List.iter
+      (fun line ->
+        let command = parse_command line in
+        let apply = exec_fn_v2 command in
         for y = command.start_y to command.end_y do
           for x = command.start_x to command.end_x do
             apply (x, y)
@@ -67,3 +91,4 @@ let lines =
   loop []
 
 let () = Printf.printf "part1: %d\n" (part_1 lines)
+let () = Printf.printf "part2: %d\n" (part_2 lines)
