@@ -1,0 +1,3 @@
+(executable 
+  (name day07) 
+  (libraries re2 stdint))

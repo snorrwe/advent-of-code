@@ -21,6 +21,7 @@
     ]
     ++ (with pkgs.ocamlPackages; [
       re2
+      stdint
     ]);
 
   # https://devenv.sh/languages/
