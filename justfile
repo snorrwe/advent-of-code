@@ -5,10 +5,7 @@ _new-rs out:
     cookiecutter $PWD/template-rs -o {{ out }}
 
 [no-cd]
-new-rs:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    just _new-rs $PWD
+new-rs: (_new-rs (env("PWD")))
 
 # count lines of code in the solutions folders
 loc:
