@@ -109,5 +109,16 @@ let part1 lines =
   in
   Stdint.Uint16.to_int (resolve commands "a")
 
+let part2 lines (p1 : int) =
+  let commands =
+    Hashtbl.of_seq
+      (Seq.map parse_command (List.to_seq lines)
+      |> Seq.map (fun cmd -> (cmd.dst, Cmd cmd)))
+  in
+  let () = Hashtbl.replace commands "b" (Int (Stdint.Uint16.of_int p1)) in
+  Stdint.Uint16.to_int (resolve commands "a")
+
 let lines = read_lines
-let () = Printf.printf "part1 = %d\n" (part1 lines)
+let p1 = part1 lines
+let () = Printf.printf "part1 = %d\n" p1
+let () = Printf.printf "part2 = %d\n" (part2 lines p1)
