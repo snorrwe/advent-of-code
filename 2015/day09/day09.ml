@@ -55,7 +55,7 @@ let parse_graph lines =
     lines;
   table
 
-let rec traverse graph visited start =
+let rec traverse_v1 graph visited start =
   let () = assert (Hashtbl.find_opt visited start |> Option.is_none) in
   let () = Hashtbl.add visited start 0 in
   let connections = Hashtbl.find graph start in
@@ -65,8 +65,25 @@ let rec traverse graph visited start =
       |> Seq.filter (fun (k, _) -> Hashtbl.find_opt visited k |> Option.is_none)
     in
     if Seq.length valid_conn != 0 then
-      Seq.map (fun (k, v) -> v + traverse graph visited k) valid_conn
+      Seq.map (fun (k, v) -> v + traverse_v1 graph visited k) valid_conn
       |> Seq.fold_left min (1 lsl 32)
+    else 0
+  in
+  let () = Hashtbl.remove visited start in
+  result
+
+let rec traverse_v2 graph visited start =
+  let () = assert (Hashtbl.find_opt visited start |> Option.is_none) in
+  let () = Hashtbl.add visited start 0 in
+  let connections = Hashtbl.find graph start in
+  let result =
+    let valid_conn =
+      Hashtbl.to_seq connections
+      |> Seq.filter (fun (k, _) -> Hashtbl.find_opt visited k |> Option.is_none)
+    in
+    if Seq.length valid_conn != 0 then
+      Seq.map (fun (k, v) -> v + traverse_v2 graph visited k) valid_conn
+      |> Seq.fold_left max 0
     else 0
   in
   let () = Hashtbl.remove visited start in
@@ -75,10 +92,16 @@ let rec traverse graph visited start =
 let part1 (graph : (string, (string, int) Hashtbl.t) Hashtbl.t) =
   let visited = Hashtbl.create 10 in
   Hashtbl.to_seq_keys graph
-  |> Seq.map (fun key -> traverse graph visited key)
+  |> Seq.map (fun key -> traverse_v1 graph visited key)
   |> Seq.fold_left (fun a b -> min a b) (1 lsl 32)
+
+let part2 (graph : (string, (string, int) Hashtbl.t) Hashtbl.t) =
+  let visited = Hashtbl.create 10 in
+  Hashtbl.to_seq_keys graph
+  |> Seq.map (fun key -> traverse_v2 graph visited key)
+  |> Seq.fold_left (fun a b -> max a b) 0
 
 let lines = read_lines
 let graph = parse_graph lines
-let p1 = part1 graph
-let () = Printf.printf "part1 = %d\n" p1
+let () = Printf.printf "part1 = %d\n" (part1 graph)
+let () = Printf.printf "part2 = %d\n" (part2 graph)
