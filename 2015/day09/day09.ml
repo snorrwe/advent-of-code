@@ -55,7 +55,7 @@ let parse_graph lines =
     lines;
   table
 
-let rec traverse_v1 graph visited start =
+let rec traverse graph visited start reducer init =
   let () = assert (Hashtbl.find_opt visited start |> Option.is_none) in
   let () = Hashtbl.add visited start 0 in
   let connections = Hashtbl.find graph start in
@@ -65,42 +65,23 @@ let rec traverse_v1 graph visited start =
       |> Seq.filter (fun (k, _) -> Hashtbl.find_opt visited k |> Option.is_none)
     in
     if Seq.length valid_conn != 0 then
-      Seq.map (fun (k, v) -> v + traverse_v1 graph visited k) valid_conn
-      |> Seq.fold_left min (1 lsl 32)
+      Seq.map
+        (fun (k, v) -> v + traverse graph visited k reducer init)
+        valid_conn
+      |> Seq.fold_left reducer init
     else 0
   in
   let () = Hashtbl.remove visited start in
   result
 
-let rec traverse_v2 graph visited start =
-  let () = assert (Hashtbl.find_opt visited start |> Option.is_none) in
-  let () = Hashtbl.add visited start 0 in
-  let connections = Hashtbl.find graph start in
-  let result =
-    let valid_conn =
-      Hashtbl.to_seq connections
-      |> Seq.filter (fun (k, _) -> Hashtbl.find_opt visited k |> Option.is_none)
-    in
-    if Seq.length valid_conn != 0 then
-      Seq.map (fun (k, v) -> v + traverse_v2 graph visited k) valid_conn
-      |> Seq.fold_left max 0
-    else 0
-  in
-  let () = Hashtbl.remove visited start in
-  result
-
-let part1 (graph : (string, (string, int) Hashtbl.t) Hashtbl.t) =
+let solve graph reducer init =
   let visited = Hashtbl.create 10 in
   Hashtbl.to_seq_keys graph
-  |> Seq.map (fun key -> traverse_v1 graph visited key)
-  |> Seq.fold_left (fun a b -> min a b) (1 lsl 32)
+  |> Seq.map (fun key -> traverse graph visited key reducer init)
+  |> Seq.fold_left (fun a b -> reducer a b) init
 
-let part2 (graph : (string, (string, int) Hashtbl.t) Hashtbl.t) =
-  let visited = Hashtbl.create 10 in
-  Hashtbl.to_seq_keys graph
-  |> Seq.map (fun key -> traverse_v2 graph visited key)
-  |> Seq.fold_left (fun a b -> max a b) 0
-
+let part1 graph = solve graph min (1 lsl 32)
+let part2 graph = solve graph max 0
 let lines = read_lines
 let graph = parse_graph lines
 let () = Printf.printf "part1 = %d\n" (part1 graph)
