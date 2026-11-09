@@ -1,0 +1,5 @@
+(executable 
+  (name day08) 
+  (libraries re2)
+  ; build bytecode for debugging
+  (modes byte exe))
