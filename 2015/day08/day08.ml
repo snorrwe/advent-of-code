@@ -42,5 +42,26 @@ let part1 (lines : string list) =
       len - (l - 2))
   |> Seq.fold_left ( + ) 0
 
+let part2 (lines : string list) =
+  let re = Re2.create_exn {|(\\\\|\\")|(\\x[a-zA-Z0-9]{2})|} in
+  List.to_seq lines
+  |> Seq.map (fun line ->
+      let len = String.length line in
+      let matches = Re2.find_all re line in
+      let l =
+        match matches with
+        | Ok matches ->
+            let delta =
+              List.to_seq matches
+              |> Seq.map (fun m -> match m with "\\\\" | "\\\"" -> 2 | _ -> 1)
+              |> Seq.fold_left ( + ) 0
+            in
+            len + delta
+        | _ -> len
+      in
+      l + 4 - len)
+  |> Seq.fold_left ( + ) 0
+
 let lines = read_lines
 let () = Printf.printf "part1 = %d\n" (part1 lines)
+let () = Printf.printf "part2 = %d\n" (part2 lines)
